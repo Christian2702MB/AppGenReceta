@@ -1,0 +1,41 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    font-family: 'Bitter', serif;
+    margin-bottom: 40px;
+    background-color: #e6e6e6;
+}
+.Cmov {
+        display: none;
+    }
+
+
+.navbar-inverse .navbar-brand {
+    color: #fff;
+    font-size:25px;
+    margin-top:28px;
+    padding-left:30px;
+    font-weight:bold;
+    letter-spacing:0.5px;
+}
+
+
+@media only screen and (max-width: 600px) {
+    .Cweb {
+        display: none;
+    }
+    .Cmov {
+        display: block;
+    }
+    .Cmov > .navbar-header > .navbar-brand {
+        padding:0px;
+        margin-top:0px;
+        margin-bottom:0px;
+        margin-left:5px;
+        margin-right:5px;
+        font-size: 10px;
+    }
+    .titulo_nuevo{
+        font-size:14px; 
+    }
+}

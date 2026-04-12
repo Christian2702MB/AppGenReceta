@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "Aplicativo Receta";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicativo Receta</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="login-container">
+        <style>
+            :root {
+                --hialpesa-dark: #002D72;
+                --hialpesa-accent: #f39c12;
+                --glass-bg: rgba(255, 255, 255, 0.08);
+            }
+
+            /* Contenedor del Logo (Letra H) */
+            .brand-logo-circle {
+                width: 80px;
+                height: 80px;
+                background-color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px auto;
+                /* Centrado horizontal */
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            }
+
+            .brand-logo-circle span {
+                color: var(--hialpesa-blue);
+                font-size: 45px;
+                font-weight: 900;
+                font-family: 'Arial Black', sans-serif;
+                line-height: 1;
+            }
+
+            body {
+                background: linear-gradient(135deg, #001a41 0%, #002D72 100%);
+                font-family: 'Inter', 'Segoe UI', sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .login-card {
+                background: var(--glass-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 24px;
+                padding: 50px 40px;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+                text-align: center;
+            }
+
+            /* Estilo para el Logo/Marca */
+            .brand-section {
+                margin-bottom: 40px;
+            }
+
+            .brand-logo {
+                width: 80px;
+                height: 80px;
+                background: white;
+                border-radius: 18px;
+                margin: 0 auto 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: var(--hialpesa-dark);
+                font-size: 24px;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            .brand-section h1 {
+                color: white;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0;
+                letter-spacing: 1px;
+            }
+
+            .brand-section p {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.9rem;
+            }
+
+            /* Inputs Modernos */
+            .form-group {
+                position: relative;
+                margin-bottom: 25px;
+            }
+
+            .form-control {
+                background: rgba(255, 255, 255, 0.05) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border-radius: 12px !important;
+                color: white !important;
+                padding: 14px 15px 14px 45px !important;
+                height: auto !important;
+                transition: all 0.3s;
+            }
+
+            .form-control:focus {
+                border-color: var(--hialpesa-accent) !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+                box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.15) !important;
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.4);
+                transition: 0.3s;
+            }
+
+            .form-control:focus+.input-icon {
+                color: var(--hialpesa-accent);
+            }
+
+            /* Botón Profesional */
+            .btn-login {
+                background: var(--hialpesa-accent);
+                border: none;
+                border-radius: 12px;
+                color: white;
+                width: 100%;
+                padding: 15px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .btn-login:hover {
+                background: #e67e22;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+            }
+
+            /* Spinner oculto por defecto */
+            .spinner-border {
+                display: none;
+                width: 20px;
+                height: 20px;
+            }
+        </style>
+
+        <div class="login-card">
+            <div class="brand-section">
+                <div class="brand-logo">H</div>
+                <h1>HIALPESA</h1>
+                <p>Aplicativo de Recetas</p>
+            </div>
+            @*<div class="brand-section">
+            <div class="brand-logo-circle"><span>H</span></div>
+            <h1>HIALPESA</h1>
+            <p>Aplicativo de Recetas</p>
+            </div>*@
+            <form id="formHomeLogin" action="@Url.Action("Ingresar","Home")" method="post">
+                <div class="form-group">
+                    <input id="txtCuenta" name="NombreUsuario" type="text" class="form-control"
+                        placeholder="Usuario Hialpesa" required />
+                    <i class="fas fa-envelope input-icon"></i>
+                </div>
+
+                <div class="form-group">
+                    <input id="txtClave" name="Clave" type="password" class="form-control" placeholder="Contraseña"
+                        required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+
+                <button id="btnHomeLogin" type="submit" class="btn-login">
+                    <span class="btn-text">Entrar</span>
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <i class="fas fa-arrow-right icon-arrow"></i>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. ESCUCHAR LA TECLA ENTER EN LOS CAMPOS DE TEXTO
+        document.addEventListener('DOMContentLoaded', function () {
+            // Seleccionamos los inputs de usuario y contraseña
+            const inputs = document.querySelectorAll('#txtCuenta, #txtClave');
+
+            inputs.forEach(input => {
+                input.addEventListener('keypress', function (e) {
+                    // Si la tecla presionada es 'Enter'
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Evita que el navegador haga un doble envío accidental
+                        document.getElementById('btnHomeLogin').click(); // Simula el clic en el botón
+                    }
+                });
+            });
+        });
+
+        // 2. TU CÓDIGO ORIGINAL DE ANIMACIÓN DEL BOTÓN
+        document.getElementById('formHomeLogin').onsubmit = function () {
+            const btn = document.getElementById('btnHomeLogin');
+            const text = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner-border');
+            const arrow = btn.querySelector('.icon-arrow');
+
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.8';
+            text.innerText = 'Cargando...';
+            spinner.style.display = 'inline-block';
+            arrow.style.display = 'none';
+        };
+    </script>
+
+    <script src="~/Scripts/jquery.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/Home/Index.js?")"></script>
+
+</body>
+
+</html>
+

@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Depurar en IIS Express",
+            "type": "clr",
+            "request": "attach",
+            "processName": "iisexpress.exe"
+        }
+    ]
+}

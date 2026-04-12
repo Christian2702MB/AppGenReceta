@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "3. Enganchar Depurador",
+            "type": "clr",
+            "request": "attach",
+            "processName": "iisexpress.exe"
+        }
+    ]
+}

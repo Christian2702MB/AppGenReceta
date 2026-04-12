@@ -1,0 +1,492 @@
+@model AppGenReceta.BE.VisitaBE
+@using AppGenReceta.BE;
+@{
+    ViewBag.Title = "Aplicativo Receta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    // Recuperamos el rol de la sesión (asumiendo que por defecto es Visualizador si no hay sesión)
+    string rolActual = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "Visualizador";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .swal2-footer {
+        text-align: center !important;
+    }
+
+    /* Corrección de Select2 para tablas y Bootstrap */
+    .select2-container {
+        width: 100% !important;
+        min-width: 250px;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 31px !important;
+        padding-top: 2px;
+        border: 1px solid #ccc !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 29px !important;
+    }
+
+    /* Estilos para las columnas dinámicas de pruebas */
+    .col-prueba-header {
+        background-color: #f8f9fa !important;
+        /* Gris claro para diferenciar */
+        border-bottom: 3px solid #17a2b8 !important;
+        /* Línea celeste abajo */
+        min-width: 130px;
+        /* Evita que el input se apachurre */
+    }
+
+    .col-prueba-cell {
+        background-color: #fdfdfe;
+    }
+
+    /* Resaltar la columna ganadora */
+    .prueba-elegida {
+        background-color: #d4edda !important;
+        /* Verde claro */
+        border-bottom: 3px solid #28a745 !important;
+        /* Línea verde fuerte */
+        transition: background-color 0.3s ease;
+    }
+
+    #btnRegistrar, #btnLimpiar, #btnCancelar {
+        display: inline-flex; /* Activa el alineamiento flexible */
+        align-items: center; /* Centra verticalmente icono y texto */
+        justify-content: center; /* Centra horizontalmente el contenido */
+        padding: 10px 20px; /* Da espacio interno uniforme */
+    }
+</style>
+<div class="panel-body">
+
+    <form id="formLibroVisita">
+        <input type="hidden" id="hdnIdVisita" value="@ViewBag.IdEditar" />
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 5px; border-bottom: 1px solid #07238a;">
+                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">
+                        Datos de la
+                        Cabecera
+                    </span>
+                </h2>
+
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Cliente
+                            </label>
+                            <input type="text" name="txtCliente" class="form-control" value="" id="txtCliente"
+                                   readonly />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Temporada</label>
+                            <input type="text" name="txtTemporada" class="form-control" value="" id="txtTemporada"
+                                   readonly />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Estilo Cliente
+                            </label>
+                            <input type="text" name="txtEstilo" class="form-control" value="" id="txtEstilo" readonly />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Estilo Propio
+                            </label>
+                            <input type="text" name="txtEstiloPropio" class="form-control" value="" id="txtEstiloPropio"
+                                   readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Combo
+                            </label>
+                            <input type="text" name="txtCombo" class="form-control" value="" id="txtCombo" readonly />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Item
+                            </label>
+                            <input type="text" name="txtItem" class="form-control" value="" id="txtItem" readonly />
+                        </div>
+                    </div>
+
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Ubicación
+                            </label>
+                            <input type="text" name="txtUbicacion" class="form-control" value="" id="txtUbicacion"
+                                   readonly />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Arte <span class="text-muted">(Opcional)</span>:</label>
+                            <input type="text" name="txtArte" id="txtArte" class="form-control" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">                    
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Fecha
+                            </label>
+                            <input type="date" name="dtFechaUDP" class="form-control" value="" id="dtFechaUDP"
+                                   required />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Muestrista
+                            </label>
+                            <input type="text" name="txtOperario" class="form-control" value="" id="txtOperario"
+                                   required />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-6">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Técnica
+                            </label>
+                            <select id="txtTecnica" class="form-control select2">
+                                <option value=""> Seleccione una técnica </option>
+                                @if (ViewBag.Tecnicas != null)
+                                {
+                                    foreach (var tecnica in (List<string>)ViewBag.Tecnicas)
+                                    {
+                                        <option value="@tecnica">@tecnica</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">                    
+                    <div class="col-xs-12 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                NP - MV
+                            </label>
+                            <input type="text" name="txtNP" class="form-control" value="" id="txtNP" />
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label for="Hub">
+                                Prendas
+                            </label>
+                            <input type="number" name="txtPrendasReq" class="form-control" value="" id="txtPrendasReq"
+                                   step="1" min="0" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="panel panel-warning shadow-sm">
+            <div class="panel-heading" style="background-color: #fcf8e3;">
+                <strong><i class="fa fa-plus-circle"></i> Agregar Elementos</strong>
+            </div>
+            <div class="panel-body">
+                <div class="btn-group pull-right">
+                    <button type="button" class="btn btn-info btn-sm" onclick="abrirModalPrueba()"
+                        style="margin-right: 5px;">
+                        <i class="fa fa-flask"></i> Nueva Prueba Gramos/UDP
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-6" style="border-right: 1px solid #eee;">
+                        <label>Nuevo Color Pantone:</label>
+                        <div class="input-group">
+                            <input type="text" id="txtNuevoColorNombre" class="form-control" placeholder="Nombre Color">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" id="btnAgregarColor" type="button"
+                                    onclick="agregarNuevoColor()"><i class="fa fa-paint-brush"></i>+</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Seleccionar Color a asignar Insumo:</label>
+                        <div class="row">
+                            <div class="col-md-2">
+                                <select id="ddlColorDestino" class="form-control"></select>
+                            </div>
+                            @*<div class="col-md-2">
+                            <input type="text" name="ddlInsumo" class="form-control" value="" id="ddlInsumo" readonly />
+                            </div>*@
+                            <div class="col-md-6">
+                                <select id="txtDescInsumo" name="txtDescInsumo" class="form-control"
+                                    style="background-color: #eee;"
+                                    data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
+                                    @* Llenado por AJAX on-demand (Optimizado) *@
+                                    <option value="">Seleccione o busque un insumo...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" name="txtStock" class="form-control" value="" id="txtStock"
+                                    readonly />
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" id="txtCantInsumo" class="form-control"
+                                        placeholder="0.00">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-success" id="btnAgregarInsumo" type="button"
+                                            onclick="agregarInsumoAColor()"
+                                            title="Agregar Insumo al Color Seleccionado"><i
+                                                class="fa fa-flask"></i></button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-sm-12">
+                <h4 class="text-primary"><i class="fas fa-flask"></i> Detalle de Receta</h4>
+                <div class="table-responsive" style="overflow-x: auto; white-space: nowrap; padding-bottom: 15px;">
+                    <div id="contenedorColores"></div>
+                </div>
+            </div>
+        </div>
+
+        @Html.Hidden("URL_Registrar", Url.Action("RegistrarVisitaCompletaEditar", "Home"))
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6" style="text-align: right">
+                        <div class="form-group">
+                            <a id="btnRegistrarTodo" class="btn btn-primary px-4 shadow-sm"
+                                onclick="guardarRecetaCompleta()"><i class="fa fa-save"></i> Actualizar</a>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="form-group" style="text-align: left">
+                            <a id="btnCancelarVisita" class="btn btn-danger px-4 shadow-sm" onclick="cancelarEdicion()">
+                                <i class="fa fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.FechaCierre))
+    {
+        <div class="alert alert-warning shadow-sm">
+            <i class="fas fa-user-lock"></i> <strong>CERRADO POR:</strong> @Model.UsuarioCierre
+            <i class="fas fa-calendar-alt ml-3"></i> <strong>FECHA:</strong> @Model.FechaCierre
+        </div>
+    }
+
+    @*Modal 01/04/26*@
+
+    <div class="modal fade" id="modalAgregarPrueba" tabindex="-1" role="dialog" aria-labelledby="modalPruebaLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modalPruebaLabel">Ingresar Prueba</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre de la Prueba</label>
+                        <select id="txtNombrePrueba" class="form-control select2" style="width: 100%;">
+                            <option value="">Seleccione un Concepto</option>
+                            @if (ViewBag.Conceptos != null)
+                            {
+                                foreach (string concepto in ViewBag.Conceptos)
+                                {
+                                    <option value="@concepto">@concepto</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer text-center">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="agregarColumnaPrueba()">Agregar
+                        Columna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<input type="hidden" id="URL_Imprimir" value="@Url.Action("ImprimirRFID","Home")" />
+
+@section scripts{
+
+    <script src="https://cdn.jsdelivr.net/npm/promise-polyfill9/dist/polyfill.js"></script>
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    <script>
+        // Declarar antes del JS externo para que sea global
+        window.g_isReadOnly = '@ViewBag.IsReadOnly'.toLowerCase() === 'true';
+    </script>
+
+    <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
+    @*<script type="text/javascript"
+src="https://cdn.jsdelivr.net/npm/sweetalert2@9.1.5/dist/sweetalert2.all.min.js"></script>*@
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+
+    <script type="text/javascript" src="@Url.Content("~/Scripts/Home/VisitaCorregirSCTR.js")"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // 1. Pasamos la variable de Razor a JavaScript
+        var rolUsuarioActual = '@rolActual';
+
+        // 2. Si el usuario es Visualizador, forzamos la variable global a TRUE
+        // Esto asegura que cualquier otro script (como VisitaCorregirSCTR.js) actúe en modo lectura
+        if (rolUsuarioActual === "Visualizador") {
+            window.g_isReadOnly = true;
+        }
+
+        $(document).ready(function () {
+            // Activar Select2 con buscador renderizado correctamente sobre el modal
+            $('#txtNombrePrueba').select2({
+                dropdownParent: $('#modalAgregarPrueba'),
+                width: '100%',
+                placeholder: 'Seleccione o escriba...',                
+                language: 'es',
+                tags: true, // <-- ESTA ES LA PROPIEDAD CLAVE para que pueda inggresar texto libre
+                //Se crea un tag
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '' || term === 'STRIKE OFF') {
+                        return null;
+                    }
+                    // Retorna el texto escrito como una nueva opción válida
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true // Añadimos una bandera por si quieres identificarlo luego
+                    }
+                }
+            });
+
+            if (!window.g_isReadOnly) {
+                $('#txtDescInsumo').select2({
+                    placeholder: 'Seleccione o busque un insumo...',
+                    ajax: {
+                        url: $('#txtDescInsumo').data('url-busqueda'),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term || '' };
+                        },
+                        processResults: function (data) {
+                            return { results: data.items };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 3,
+                    language: {
+                        inputTooShort: function () {
+                            return "Por favor ingrese 3 o mas caracteres...";
+                        },
+                        noResults: function () {
+                            return "No se encontraron insumos";
+                        },
+                        searching: function () {
+                            return "Buscando...";
+                        }
+                    }
+                });
+
+                // Auto-clic en el botón de sumar Insumo al dar ENTER
+                $('#txtCantInsumo').on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault(); // Evita que la página intente hacer un recargo rápido
+                        $('#btnAgregarInsumo').click(); // Simula el click físico en el botón verde (+)
+                    }
+                });
+
+                // Auto-clic en el botón de agregar Color Pantone al dar ENTER
+                $('#txtNuevoColorNombre').on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        $('#btnAgregarColor').click();
+                    }
+                });
+            }
+
+            if (window.g_isReadOnly) {
+                // Bloqueo de controles estándar
+
+                // 1. Deshabilitar todos los inputs, selects y textareas
+                $("#formLibroVisita input, #formLibroVisita select, #formLibroVisita textarea").prop("disabled", true);
+
+                // 2. Deshabilitar botones dentro de tablas (como eliminar colores o insumos)
+                $("#formLibroVisita button, #formLibroVisita .btn").not("#btnCancelarVisita").addClass("disabled").attr("onclick", "return false;");
+
+                // 3. Ocultar el botón de Guardar/Actualizar
+                $("#btnGuardarVisita, #btnActualizarReceta, #btnRegistrarTodo, #btnAgregarColor, #btnAgregarInsumo").hide();
+
+                //// 4. Cambiar el título para indicar que es modo consulta
+                //$(".page-header span").append(" - (Modo Lectura)");
+
+                // 4. Cambiar el título para indicar que es modo consulta
+                $(".page-header span").append(" - <small class='label label-danger'>Modo Lectura</small>");
+
+                // Si usas librerías como bootstrap-select, hay que refrescarlas
+                if ($('.selectpicker').length > 0) {
+                    $('.selectpicker').selectpicker('refresh');
+                }
+                if ($('.select2').length > 0) {
+                    $('.select2').prop('disabled', true);
+                }
+            }
+        });
+    </script>
+
+}
+
+
+
+
+
+
+
+
+
+

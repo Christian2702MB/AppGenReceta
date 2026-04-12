@@ -1,0 +1,93 @@
+﻿@model SenatiLR.Web.Models.Home.ReclamoViewModel
+@using SenatiLR.BE;
+@{
+    ViewBag.Title = "Satisfacción de Reclamaciones Virtual";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+<style>
+
+    .swal2-footer {
+        text-align: center !important;
+    }
+</style>
+<div class="panel-body">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12" style="padding-left:10px; font-size:30px; border-left:2px solid #07238a; color: white; text-align:center; background: #ff0000">
+                    <span>
+                        PRUEBA
+                    </span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <h2>
+                        <span style="padding-left:10px; border-left:5px solid #07238a; color: #07238a;">
+                            Fecha: <span id="lblFecha" style="padding-left:10px; color: #07238a;">@Model.FechaRegistro.ToShortDateString()</span>
+                        </span>
+                    </h2>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <form action="@Url.Action("RegistrarSatisfaccionPrueba","Home")" method="post" id="formLibroSatisfaccion">
+        <input type="hidden" name="GuidReclamo" value="@Model.GuidReclamo" />
+        <div class="row">
+            <div class="col-xs-12 col-sm-3">
+            </div>
+            <div class="col-xs-12 col-sm-3">
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="DeAcuerdo" id="DeAcuerdo" value="true" checked/>
+                        <span style="font-weight: bold;">Estoy de acuerdo</span>
+                    </label>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="DeAcuerdo" id="DeAcuerdo" value="false" />
+                        <span style="font-weight: bold;">No estoy de acuerdo</span>
+                    </label>
+                </div>
+            </div>
+        </div>        
+        <div class="panel panel-default NoDeacuerdo" hidden>
+            <div class="panel-body">
+                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 5px; border-bottom: 1px solid #07238a;">
+                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Indicar las razones por las que no esta de acuerdo:</span>
+                </h2>
+
+                <div class="row">
+                    <div class="col-xs-12 col-sm-12">
+                        <div class="form-group">
+                            <textarea name="RespuestaCliente" id="RespuestaCliente" class="form-control" rows="5" placeholder="En este espacio indicar las razones por las que no esta de acuerdo"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: right;">
+            <a id="btnRegistrarSatisfaccion" class="btn btn-info"><i class="fa fa-check"></i>&nbsp;Enviar</a>
+            <a id="btnCancelar" class="btn btn-default"><i class="fa fa-arrow-left"></i>&nbsp;Cancelar</a>
+
+        </div>
+    </form>
+</div>
+
+
+@section scripts{
+    <!-- Include a polyfill for ES6 Promises (optional) for IE11 -->
+    @*<script src="https://cdn.jsdelivr.net/npm/promise-polyfill9/dist/polyfill.js"></script>*@
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@9.1.5/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/Home/SatisfaccionPrueba.js?v=1.0.4")"></script>
+
+}

@@ -1,0 +1,220 @@
+﻿@{
+    ViewBag.Title = "Aplicativo Receta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    // Recuperamos el rol del usuario desde la sesión actual
+    // Si no hay sesión, asumimos el rol de menor privilegio por seguridad
+    string rolActual = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "Visualizador";
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+
+<style>
+    /* 1. Fondo y Contenedor Principal */
+    .main-wrapper {
+        width: 100%;
+        padding: 60px 0;
+        display: flex;
+        justify-content: center; /* Centrado Horizontal */
+    }
+
+    /* Limita el ancho del grupo de tarjetas para que no se separen tanto */
+    .cards-container {
+        max-width: 900px; /* Ajusta este valor según prefieras: más bajo = más juntos */
+        margin: 0 auto; /*Centra el bloque entero horizontalmente */
+        /* margin: 5vh auto !important;*/ /*-> Añade un 5% de espacio arriba y abajo para que no pegue al header */
+        padding: 20px;
+        /* Asegura que el contenido interno se distribuya desde el centro */
+        display: block;
+        float: none;
+        clear: both;
+    }
+
+        /* Ajuste adicional para la fila de Bootstrap dentro del contenedor */
+        .cards-container .row {
+            display: flex;
+            justify-content: center;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+    /* Estilos de las Tarjetas */
+    .menu-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: 15px;
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        background: #fff;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+
+        .menu-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+
+    .card-icon {
+        font-size: 3.5rem;
+        margin-bottom: 20px;
+    }
+
+    .card-info h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .card-info p {
+        color: #777;
+        /*font-size: 0.95rem;
+        max-width: 250px;*/
+        font-size: 1.2rem; /* Antes era 0.95rem - Aumentado para mayor legibilidad */
+        max-width: 300px; /* Aumentamos el ancho máximo para que el texto fluya mejor */
+        margin: 0 auto; /* Centra el bloque de texto si crece mucho */
+    }
+
+    /* Colores de Acento */
+    .card-primary .card-icon {
+        color: #502773;
+    }
+
+    .card-primary:hover {
+        border-bottom: 5px solid #502773;
+    }
+
+    .card-warning .card-icon {
+        color: #e3a53b;
+    }
+
+    .card-warning:hover {
+        border-bottom: 5px solid #e3a53b;
+    }
+
+    /* Nueva clase para Configuración (Azul Acero) */
+    .card-config .card-icon {
+        color: #2980b9;
+    }
+
+    .card-config:hover {
+        border-bottom: 5px solid #2980b9;
+    }
+
+    /* Modernización del Progress Loader */
+    .submit-progress {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(7, 35, 138, 0.95);
+        backdrop-filter: blur(5px);
+        padding: 2rem;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        z-index: 9999;
+    }
+</style>
+
+@if (rolActual == "Administrador")
+{
+    <div class="container main-section">
+        <div class="cards-container w-100">
+            <div class="row justify-content-center">
+                <div class="col-md-5 mb-4">
+                    <a href="~/Home/Visita" class="menu-card card-primary">
+                        <div class="card-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Nueva Receta</h3>
+                            <p>Registrar una nueva receta en el sistema de producción.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-5 mb-4">
+                    <a href="~/Home/MantenimientoVisitas" class="menu-card card-warning">
+                        <div class="card-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Mantenimiento</h3>
+                            <p>Consultar, editar y gestionar el historial de recetas.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-5 mb-4">
+                    <a href="~/Home/MantenimientoRoles" class="menu-card card-config">
+                        <div class="card-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Configuración</h3>
+                            <p>Asignación de roles (V-E-A) y permisos del sistema.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    if (rolActual == "Editor")
+    {
+        <div class="container main-section">
+            <div class="cards-container w-100">
+                <div class="row justify-content-center">
+                    <div class="col-md-5 mb-4">
+                        <a href="~/Home/Visita" class="menu-card card-primary">
+                            <div class="card-icon">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Nueva Receta</h3>
+                                <p>Registrar una nueva receta en el sistema de producción.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-5 mb-4">
+                        <a href="~/Home/MantenimientoVisitas" class="menu-card card-warning">
+                            <div class="card-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Mantenimiento</h3>
+                                <p>Consultar, editar y gestionar el historial de recetas.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container main-section">
+            <div class="cards-container w-100">
+                <div class="row justify-content-center">
+                    <div class="col-md-5 mb-4">
+                        <a href="~/Home/MantenimientoVisitas" class="menu-card card-warning">
+                            <div class="card-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Historico</h3>
+                                <p>Consultar el historial de recetas.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+

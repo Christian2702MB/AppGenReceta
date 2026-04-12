@@ -1,0 +1,524 @@
+@model List<AppGenReceta.BE.VisitaBE>
+@using CaptchaMvc.HtmlHelpers
+@using AppGenReceta.BE;
+@{
+    ViewBag.Title = "Menú Principal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    // Recuperamos el rol de la sesión (asumiendo que por defecto es Visualizador si no hay sesión)
+    string rolActual = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "Visualizador";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* Estilo para los botones de acción en la cabecera */
+    .btn-hialpesa-action {
+        padding: 12px 25px !important; /* Más alto y ancho */
+        font-size: 1.15rem !important; /* Texto más grande */
+        font-weight: 700; /* Texto más grueso */
+        border-radius: 10px; /* Bordes más redondeados */
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+        /* Agranda específicamente el icono dentro de estos botones */
+        .btn-hialpesa-action i {
+            font-size: 1.3rem;
+            margin-right: 10px !important;
+        }
+
+        /* Efecto al pasar el mouse para que se sienta más interactivo */
+        .btn-hialpesa-action:hover {
+            transform: scale(1.05); /* Crece ligeramente al poner el cursor */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .btn-gold {
+        background-color: var(--hialpesa-gold);
+        color: white !important;
+        border: none;
+    }
+
+        .btn-gold:hover {
+            background-color: #e67e22; /* Un tono más oscuro al hover */
+        }
+
+    /* Fin de este dato */
+
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-gold: #f39c12;
+        --bg-light: #f8f9fa;
+    }
+
+    body {
+        background-color: var(--bg-light);
+    }
+
+    /* Encabezado Estilizado */
+    .page-header {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 6px solid var(--hialpesa-blue);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+        .page-header h2 {
+            margin: 0;
+            color: var(--hialpesa-blue);
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+    /* Tabla Profesional */
+    .table-container {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table thead {
+        /* Azul Turquesa Claro como fondo principal */
+        background-color: #f4f8fa !important;
+        /* Linea superior decorativa azul marino para toque corporativo */
+        border-top: 4px solid var(--hialpesa-blue) !important;
+        /* Linea inferior suave */
+        border-bottom: 2px solid #DEE2E6 !important;
+    }
+
+        .table thead th {
+            border: none !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            font-size: 1.2rem !important;
+            letter-spacing: 0.8px;
+            padding: 18px !important;
+            /* Texto en azul marino corporativo */
+            color: var(--hialpesa-blue) !important;
+        }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 45, 114, 0.03);
+        }
+
+    /* Botones Modernos */
+    .btn-custom {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: 0.3s;
+        border: none;
+    }
+
+    .btn-new {
+        background-color: var(--hialpesa-gold);
+        color: white;
+    }
+
+        .btn-new:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+            color: white;
+        }
+
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+    }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            color: white;
+        }
+
+    .btn-edit-sm {
+        background-color: var(--hialpesa-blue);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+
+    /* Botón Editar más moderno */
+    .btn-edit-modern {
+        padding: 8px 18px !important;
+        font-size: 0.9rem !important; /* Texto más pequeño */
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 30px !important; /* Forma de píldora */
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+        .btn-edit-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            background-color: #218838; /* Verde un poco más oscuro */
+        }
+
+        .btn-edit-modern i {
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+
+    .btn-fijo {
+        width: 95px !important; /* Ajusta este número si necesitas más o menos espacio */
+        text-align: left; /* Alinea el texto e ícono de forma uniforme */
+    }
+
+    /* 1. Contenedor que da la altura y activa el scroll */
+    .contenedor-tabla-scroll {
+        max-height: 600px; /* Ajusta esta altura a lo que necesites (ej: 400px, 60vh, etc.) */
+        overflow-y: auto;
+        overflow-x: auto; /* Mantiene el scroll horizontal si la tabla es muy ancha */
+    }
+
+        /* 2. Fijar el encabezado */
+        .contenedor-tabla-scroll thead th {
+            position: sticky;
+            top: 0;
+            /* IMPORTANTE: Removido el gris oscuro. Ahora hereda de .table thead para tener aspecto moderno */
+            background-color: #f4f8fa !important; 
+            color: var(--hialpesa-blue) !important;
+            z-index: 2; /* Asegura que el título quede por encima de los botones y datos al hacer scroll */
+            /* Opcional: Agrega un pequeño borde o sombra debajo del título para separarlo visualmente */
+            box-shadow: inset 0 -1px 0 #dee2e6;
+        }
+</style>
+
+<style>
+    .swal2-footer {
+        text-align: center !important;
+    }
+
+    /* Animaciones y estilos premium para Botones de Acción Superiores */
+    .btn-header-back {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+    
+    .btn-header-back:hover {
+        background-color: #e2e6ea;
+        color: #495057;
+        transform: translateY(-3px); /* Levanta el botón al pasar el mouse */
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08); /* Sombra más pronunciada */
+        text-decoration: none;
+    }
+
+    .btn-header-new {
+        background-color: var(--hialpesa-blue);
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 24px;
+        box-shadow: 0 4px 10px rgba(0, 45, 114, 0.2);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--hialpesa-blue);
+        text-decoration: none;
+    }
+    
+    .btn-header-new:hover, .btn-header-new:focus {
+        background-color: #004085;
+        color: white;
+        transform: translateY(-3px); /* Levanta el botón al pasar el mouse */
+        box-shadow: 0 8px 20px rgba(0, 45, 114, 0.35); /* Glow shadow corporativo */
+        text-decoration: none;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Título y Botones de Acción -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
+        <div style="flex: 1 1 auto; margin-bottom: 15px;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #17a2b8; padding-left: 15px; letter-spacing: -0.5px;">
+                Mantenimiento de Recetas
+            </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Administre, consulte y edite su historial de recetas centralizado.</p>
+        </div>
+        
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+            <a href="/Home/MenuProveedor" class="btn-header-back">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar al Menú
+            </a>
+            
+            @if (rolActual == "Administrador" || rolActual == "Editor")
+            {
+                <a href="@Url.Action("Visita", "Home")" class="btn-header-new">
+                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Nueva Receta
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Panel de Filtros -->
+    <div class="panel panel-default shadow-sm mb-4" style="border: 1px solid #17a2b8; border-left: 6px solid #17a2b8; border-radius: 8px;">
+        <div class="panel-body" style="padding: 15px;">
+            <form method="get" action="@Url.Action("MantenimientoVisitas", "Home")">
+                <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px;">
+                    
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-alt text-info mr-1"></i> Fecha de Inicio</label>
+                        <input type="date" class="form-control" name="start" value="@ViewBag.FechaInicio" required />
+                    </div>
+
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-check text-info mr-1"></i> Fecha de Fin</label>
+                        <input type="date" class="form-control" name="end" value="@ViewBag.FechaFin" required />
+                    </div>
+
+                    <div style="flex: 0 0 auto; min-width: auto; padding-bottom: 2px;">
+                        <button type="submit" class="btn btn-info px-4 mb-0" style="border-radius: 6px;">
+                            <i class="fas fa-search mr-2"></i> Filtrar Recetas
+                        </button>
+                    </div>
+
+                    <div style="flex: 100%; margin-top:-5px;">
+                        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Se muestran los últimos 3 meses por defecto para optimizar la velocidad del sistema.</small>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Campo de Búsqueda Global -->
+    <div style="margin-bottom: 20px; max-width: 450px;">
+        <div class="input-group shadow-sm" style="border-radius: 30px; overflow: hidden; border: 1px solid #dee2e6;">
+            <span class="input-group-addon" style="background: white; border: none; padding-left: 15px; color: #6c757d;">
+                <i class="fas fa-search"></i>
+            </span>
+            <input type="text" id="txtBusquedaGlobal" class="form-control" placeholder="Buscar por Cliente, Estilo, Item..." 
+                   style="border: none; box-shadow: none; font-size: 15px; height: 45px; padding-left: 10px;"
+                   onkeyup="filtrarTablaGlobal()">
+        </div>
+        <small class="text-muted ml-2" style="padding-left: 10px;">
+            <i class="fas fa-lightbulb text-warning mr-1"></i> Filtra resultados instantáneamente en la tabla actual.
+        </small>
+    </div>
+
+    @*<div class="table-container">*@
+    <div class="contenedor-tabla-scroll">
+        <div class="table-responsive">
+            @if (Model.Count == 0)
+            {
+                <div class="alert alert-info border-0 shadow-sm text-center">
+                    <i class="fas fa-info-circle mr-2"></i> No se encontraron recetas para visualizar.
+                </div>
+            }
+            else
+            {
+                @*<table class="table" id="htmltable" width="100%">*@
+                <table class="table table-bordered table-striped" id="tblMantenimiento">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Cliente</th>
+                            <th class="text-center">Temporada</th>
+                            <th class="text-center">Estilo Cliente<br>/Propio</th>
+                            <th class="text-center">Combo</th>
+                            <th class="text-center">Item</th>
+                            @*<th class="text-center">Ubicación</th>*@
+                            <th class="text-center">Fecha<br>Registro</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center font-weight-bold text-primary">@item.Cliente</td>
+                                <td class="text-center">@item.Temporada</td>
+                                <td class="text-center">@item.Estilo<br>@item.EstiloPropio</td>
+                                <td class="text-center">@item.ComboCabecera</td>
+                                <td class="text-center">@item.Item</td>
+                                @*<td class="text-center">@item.Ubicacion</td>*@
+                                @*<td><span class="badge badge-light p-2">@item.Concepto</span></td>
+                                 <td><i class="fas mr-2 text-muted"></i>@item.NP</td>*@
+                                <td class="text-center">@item.FechaRegistro<br>@item.HoraRegistro</td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        @if (rolActual == "Editor")
+                                        {
+                                            <button class="btn btn-success btn-sm" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </button>
+                                        }
+                                        @if (rolActual == "Administrador")
+                                        {
+                                            <div class="mb-2" style="margin-bottom: 5px;">
+                                                <button class="btn btn-success btn-sm btn-fijo" style="margin-right: 4px;" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </button>
+                                                <button class="btn btn-danger btn-sm btn-fijo" onclick="eliminarVisita(@item.hdnIdVisita)">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </button>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-info btn-sm btn-fijo" style="margin-right: 4px;" onclick="btnAuditoria(@item.hdnIdVisita, true)">
+                                                    <i class="fas fa-lock"></i> Cerrar
+                                                </button>
+                                                <button class="btn btn-warning btn-sm btn-fijo" onclick="btnAuditoria(@item.hdnIdVisita, false)">
+                                                    <i class="fas fa-lock-open"></i> Abrir
+                                                </button>
+                                            </div>
+                                        }
+                                        @if (rolActual == "Visualizador")
+                                        {
+                                            <button class="btn btn-success btn-sm" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                                <i class="fas fa-eye"></i> Visualizar
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@*}*@
+
+<div id="loader-container" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h3 style="margin-top: 15px;">Optimizando y cargando la receta...</h3>
+    <p>Tiempo transcurrido: <span id="break-timer">0</span>s</p>
+</div>
+
+@section scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/promise-polyfill9/dist/polyfill.js"></script>
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
+
+    @*<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@9.1.5/dist/sweetalert2.all.min.js"></script>*@
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/Home/Mantenimiento.js")"></script>
+
+    <script>
+        function irAEditarConLoader(id) {
+            // 1. Mostrar el temporizador (Break Time)
+            $("#loader-container").css("display", "flex");
+
+            let segundos = 0;
+            const interval = setInterval(function () {
+                segundos++;
+                $("#break-timer").text(segundos);
+            }, 1000);
+
+            // 2. Pequeña pausa para asegurar que el DOM muestre el loader antes de la carga pesada
+            setTimeout(function () {
+                // Redirige a la página de edición
+                window.location.href = "/Home/VisitaCorregirSCTR/" + id;
+            }, 300);
+        }
+
+        function btnAuditoria(id, cerrar) {
+            const accion = cerrar ? 'Cerrar Registro' : 'Abrir Registro';
+
+            Swal.fire({
+                title: '¿' + accion + '?',
+                text: cerrar ? 'Se deshabilitará la edición. Ingrese el motivo:' : 'Se habilitará la edición. Ingrese el motivo:',
+                icon: 'warning',
+                input: 'textarea', // Añadimos el campo de texto
+                inputPlaceholder: 'Escriba aquí sus comentarios...',
+                inputAttributes: {
+                    'aria-label': 'Escriba su comentario'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Sí, confirmar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return '¡El comentario es obligatorio para continuar!'
+                    }
+                }
+            }).then((result) => {
+                if (result.value) {
+                    const comentarioUsuario = result.value; // Capturamos el texto
+
+                    // Mostramos un loader mientras procesa
+                    Swal.fire({
+                        title: 'Procesando...',
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    $.post("/Home/CambiarEstadoAuditoria", {
+                        id: id,
+                        cerrar: cerrar,
+                        comentario: comentarioUsuario // Enviamos el comentario al controlador
+                    }, function (res) {
+                        if (res.success) {
+                            Swal.fire('¡Procesado!', 'El estado ha sido actualizado.', 'success').then(() => {
+                                location.reload(); // Recargamos para ver cambios
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function filtrarTablaGlobal() {
+            var input = document.getElementById("txtBusquedaGlobal");
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById("tblMantenimiento");
+            var tr = table.getElementsByTagName("tr");
+
+            // Recorrer todas las filas de la tabla (empezando por la 1 para saltar el encabezado)
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var mostrarFila = false;
+
+                // Revisar cada celda de la fila (excepto la de acciones si se desea)
+                for (var j = 0; j < td.length - 1; j++) {
+                    if (td[j]) {
+                        var txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            mostrarFila = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Mostrar u ocultar la fila según el resultado
+                if (mostrarFila) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+    </script>
+}
+
+

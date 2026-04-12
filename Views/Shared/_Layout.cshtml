@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - SENATI</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+</head>
+<body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" style="background-color:#07238a;border-color:#07238a;height:150px;font-family:'Work Sans', sans-serif;">
+        <div class="container Cweb">
+            <div class="navbar-header logo-navbar">
+                <img class="logo-medium" src="~/Content/img/logo.svg" alt="SENATI" style="padding-top:15px;padding-right:15px;height:75px" />
+            </div>
+            <div class="navbar-header titulo-navbar" style="margin-top:-100px;padding-left:282px;" id="cabecera">
+                <div class="navbar-brand a-navbar">
+                    <p style="font-size:14px;margin-bottom:0px;color:white;">
+                        LIBRO DE RECLAMACIONES VIRTUAL
+                    </p>
+                    <p style="font-size:12px;margin:0px;color:white;">
+                        Servicio Nacional de Adiestramiento en Trabajo Industrial
+                    </p>
+                    <p style="font-size:12px;margin:0px;color:white;">
+                        20131376503
+                    </p>
+                    <p style="font-size:12px;margin:0px;color:white;">
+                        Avenida Alfredo Mendiola 3520, Independencia, Lima – Perú.
+                    </p>
+                    <p style="font-size:12px;margin:0px;color:white;">
+                        Conforme a lo establecido en el Código de Protección y Defensa del Comsumidor, se cuenta con un Libro de Reclamaciones Virtual a su disposición
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="container Cmov">
+            <div class="navbar-header">
+                <div class="navbar-brand">
+                    <p style="color:white;">
+                        LIBRO DE RECLAMACIONES VIRTUAL
+                    </p>
+                    <p style="color:white;">
+                        Servicio Nacional de Adiestramiento en Trabajo Industrial
+                    </p>
+                    <p style="color:white;">
+                        20131376503
+                    </p>
+                    <p style="color:white;">
+                        Avenida Alfredo Mendiola 3520, Independencia, Lima – Perú.
+                    </p>
+                    <p style="color:white;">
+                        Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, esta institución cuenta con un Libro de Reclamaciones Virtual a su disposición.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+   
+
+
+    <div class="container" style="margin-top: 100px;">
+        <div class="panel panel-default" style="margin-top: 10px; background-color: #FBFBFB;">
+            @RenderBody()
+        </div>
+    </div>
+
+
+    <script src="~/Scripts/jquery.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

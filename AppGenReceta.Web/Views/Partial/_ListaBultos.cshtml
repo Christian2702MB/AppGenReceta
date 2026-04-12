@@ -1,0 +1,73 @@
+﻿@model  List<AppGenReceta.BE.BultosBE>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 class="page-header" style="margin-top: 0px; margin-bottom: 5px; border-bottom: 1px solid #07238a;">
+            <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Bultos</span>
+        </h2>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="htmltable" data-order='[[ 0, "asc" ]]' width="100%" cellspacing="0">
+                    <thead class="text-center">
+                        <tr class="text-center">
+                            <th class="text-center">Cantidad de Bultos</th>
+                            <th class="text-center">Código de Artículo</th>
+                            <th class="text-center">Largo (cm)</th>
+                            <th class="text-center">Ancho (cm)</th>
+                            <th class="text-center">Altura (cm)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (AppGenReceta.BE.BultosBE item in Model)
+                            {
+                                <tr class="text-center">
+                                    <td>@item.CantBultos</td>
+                                    <td>@item.CodArticulo</td>
+                                    <td>@item.Largo</td>
+                                    <td>@item.Ancho</td>
+                                    <td>@item.Altura</td>
+                                    <td>
+                                        <a id="btnEliminarBultos" data-codigobultos="@item.IDDatosBultos" class="btn btn-danger btn-icon-split" @*href="~/Home/EliminarDatosBultos/@item.IDDatosBultos"*@>
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <span class="text">Eliminar</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 col-sm-3">
+                    @*<div class="form-group" style="text-align: left">
+                        <label for="TotalBultos">
+                            Total Bultos*
+                        </label>
+                        <input name="TotalBultos" type="text" id="TotalBultos" class="form-control text-center" maxlength="10" value="@Model.TotalBultos" disabled />
+                    </div>*@
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                    <div class="form-group" style="text-align: right">
+                        @*<a href="~/Home/DatosBultos" id="btnNuevoBulto" class="btn btn-success"><i class="fa fa-check"></i>Ingresar Bulto</a>*@
+                        <a class="btn btn-primary btn-icon-split" id="btnNuevoModal" data-toggle="modal" data-target="#buscarOTModal">Agregar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="text-align: center">
+            <a id="btnActualizarOC" class="btn btn-info"><i class="fa fa-check"></i>Actualizar</a>
+            <a id="btnRegresar" class="btn btn-default"><i class="fa fa-arrow-left"></i>Volver</a>
+        </div>
+    </div>
+</div>

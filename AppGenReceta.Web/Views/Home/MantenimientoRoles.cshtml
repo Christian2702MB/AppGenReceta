@@ -1,0 +1,148 @@
+﻿@{
+    ViewBag.Title = "Configuración de Perfiles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Estilo para la cabecera de la tabla de configuración */
+    .bg-configuracion {
+        background-color: #2980b9 !important; /* Azul Acero */
+        color: white !important;
+    }
+
+        .bg-configuracion th {
+            border-bottom: 2px solid #1f6391 !important; /* Un tono más oscuro para el borde */
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    /* Opcional: Centrar el contenido de la tabla para que se vea más ordenado */
+    #tblUsuarios td {
+        vertical-align: middle;
+        text-align: center;
+    }
+</style>
+
+<div style="margin-top: 20px; margin-bottom: 15px;">
+    <button type="button" id="btnRegresar" class="btn btn-default">
+        <i class="fas fa-arrow-left"></i> Regresar
+    </button>
+</div>
+
+<div class="panel panel-default shadow-sm" style="border-radius: 8px; overflow: hidden; margin-top: 20px;">
+    <div class="panel-heading bg-configuracion">
+        <h3 class="panel-title" style="margin: 0; font-size: 16px;">
+            <i class="fas fa-users-cog"></i> Gestión de Accesos y Perfiles
+        </h3>
+    </div>
+    <div class="panel-body">
+        <table class="table table-bordered table-striped table-hover" id="tblUsuarios">
+            <thead class="bg-configuracion">
+                <tr>
+                    <th width="10%">ID</th>
+                    <th width="40%">Usuario</th>
+                    <th width="30%">Rol Actual</th>
+                    <th width="20%">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    @*<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@9.1.5/dist/sweetalert2.all.min.js"></script>*@
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 1. Variable para rastrear si hay cambios sin guardar
+        var huboCambios = false;
+
+        $(document).ready(function () {
+            cargarUsuarios();
+        });
+
+        function cargarUsuarios() {
+            $.get("/Home/ListarUsuariosRoles", function (res) {
+                $("#tblUsuarios tbody").empty();
+
+                var lista = res.data ? res.data : res;
+
+                lista.forEach(item => {
+                    var id = item.IDUsuario !== undefined ? item.IDUsuario : item.IDUsuario;
+                    var nombre = item.NombreUsuario !== undefined ? item.NombreUsuario : item.nombreUsuario;
+                    var rol = item.IdRol !== undefined ? item.IdRol : item.idRol;
+
+                    $("#tblUsuarios tbody").append(`
+                                <tr>
+                                    <td>${id}</td>
+                                    <td>${nombre}</td>
+                                    <td>
+                                        <select class="form-control cbxRol" data-id="${id}">
+                                            <option value="1" ${rol == 1 ? 'selected' : ''}>Visualizador</option>
+                                            <option value="2" ${rol == 2 ? 'selected' : ''}>Editor</option>
+                                            <option value="3" ${rol == 3 ? 'selected' : ''}>Administrador</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm btnGuardarRol" data-id="${id}">Guardar</button>
+                                    </td>
+                                </tr>
+                            `);
+                });
+            });
+        }
+
+        // 2. Detectamos si el usuario cambia el valor de algún combo
+        $(document).on('change', '.cbxRol', function () {
+            huboCambios = true;
+        });
+
+        $(document).on('click', '.btnGuardarRol', function () {
+            var idUsuario = $(this).attr('data-id');
+            var idRol = $(this).closest('tr').find('.cbxRol').val();
+
+            Swal.fire({
+                title: 'Actualizando...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.post("/Home/ActualizarRol", { idUsuario: idUsuario, idRol: idRol }, function (res) {
+                if (res.success) {
+                    // 3. Si se guardó correctamente, reseteamos la variable
+                    huboCambios = false;
+                    Swal.fire('Éxito', res.message, 'success');
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            }).fail(function () {
+                Swal.fire('Error', 'Ocurrió un problema de conexión con el servidor.', 'error');
+            });
+        });
+
+        // 4. Evento del botón Regresar
+        $('#btnRegresar').on('click', function () {
+            if (huboCambios) {
+                // Si hay cambios, preguntamos primero
+                Swal.fire({
+                    title: '¿Tienes cambios sin guardar!',
+                    text: "Si regresas ahora, los roles modificados no se guardarán. ¿Deseas salir de todas formas?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, salir sin guardar',
+                    cancelButtonText: 'No, me quedo'
+                }).then((result) => {
+                    if (result.value) { // result.isConfirmed en versiones más nuevas de Swal
+                        window.location.href = '/Home/MenuProveedor';
+                    }
+                });
+            } else {
+                // Si no hay cambios, regresa directamente
+                window.location.href = '/Home/MenuProveedor';
+            }
+        });
+    </script>
+}
