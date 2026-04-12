@@ -14,9 +14,9 @@ namespace AppGenReceta.DA
         private String ConnectionString = ConfigurationManager.ConnectionStrings["AppGenReceta_SQL"].ConnectionString;
         private String ConnectionStringPrueba = ConfigurationManager.ConnectionStrings["AppGenReceta_SQL_Prueba"].ConnectionString;
 
-        public ProveedorBE ValidarUsuario(UsuarioBE libro)
+        public UsuarioBE ValidarUsuario(UsuarioBE libro)
         {
-            ProveedorBE item;
+            UsuarioBE item;
             try
             {
                 using (SqlConnection cnx = new SqlConnection(ConnectionString))
@@ -33,11 +33,11 @@ namespace AppGenReceta.DA
                     item = null;
                     while (dr.Read())
                     {
-                        item = new ProveedorBE();
-                        if (!dr.IsDBNull(dr.GetOrdinal("IDUsuario")))
-                        {
-                            item.IDProveedor = dr.GetInt32(dr.GetOrdinal("IDUsuario"));
-                        }
+                        item = new UsuarioBE();
+                        //if (!dr.IsDBNull(dr.GetOrdinal("IDUsuario")))
+                        //{
+                        //    item.IDProveedor = dr.GetInt32(dr.GetOrdinal("IDUsuario"));
+                        //}
                         if (!dr.IsDBNull(dr.GetOrdinal("Nombres")))
                         {
                             item.Nombres = dr.GetString(dr.GetOrdinal("Nombres"));
@@ -58,10 +58,10 @@ namespace AppGenReceta.DA
                         {
                             item.Correo = dr.GetString(dr.GetOrdinal("Correo"));
                         }
-                        if (!dr.IsDBNull(dr.GetOrdinal("Cliente")))
-                        {
-                            item.Cliente = dr.GetString(dr.GetOrdinal("Cliente"));
-                        }
+                        //if (!dr.IsDBNull(dr.GetOrdinal("Cliente")))
+                        //{
+                        //    item.Cliente = dr.GetString(dr.GetOrdinal("Cliente"));
+                        //}
                         if (!dr.IsDBNull(dr.GetOrdinal("NombreRol")))
                         {
                             item.NombreRol = dr.GetString(dr.GetOrdinal("NombreRol"));
@@ -79,7 +79,7 @@ namespace AppGenReceta.DA
 
         public String ConcatenarCorreos(String area)
         {
-            ProveedorBE item;
+            UsuarioBE item;
             String cadena = "";
             String Resultado;
             try
@@ -95,7 +95,7 @@ namespace AppGenReceta.DA
                     item = null;
                     while (dr.Read())
                     {
-                        item = new ProveedorBE();
+                        item = new UsuarioBE();
                         if (!dr.IsDBNull(dr.GetOrdinal("Correo")))
                         {
                             item.Correo = dr.GetString(dr.GetOrdinal("Correo"));
@@ -119,16 +119,6 @@ namespace AppGenReceta.DA
             }
             return Resultado;
         }
-
-        #region SharePointCamlQuery
-
-        public string EncriptarBase64(string cadenaEncriptar)
-        {
-            var cadenaEncriptarBytes = System.Text.Encoding.
-                UTF8.GetBytes(cadenaEncriptar);
-            return System.Convert.ToBase64String(cadenaEncriptarBytes);
-        }
-
-        #endregion
+            
     }
 }

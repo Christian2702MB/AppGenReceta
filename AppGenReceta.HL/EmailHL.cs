@@ -785,7 +785,7 @@ namespace AppGenReceta.HL
                                                   | SecurityProtocolType.Tls12;
             }
 
-            Boolean result = false;
+            Boolean result;
             try
             {
                 DateTime now = DateTime.UtcNow;

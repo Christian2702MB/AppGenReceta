@@ -7,7 +7,7 @@ namespace AppGenReceta.BL
 {
     public class UsuarioBL
     {
-        public ProveedorBE ValidarUsuario(UsuarioBE user)
+        public UsuarioBE ValidarUsuario(UsuarioBE user)
         {
             UsuarioDA usuarioDA = new UsuarioDA();
             try

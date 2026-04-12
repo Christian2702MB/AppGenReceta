@@ -7,7 +7,6 @@ namespace AppGenReceta.BE
     public class VisitaBE
     {
         public String Cod_EstPro { get; set; }
-        
         public String Motivo { get; set; }
         public String TimeProceso { get; set; }
         public String IDCliente { get; set; }
@@ -17,23 +16,16 @@ namespace AppGenReceta.BE
         public String TemporadaNew { get; set; }
         public String Prenda { get; set; }
         public String CuerpoCorreo { get; set; }
-
-
         //Seccion Generales para Insertar
         public String ObservacionInsertarGeneral { get; set; }
         public String UsuarioInsertarGeneral { get; set; }
         [XmlIgnore]
         public Int32 IDDetalle { get; set; }
-
-
         //Seccion de nombre archivos
         public String rutaDescarga { get; set; }
         //seccion extensiones
         public String Extension { get; set; }
-
-        //seccion formato
         public String Formato { get; set; }
-
         public String Tipo { get; set; }
         public String Responsable { get; set; }
         public String DifOP { get; set; }
@@ -49,32 +41,14 @@ namespace AppGenReceta.BE
         [XmlIgnore]
         public Int32 IDDatosCompra { get; set; }
         public String Colaborador { get; set; }
-        //public String CodigoVisita { get; set; }
-        //public String Proveedor { get; set; }
-        //public String RUC { get; set; }
-        //public String RazonSocial { get; set; }
-        //public String Hub { get; set; }
-        //public String TipoEntrega { get; set; }
-        //public String OperadorLog { get; set; }
-        //public String PlacaVehiculo { get; set; }
         public String Fecha { get; set; }
-        //public String HoraInicio { get; set; }
-        //public String HoraFin { get; set; }
-        //public String Duracion { get; set; }
         public String Estado { get; set; }
-        //[XmlIgnore]
-        //public Int32 intEstado { get; set; }
-       
-
         //ingreso y salida de vigilancia
         [XmlIgnore]
         public DateTime FechaIngresoSeguridad { get; set; }
         [XmlIgnore]
         public DateTime FechaSalidaSeguridad { get; set; }
         public String DiaSemana { get; set; }
-
-        //public HttpPostedFileBase mySCTR { get; set; }
-        public List<ClienteBE> Clientes { get; set; }
 
         //Ejecutor indica quien realiza la acción
         public String Ejecutor { get; set; }
@@ -95,7 +69,7 @@ namespace AppGenReceta.BE
        
         public string ComboCabecera { get; set; }
         public string PrendasReq { get; set; }
-                public string Ubicacion { get; set; }
+        public string Ubicacion { get; set; }
 
         public string Arte { get; set; }
         public Int32 hdnIdVisita { get; set; }

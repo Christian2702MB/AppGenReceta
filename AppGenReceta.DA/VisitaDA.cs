@@ -369,7 +369,7 @@ namespace AppGenReceta.DA
 
         public bool ActualizarRecetaCompleta(VisitaBE entidad)
         {
-            bool rpta = false;
+            bool rpta;
             try
             {
                 // 1. Serializar el objeto VisitaBE a XML

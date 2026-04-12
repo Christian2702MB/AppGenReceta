@@ -56,7 +56,7 @@ namespace AppGenReceta.Web.Controllers
         [HttpPost]
         public ActionResult Ingresar(UsuarioBE usuario)
         {
-            Object result = null;
+            Object result;
             try
             {
                 VisitaBE item = new VisitaBE();
@@ -73,7 +73,7 @@ namespace AppGenReceta.Web.Controllers
                     return Json(result);
                 }
                 UsuarioBL usuarioBL = new UsuarioBL();
-                ProveedorBE usuarioLogueado = usuarioBL.ValidarUsuario(usuario);
+                UsuarioBE usuarioLogueado = usuarioBL.ValidarUsuario(usuario);
 
                 if (usuarioLogueado != null)
                 {
@@ -83,7 +83,7 @@ namespace AppGenReceta.Web.Controllers
                         Session["NombreUsuario"] = usuarioLogueado.Nombres + " " + usuarioLogueado.ApellidoPaterno + " " + usuarioLogueado.ApellidoMaterno;
                         Session["CorreoUsuario"] = usuarioLogueado.Correo;
                         Session["Documento"] = usuarioLogueado.Documento;
-                        Session["Cliente"] = usuarioLogueado.Cliente;
+                        //Session["Cliente"] = usuarioLogueado.Cliente;
 
                         //Session["UsuariosComercial"] = usuarioBL.ConcatenarCorreos("Comercial");
                         //Session["UsuariosUDP"] = usuarioBL.ConcatenarCorreos("UDP");
@@ -344,10 +344,10 @@ namespace AppGenReceta.Web.Controllers
 
         [HttpGet]
         [NoCache]
-        public ActionResult MenuProveedor(String id, String pIDCliHijo, String pBusqueda) //
+        public ActionResult MenuProveedor() //
         {
             List<VisitaBE> lstVisitas = new List<VisitaBE>();
-            Object result = null;
+            Object result;
 
             try
             {
