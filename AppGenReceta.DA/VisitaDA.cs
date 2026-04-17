@@ -126,7 +126,7 @@ namespace AppGenReceta.DA
             int intFormato = 0;
             int cantdigitos = 0;
             int i = 0;
-            string letra = "";
+            string letra;
             cantdigitos = pFecha.Length;
             while (i <= cantdigitos)
             {
@@ -329,12 +329,17 @@ namespace AppGenReceta.DA
             return lista;
         }
 
-        public List<string> ListarTecnicas()
+        public List<string> ListarTecnicas(string cliente, string temporada, string estilo, string item)
         {
             List<string> lista = new List<string>();
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
                 SqlCommand cmd = new SqlCommand("SP_LISTAR_TECNICAS", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Cliente", cliente);
+                cmd.Parameters.AddWithValue("@Temporada", temporada);
+                cmd.Parameters.AddWithValue("@Estilo", estilo);
+                cmd.Parameters.AddWithValue("@Item", item);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
@@ -802,7 +807,7 @@ namespace AppGenReceta.DA
 
         // Método para listar Items
         //Listar Items
-        public List<ItemBE> ListarItems(string cliente, string temporada)
+        public List<ItemBE> ListarItems(string cliente, string temporada, string estiloPropio)
         {
             List<ItemBE> lstItems = new List<ItemBE>();
             try
@@ -814,6 +819,7 @@ namespace AppGenReceta.DA
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Cliente", cliente ?? "");
                     cmd.Parameters.AddWithValue("@Temporada", temporada ?? "");
+                    cmd.Parameters.AddWithValue("@EstiloPropio", estiloPropio ?? "");
 
                     cnx.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -877,25 +883,25 @@ namespace AppGenReceta.DA
         }
 
         // 2. Listar Estilos filtrados por Cliente y Temporada
-        public List<string> ListarEstilosPorClienteTemporada(string cliente, string temporada)
-        {
-            List<string> lstEstilos = new List<string>();
-            using (SqlConnection cnx = new SqlConnection(ConnectionString))
-            {
-                SqlCommand cmd = new SqlCommand("dbo.SP_ListarEstilosPorClienteTemporada", cnx);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@Cliente", string.IsNullOrEmpty(cliente) ? "" : cliente);
-                cmd.Parameters.AddWithValue("@Temporada", string.IsNullOrEmpty(temporada) ? "" : temporada);
-                cnx.Open();
-                IDataReader dr = cmd.ExecuteReader();
-                while (dr.Read())
-                {
-                    if (!dr.IsDBNull(0)) lstEstilos.Add(dr.GetString(0));
-                }
-                cnx.Close();
-            }
-            return lstEstilos;
-        }
+        //public List<string> ListarEstilosPorClienteTemporada(string cliente, string temporada)
+        //{
+        //    List<string> lstEstilos = new List<string>();
+        //    using (SqlConnection cnx = new SqlConnection(ConnectionString))
+        //    {
+        //        SqlCommand cmd = new SqlCommand("dbo.SP_ListarEstilosPorClienteTemporada", cnx);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@Cliente", string.IsNullOrEmpty(cliente) ? "" : cliente);
+        //        cmd.Parameters.AddWithValue("@Temporada", string.IsNullOrEmpty(temporada) ? "" : temporada);
+        //        cnx.Open();
+        //        IDataReader dr = cmd.ExecuteReader();
+        //        while (dr.Read())
+        //        {
+        //            if (!dr.IsDBNull(0)) lstEstilos.Add(dr.GetString(0));
+        //        }
+        //        cnx.Close();
+        //    }
+        //    return lstEstilos;
+        //}
 
         // 3. Listar Items filtrados por Cliente y Temporada
         public List<string> ListarItemsPorClienteTemporada(string cliente, string temporada)

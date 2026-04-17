@@ -116,12 +116,12 @@ namespace AppGenReceta.BL
             }
         }
 
-        public List<string> ListarTecnicas()
+        public List<string> ListarTecnicas(string cliente, string temporada, string estilo, string item)
         {
             VisitaDA visitaDA = new VisitaDA();
             try
             {
-                return visitaDA.ListarTecnicas();
+                return visitaDA.ListarTecnicas(cliente, temporada, estilo, item);
             }
             catch (Exception ex)
             {
@@ -163,17 +163,17 @@ namespace AppGenReceta.BL
             return new VisitaDA().ListarCombosPorEstilo(cliente, temporada, estilo);
         }
 
-        public List<string> ListarEstilosPorClienteTemporada(string cliente, string temporada)
-        {
-            return new VisitaDA().ListarEstilosPorClienteTemporada(cliente, temporada);
-        }
+        //public List<string> ListarEstilosPorClienteTemporada(string cliente, string temporada)
+        //{
+        //    return new VisitaDA().ListarEstilosPorClienteTemporada(cliente, temporada);
+        //}
 
         // Inicio 27/03/23
-        public List<ItemBE> ListarItems(string cliente, string temporada)
+        public List<ItemBE> ListarItems(string cliente, string temporada, string estiloPropio)
         {
             try
             {
-                return new VisitaDA().ListarItems(cliente, temporada);
+                return new VisitaDA().ListarItems(cliente, temporada, estiloPropio);
             }
             catch (Exception ex)
             {

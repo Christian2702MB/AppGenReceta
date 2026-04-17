@@ -28,16 +28,6 @@ $(document).ready(function () {
         $("#txtCliente, #txtTemporada").prop("disabled", true);
     }
 
-    //if (modoQuery === 'INVERSO') {
-    //    $("#rdoModoInverso").prop("checked", true);
-    //    $("#lblInfoModoRegistro").html('(Busque directamente un Estilo [mín. 4 letras], todo se auto-rellenará)');
-    //    $("#txtCliente, #txtTemporada").prop("disabled", true);
-    //} else {
-    //    $("#rdoModoNormal").prop("checked", true);
-    //    $("#lblInfoModoRegistro").html('(Seleccione Cliente &rarr; Temporada &rarr; Estilo)');
-    //    $("#txtCliente, #txtTemporada").prop("disabled", false);
-    //}
-
     // 1. CUANDO CAMBIA EL CLIENTE
     $("#txtCliente").on("change", function () {
         var clienteSeleccionado = $(this).val();
@@ -66,11 +56,12 @@ $(document).ready(function () {
         //$("#txtConcepto").empty().append('<option value="">Seleccione un Concepto</option>');
         $("#txtUbicacion").empty().append('<option value="">Seleccione un Ubicacion</option>');
         $("#txtCombo").empty().append('<option value="">Seleccione un Combo</option>'); // NUEVO
+        $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
 
         if (clienteSeleccionado && temporadaSeleccionada) {
             //se cambiara 27/03/2026
             //cargarFiltrosEstiloItem(clienteSeleccionado, temporadaSeleccionada);
-            cargarItems(clienteSeleccionado, temporadaSeleccionada);
+            //cargarItems(clienteSeleccionado, temporadaSeleccionada);
             cargarEstilos(clienteSeleccionado, temporadaSeleccionada);
         }
     });
@@ -97,6 +88,7 @@ $(document).ready(function () {
                 //limpiar 27/03/26
                 $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicación</option>');
                 $("#txtCombo").empty().append('<option value="">Seleccione un Combo</option>');
+                $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
             }
         }
         // ¡IMPORTANTE! Aquí debe ir el código que ya tenías para cargar
@@ -135,6 +127,7 @@ $(document).ready(function () {
                 //limpiar 27/03/26
                 $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicación</option>');
                 $("#txtCombo").empty().append('<option value="">Seleccione un Combo</option>');
+                $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
             }
         }
         // ¡IMPORTANTE! Aquí debe ir el código que ya tenías para cargar
@@ -145,13 +138,6 @@ $(document).ready(function () {
         } else {
             //autocompletarCabeceraDesdeEstilo($(this).val(), true);
         }
-    });
-
-    // Inicializar Select2 para habilitar la caja de búsqueda en el desplegable
-    $('#txtDescInsumo').select2({
-        placeholder: "Escriba para buscar o filtrar un insumo...",
-        allowClear: true,
-        width: '100%' // Es importante para que se adapte correctamente al div/columna de Bootstrap
     });
 
 
@@ -257,7 +243,12 @@ $(document).ready(function () {
 
     }
 
-
+    // Inicializar Select2 para habilitar la caja de búsqueda en el desplegable
+    $('#txtDescInsumo').select2({
+        placeholder: "Escriba para buscar o filtrar un insumo...",
+        allowClear: true,
+        width: '100%' // Es importante para que se adapte correctamente al div/columna de Bootstrap
+    });
 
 });
 
@@ -354,7 +345,7 @@ function autocompletarCabeceraDesdeEstilo(estiloBuscado, esPropio) {
                 //Disparar carga de sub-combos ahora que Cliente y Temporada existen   
                 var temporadaSeleccionada = $("#txtTemporada").val().substring(0, 3);
                 if (temporadaSeleccionada != "") {
-                    cargarItems(data.Cliente, temporadaSeleccionada);
+                    //cargarItems(data.Cliente, temporadaSeleccionada, data.EstiloPropio);
                     rellenarCombos();
                 }
 
@@ -380,10 +371,13 @@ function rellenarCombos() {
     $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicación</option>');
     $("#txtCombo").empty().append('<option value="">Seleccione un Combo</option>'); // NUEVO
 
+    cargarItems(cliente, temporada, estiloProp);
+
     if (cliente && temporada && estilo) {
         if (item) {
             //cargarConceptos(cliente, temporada, estilo, item);
-            cargarUbicacion(cliente, temporada, estilo, item);
+            cargarUbicacion(cliente, temporada, estiloProp, item);
+            cargarTecnica(cliente, temporada, estiloProp, item);
         }
         // NUEVO: Cargar combos basados en el estilo seleccionado
         cargarCombos(cliente, temporada, estiloProp);
@@ -392,12 +386,12 @@ function rellenarCombos() {
 
 
 // Carga de Items
-function cargarItems(cliente, temporada) {
+function cargarItems(cliente, temporada, estiloPropio) {
     $("#txtItem").empty().append('<option value="">Seleccione un Item</option>');
     $.ajax({
         url: "/Home/ListarItems", // Asegúrate que esta ruta exista en tu HomeController
         type: "GET",
-        data: { cliente: cliente, temporada: temporada },
+        data: { cliente: cliente, temporada: temporada, estiloPropio: estiloPropio },
         success: function (data) {
             if (data && data.length > 0) {
                 $.each(data, function (i, item) {
@@ -495,11 +489,14 @@ $("#txtItem").on("change", function () {
     var cliente = $("#txtCliente").val();
     var temporada = $("#txtTemporada").val().substring(0, 3);
     var estilo = $("#txtEstilo").val();
+    var estiloPropio = $("#txtEstiloPropio").val();
     var item = $(this).val();
     $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicacion</option>');
-    if (cliente && temporada && estilo && item) {
+    $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
+    if (cliente && temporada && estiloPropio && item) {
         //cargarConceptos(cliente, temporada, estilo, item);
-        cargarUbicacion(cliente, temporada, estilo, item);
+        cargarTecnica(cliente, temporada, estiloPropio, item);
+        cargarUbicacion(cliente, temporada, estiloPropio, item);
     }
 });
 
@@ -544,6 +541,27 @@ function cargarCombos(cliente, temporada, estilo) {
 //Fin 17/03/2026
 
 //Inicio 30/03/2026
+function cargarTecnica(cliente, temporada, estilo, item) {
+    $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
+    $.ajax({
+        url: "/Home/ListarTecnicas", // Asegúrate que la ruta coincida con tu RouteConfig
+        type: "GET",
+        data: { cliente: cliente, temporada: temporada, estilo: estilo, item: item },
+        success: function (data) {
+            if (data && data.length > 0) {
+                $.each(data, function (i, NombreTecnica) {
+                    $("#txtTecnica").append($('<option>', {
+                        value: NombreTecnica,
+                        text: NombreTecnica
+                    }));
+                });
+            }
+        }
+    });
+}
+//Fin 30/03/2026
+
+//Inicio 30/03/2026
 function cargarUbicacion(cliente, temporada, estilo, item) {
     $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicación</option>');
     $.ajax({
@@ -586,63 +604,63 @@ function cargarTemporadas(cliente) {
     });
 }
 
-function cargarFiltrosEstiloItem(cliente, temporada) {
-    $.ajax({
-        url: '/Home/ListarFiltrosPorClienteTemporada', // El método que creamos en la solución anterior
-        type: 'POST',
-        data: { cliente: cliente, temporada: temporada },
-        success: function (response) {
-            if (response.success) {
-                var ddlEstilo = $("#txtEstilo");
-                var ddlItem = $("#txtItem");
+//function cargarFiltrosEstiloItem(cliente, temporada) {
+//    $.ajax({
+//        url: '/Home/ListarFiltrosPorClienteTemporada', // El método que creamos en la solución anterior
+//        type: 'POST',
+//        data: { cliente: cliente, temporada: temporada },
+//        success: function (response) {
+//            if (response.success) {
+//                var ddlEstilo = $("#txtEstilo");
+//                var ddlItem = $("#txtItem");
 
-                $.each(response.estilos, function (i, estiloPropio) {
-                    ddlEstilo.append($('<option></option>').val(estiloPropio).html(estiloPropio));
-                });
+//                $.each(response.estilos, function (i, estiloPropio) {
+//                    ddlEstilo.append($('<option></option>').val(estiloPropio).html(estiloPropio));
+//                });
 
-                $.each(response.estilos, function (i, estilo) {
-                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
-                });
+//                $.each(response.estilos, function (i, estilo) {
+//                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
+//                });
 
-                $.each(response.items, function (i, item) {
-                    ddlItem.append($('<option></option>').val(item).html(item));
-                });
-            } else {
-                console.error("Error al cargar Estilos/Items: " + response.message);
-            }
-        },
-        error: function (error) {
-            console.log("Error en AJAX (Estilos/Items)", error);
-        }
-    });
-}
+//                $.each(response.items, function (i, item) {
+//                    ddlItem.append($('<option></option>').val(item).html(item));
+//                });
+//            } else {
+//                console.error("Error al cargar Estilos/Items: " + response.message);
+//            }
+//        },
+//        error: function (error) {
+//            console.log("Error en AJAX (Estilos/Items)", error);
+//        }
+//    });
+//}
 
-function cargarFiltros(cliente, temporada) {
-    $.ajax({
-        url: '/Home/ListarFiltrosPorClienteTemporada',
-        type: 'POST',
-        data: { cliente: cliente, temporada: temporada },
-        success: function (response) {
-            if (response.success) {
-                // Llenar Estilos
-                var ddlEstilo = $("#txtEstilo");
-                ddlEstilo.empty().append('<option value="">Seleccione un estilo</option>');
-                $.each(response.estilos, function (i, estilo) {
-                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
-                });
+//function cargarFiltros(cliente, temporada) {
+//    $.ajax({
+//        url: '/Home/ListarFiltrosPorClienteTemporada',
+//        type: 'POST',
+//        data: { cliente: cliente, temporada: temporada },
+//        success: function (response) {
+//            if (response.success) {
+//                // Llenar Estilos
+//                var ddlEstilo = $("#txtEstilo");
+//                ddlEstilo.empty().append('<option value="">Seleccione un estilo</option>');
+//                $.each(response.estilos, function (i, estilo) {
+//                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
+//                });
 
-                // Llenar Items
-                var ddlItem = $("#txtItem");
-                ddlItem.empty().append('<option value="">Seleccione un Item</option>');
-                $.each(response.items, function (i, item) {
-                    ddlItem.append($('<option></option>').val(item).html(item));
-                });
-            } else {
-                console.error("Error: " + response.message);
-            }
-        }
-    });
-}
+//                // Llenar Items
+//                var ddlItem = $("#txtItem");
+//                ddlItem.empty().append('<option value="">Seleccione un Item</option>');
+//                $.each(response.items, function (i, item) {
+//                    ddlItem.append($('<option></option>').val(item).html(item));
+//                });
+//            } else {
+//                console.error("Error: " + response.message);
+//            }
+//        }
+//    });
+//}
 
 function guardarRecetaCompleta() {
     // Llenamos la cabecera del objeto recetaMaster

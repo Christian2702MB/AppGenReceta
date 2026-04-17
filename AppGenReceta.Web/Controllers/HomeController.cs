@@ -119,7 +119,7 @@ namespace AppGenReceta.Web.Controllers
         public ActionResult MantenimientoVisitas(string start = null, string end = null)
         {
             VisitaBL visitaBL = new VisitaBL();
-            List<VisitaBE> lstVisitas = new List<VisitaBE>();
+            List<VisitaBE> lstVisitas;
             try
             {
                 if (Session["Usuario"] != null)
@@ -242,9 +242,9 @@ namespace AppGenReceta.Web.Controllers
                     //lstDatosNPS = visitaBL.ListarDatosPorCadaNP();
                     //Session["DatosNPS"] = lstDatosNPS;
 
-                    ViewBag.Tecnicas = visitaBL.ListarTecnicas();
+                    //ViewBag.Tecnicas = visitaBL.ListarTecnicas();
                     ViewBag.Cliente = visitaBL.ListarCliente();
-                    ViewBag.Conceptos = visitaBL.ListarConceptos();
+                    //ViewBag.Conceptos = visitaBL.ListarConceptos();
 
                     ////Datos
                     //lstEstilo = visitaBL.ListarEstilo();
@@ -392,6 +392,22 @@ namespace AppGenReceta.Web.Controllers
         // HomeController.cs 30/03/2026
         [HttpGet]
         [OutputCache(Duration = 60, VaryByParam = "cliente;temporada;estilo;item")]
+        public JsonResult ListarTecnicas(string cliente, string temporada, string estilo, string item)
+        {
+            try
+            {
+                var lista = new VisitaBL().ListarTecnicas(cliente, temporada, estilo, item);
+                return Json(lista, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<string>(), JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // HomeController.cs 30/03/2026
+        [HttpGet]
+        [OutputCache(Duration = 60, VaryByParam = "cliente;temporada;estilo;item")]
         public JsonResult ListarUbicacionPendientes(string cliente, string temporada, string estilo, string item)
         {
             try
@@ -405,16 +421,15 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
-
         //Inicio 27/03/26
         [HttpGet]
-        [OutputCache(Duration = 300, VaryByParam = "cliente;temporada")]
-        public JsonResult ListarItems(string cliente, string temporada)
+        [OutputCache(Duration = 300, VaryByParam = "cliente;temporada;estiloPropio")]
+        public JsonResult ListarItems(string cliente, string temporada, string estiloPropio)
         {
             try
             {
                 VisitaBL visitaBL = new VisitaBL();
-                List<ItemBE> lstItems = visitaBL.ListarItems(cliente, temporada);
+                List<ItemBE> lstItems = visitaBL.ListarItems(cliente, temporada, estiloPropio);
                 return Json(lstItems, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -521,36 +536,34 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
-        //[HttpGet]
-        [HttpPost]
-        public JsonResult ListarFiltrosPorClienteTemporada(string cliente, string temporada)
-        {
-            try
-            {
-                VisitaBL visitaBL = new VisitaBL();
-                var estilos = visitaBL.ListarEstilosPorClienteTemporada(cliente, temporada);
-                //var estilosPropios = visitaBL.ListarEstilosPorClienteTemporada(cliente, temporada);
-                var items = visitaBL.ListarItemsPorClienteTemporada(cliente, temporada);
+        ////[HttpGet]
+        //[HttpPost]
+        //public JsonResult ListarFiltrosPorClienteTemporada(string cliente, string temporada)
+        //{
+        //    try
+        //    {
+        //        VisitaBL visitaBL = new VisitaBL();
+        //        var estilos = visitaBL.ListarEstilosPorClienteTemporada(cliente, temporada);
+        //        //var estilosPropios = visitaBL.ListarEstilosPorClienteTemporada(cliente, temporada);
+        //        var items = visitaBL.ListarItemsPorClienteTemporada(cliente, temporada);
 
-                return Json(new { success = true, estilos = estilos, items = items });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
+        //        return Json(new { success = true, estilos = estilos, items = items });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = ex.Message });
+        //    }
+        //}
 
         [NoCache]
         public ActionResult VisitaCorregirSCTR(String id, bool preadonly = false)
         {
             VisitaBL visitaBL = new VisitaBL();
             VisitaBE item = new VisitaBE();
-            //ViewBag.ListarInsumos = new SelectList(visitaBL.ListarInsumos(), "CodigoInsumo", "CodigoInsumo");
-            List<string> listaTecnicas = visitaBL.ListarTecnicas();
-            ViewBag.Tecnicas = listaTecnicas;
-            ViewBag.Conceptos = visitaBL.ListarConceptos();
-            List<NPBE> lstNPS = new List<NPBE>();
-            List<NPBE> lstDatosNPS = new List<NPBE>();
+            //ViewBag.ListarInsumos = new SelectList(visitaBL.ListarInsumos(), "CodigoInsumo", "CodigoInsumo");            
+            //List<NPBE> lstNPS = new List<NPBE>();
+            //List<NPBE> lstDatosNPS = new List<NPBE>();
+            DateTime dt;
             try
             {
                 if (Session["Usuario"] != null)
@@ -566,6 +579,11 @@ namespace AppGenReceta.Web.Controllers
                         // Buscamos la información real de la receta usando el ID
                         item = visitaBL.ObtenerRecetaPorId(Convert.ToInt32(id));
                         //Guardar informacion
+                        //List<string> listaTecnicas = visitaBL.ListarTecnicas(item.Cliente, item.Temporada, item.EstiloPropio, item.Item);
+                        //ViewBag.Tecnicas = listaTecnicas;
+                        ViewBag.Conceptos = visitaBL.ListarConceptos();
+                        //ViewBag.Conceptos = visitaBL.ListarConceptos(item.Cliente, item.Temporada, item.EstiloPropio, item.Item);
+
                         // Pasamos el ID a la vista mediante un ViewBag para el campo hidden
                         ViewBag.IdEditar = id;
                         // Si viene de "Cerrar" o si la visita ya tiene datos de cierre en BD
@@ -573,8 +591,7 @@ namespace AppGenReceta.Web.Controllers
 
                         // Si la fecha viene como 05/03/2026, la pasamos a 2026-03-05
                         if (!string.IsNullOrEmpty(item.FechaUDP))
-                        {
-                            DateTime dt;
+                        {                            
                             if (DateTime.TryParseExact(item.FechaUDP, "dd/mm/yyyy", null, System.Globalization.DateTimeStyles.None, out dt))
                             {
                                 item.FechaUDP = dt.ToString("yyyy-MM-dd");
