@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Aplicativo Receta";
     Layout = null;
 }
@@ -161,6 +161,35 @@
                 box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
             }
 
+            /* Botón Secundario (Mockup) */
+            .btn-mockup {
+                background: transparent;
+                border: 2px solid var(--hialpesa-accent);
+                border-radius: 12px;
+                color: var(--hialpesa-accent);
+                width: 100%;
+                padding: 13px;
+                /* 13px + 2px de borde = 15px igual que el botón principal */
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                text-decoration: none;
+                margin-top: 15px;
+            }
+
+            .btn-mockup:hover {
+                background: var(--hialpesa-accent);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+                text-decoration: none;
+            }
+
             /* Spinner oculto por defecto */
             .spinner-border {
                 display: none;
@@ -199,6 +228,14 @@
                     <i class="fas fa-arrow-right icon-arrow"></i>
                 </button>
             </form>
+
+            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 12px;">¿Quieres ver el nuevo
+                    diseño propuesto?</p>
+                <a href="@Url.Content("~/Mockup/sistema_gestion_insumos_estampado.html")" class="btn-mockup">
+                    <i class="fas fa-paint-brush"></i> Ver Prototipo (Estampado)
+                </a>
+            </div>
         </div>
 
     </div>
@@ -232,6 +269,14 @@
             text.innerText = 'Cargando...';
             spinner.style.display = 'inline-block';
             arrow.style.display = 'none';
+
+            // 3. MOSTRAR OVERLAY GLOBAL CON TEMPORIZADOR
+            document.getElementById('loader-container').style.display = 'flex';
+            let segundos = 0;
+            setInterval(function () {
+                segundos++;
+                document.getElementById('login-timer').innerText = segundos;
+            }, 1000);
         };
     </script>
 
@@ -239,6 +284,17 @@
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript" src="@Url.Content("~/Scripts/Home/Index.js?")"></script>
+
+    <!-- Overlay Loader Global (similar a MantenimientoVisitas) -->
+    <div id="loader-container"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; text-align: center;">
+        <div class="spinner-border" role="status"
+            style="width: 4rem; height: 4rem; color: #002D72 !important; border-width: 0.35em;"></div>
+        <h3 style="margin-top: 25px; color: #002D72; font-weight: 700; letter-spacing: 0.5px;">Validando e iniciando
+            sesión...</h3>
+        <p style="color: #444; font-size: 1.1rem; margin-top: 10px;">Tiempo transcurrido: <span id="login-timer"
+                style="font-weight:bold; color: #002D72; font-size: 1.3rem;">0</span>s</p>
+    </div>
 
 </body>
 

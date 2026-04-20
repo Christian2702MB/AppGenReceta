@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo - Gestión de Insumos</title>
+    <!-- Mismas fuentes y estilos base que el aplicativo -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Paleta Hialpesa Oficial */
+            --hialpesa-dark: #002D72;
+            --hialpesa-accent: #f39c12;
+            --hialpesa-light-blue: #e6f0fa;
+            
+            /* Variables usadas por el mockup mapeadas a los colores del sistema */
+            --font-sans: 'Inter', 'Segoe UI', sans-serif;
+            --color-background-primary: #ffffff;
+            --color-background-secondary: #f8f9fa;
+            --color-background-tertiary: #f4f6f9;
+            --color-background-info: var(--hialpesa-light-blue);
+            
+            --color-text-primary: #333333;
+            --color-text-secondary: #6c757d;
+            
+            --color-border-secondary: #ced4da;
+            --color-border-tertiary: #e9ecef;
+            
+            --border-radius-md: 6px;
+            --border-radius-lg: 10px;
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary);background:var(--color-background-tertiary)}
+        
+        /* Layout principal */
+        .app{display:flex;height:100vh;min-height:600px;background:var(--color-background-tertiary)}
+        
+        /* Menú lateral (Sidebar) estandarizado a Hialpesa */
+        .sidebar{width:240px;min-width:240px;background:var(--hialpesa-dark);display:flex;flex-direction:column;padding:16px 0;box-shadow: 2px 0 10px rgba(0,0,0,0.1);z-index: 10;}
+        .logo{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:15px;text-align:center;}
+        .logo-text{font-size:18px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px;}
+        .logo-sub{font-size:12px;color:var(--hialpesa-accent);}
+        
+        .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;font-size:14px;color:rgba(255,255,255,0.7);border-left:3px solid transparent;transition:all 0.2s}
+        .nav-item:hover{background:rgba(255,255,255,0.05);color:#ffffff}
+        .nav-item.active{color:#ffffff;border-left:3px solid var(--hialpesa-accent);background:rgba(255,255,255,0.1);font-weight:600}
+        .nav-icon{width:16px;height:16px;opacity:0.9;flex-shrink:0}
+        
+        .main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+        
+        /* Barra superior */
+        .topbar{background:var(--color-background-primary);border-bottom:1px solid var(--color-border-tertiary);padding:15px 25px;display:flex;align-items:center;justify-content:space-between;box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .topbar-title{font-size:18px;font-weight:600;color:var(--hialpesa-dark)}
+        
+        /* Botones estandarizados */
+        .btn{padding:8px 16px;border-radius:var(--border-radius-md);border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}
+        .btn:hover{background:var(--color-background-secondary);box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        
+        .btn-primary{background:var(--hialpesa-dark);color:#ffffff;border-color:var(--hialpesa-dark)}
+        .btn-primary:hover{background:#001a41;color:#ffffff;box-shadow: 0 4px 8px rgba(0,45,114,0.2);}
+        
+        .btn-success{background:#28a745;color:#ffffff;border-color:#28a745}
+        .btn-success:hover{background:#218838;color:#ffffff;}
+        
+        .btn-sm{padding:5px 10px;font-size:12px}
+        
+        .content{flex:1;overflow-y:auto;padding:25px}
+        .section{display:none;animation: fadeIn 0.3s ease;}
+        .section.active{display:block}
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Tarjetas (Cards) */
+        .card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px;margin-bottom:20px;box-shadow: 0 4px 12px rgba(0,0,0,0.03);}
+        .card-title{font-size:15px;font-weight:600;margin-bottom:15px;color:var(--hialpesa-dark);border-bottom:1px solid var(--color-border-tertiary);padding-bottom:10px;}
+        
+        /* Badges */
+        .badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+        .badge-total{background:#ffeeba;color:#856404} /* Advertencia suave */
+        .badge-parcial{background:#f8d7da;color:#721c24} /* Alerta ligera */
+        .badge-vacio{background:#d4edda;color:#155724} /* OK */
+        .badge-info{background:var(--hialpesa-light-blue);color:var(--hialpesa-dark)}
+        
+        /* Grids */
+        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+        
+        /* Métricas */
+        .metric{background:#ffffff;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px;box-shadow: 0 2px 8px rgba(0,0,0,0.04);border-left:4px solid var(--hialpesa-dark);}
+        .metric:nth-child(2) { border-left-color: #dc3545; }
+        .metric:nth-child(3) { border-left-color: #28a745; }
+        .metric-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:500}
+        .metric-value{font-size:28px;font-weight:700;color:var(--hialpesa-dark)}
+        
+        /* Tablas tipo Bootstrap */
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{text-align:left;padding:12px 15px;background:var(--color-background-secondary);color:var(--color-text-secondary);font-weight:600;font-size:12px;border-bottom:2px solid var(--color-border-secondary);text-transform:uppercase;letter-spacing:0.5px;}
+        td{padding:12px 15px;border-bottom:1px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:var(--hialpesa-light-blue)}
+        
+        /* Inputs modernos */
+        input[type=checkbox]{accent-color:var(--hialpesa-accent);width:16px;height:16px;cursor:pointer;}
+        select,input[type=text],input[type=date]{border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);width:100%;transition:border-color 0.2s;}
+        select:focus,input[type=text]:focus,input[type=date]:focus{border-color:var(--hialpesa-dark);outline:none;box-shadow:0 0 0 3px rgba(0,45,114,0.1);}
+        
+        .filter-row{display:flex;gap:15px;align-items:center;margin-bottom:20px;flex-wrap:wrap;background:var(--color-background-secondary);padding:15px;border-radius:var(--border-radius-md);}
+        .filter-row label{font-size:13px;font-weight:500;color:var(--color-text-secondary);white-space:nowrap}
+        
+        /* Pasos (Wizard) */
+        .steps{display:flex;gap:0;margin-bottom:25px;box-shadow: 0 2px 5px rgba(0,0,0,0.05);border-radius:var(--border-radius-md);overflow:hidden;}
+        .step{flex:1;padding:12px 15px;font-size:13px;text-align:center;background:var(--color-background-primary);color:var(--color-text-secondary);border:1px solid var(--color-border-tertiary);border-right:none;position:relative;}
+        .step:last-child{border-right:1px solid var(--color-border-tertiary);}
+        .step.done{background:var(--hialpesa-light-blue);color:var(--hialpesa-dark);font-weight:600}
+        .step.current{background:var(--hialpesa-dark);color:#ffffff;font-weight:600}
+        
+        /* Voucher style */
+        .voucher-box{border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:30px;background:#ffffff;box-shadow: 0 10px 30px rgba(0,0,0,0.05);}
+        .voucher-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:25px;padding-bottom:20px;border-bottom:2px dashed var(--color-border-secondary)}
+        
+        /* Tags */
+        .tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:15px;font-size:12px;border:1px solid var(--color-border-tertiary);cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);transition:all 0.2s}
+        .tag.selected{background:var(--hialpesa-dark);color:#ffffff;border-color:var(--hialpesa-dark)}
+        .tag-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}
+        
+        .dispatch-sel{padding:4px 8px;font-size:12px;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+        
+        /* Reporte Excel */
+        .excel-report-box{background:#ffffff;padding:25px;margin-top:20px;border:1px solid #c0c0c0;border-radius:var(--border-radius-lg);font-family: Arial, sans-serif;overflow-x:auto;}
+        .excel-header-title{border-top:2px solid #23693e;border-bottom:2px solid #23693e;text-align:center;font-weight:bold;font-size:14px;padding:6px 0;margin-bottom:15px;color:#000;}
+        .excel-details{display:grid;grid-template-columns:120px 1fr 60px 100px;font-size:11px;margin-bottom:15px;row-gap:5px;color:#000;}
+        .excel-details > div{padding-right:10px;}
+        .excel-details .bold{font-weight:bold;}
+        .excel-table{width:100%;border-collapse:collapse;font-size:11px;color:#000;table-layout:fixed;}
+        .excel-table th{background-color:#c0c0c0;border:1px solid #000;padding:6px 4px;font-weight:bold;text-align:center;text-transform:uppercase;color:#000;}
+        .excel-table td{border:none;border-bottom:1px solid #eaeaea;padding:8px 6px;vertical-align:top;}
+        .excel-table tr td:nth-child(1), .excel-table tr td:nth-child(5){text-align:right;}
+        .excel-table tr td:nth-child(6){text-align:center;}
+        .ultimos-precios{font-size:10px;color:#555;margin-top:6px;line-height:1.4;display:block;}
+        .excel-signatures{display:flex;justify-content:space-between;margin-top:60px;font-size:11px;color:#000;}
+        .excel-signature-line{border-top:1px solid #000;padding-top:4px;min-width:140px;}
+
+        /* Vuelve atrás al login (enlace superior) */
+        .back-link {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 20;
+        }
+        .back-link:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+<h2 class="sr-only">Sistema de Gestión de Insumos de Estampado - Prototipo interactivo</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Insumos</div>
+      <div class="logo-sub">Almacén de Estampado</div>
+    </div>
+    <div class="nav-item active" onclick="showSection('nps',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M4 7h6M4 4.5h6M4 9.5h4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Agrupación de NPs
+    </div>
+    <div class="nav-item" onclick="showSection('insumos',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4v6l-6 3L1 10V4l6-3z" stroke="currentColor" stroke-width="1.2"/></svg>
+      Lista de Insumos
+    </div>
+    <div class="nav-item" onclick="showSection('proveedores',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.2"/></svg>
+      Proveedores
+    </div>
+    <div class="nav-item" onclick="showSection('solicitud',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 2h10v10H2z" stroke="currentColor" stroke-width="1.2"/><path d="M5 7l2 2 4-4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Generar Solicitud
+    </div>
+    <div class="nav-item" onclick="showSection('voucher',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 2h10v10H2z" stroke="currentColor" stroke-width="1.2"/><path d="M4 5h6M4 7h6M4 9h4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Voucher
+    </div>
+    <div class="nav-item" onclick="showSection('mantenimiento',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h10M2 11h10" stroke="currentColor" stroke-width="1.2"/></svg>
+      Mant. Solicitudes
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="section-title">Agrupación de NPs — Abril 2026</span>
+      <div style="display:flex;gap:8px">
+        <span class="badge badge-info">Familia: ES</span>
+        <button class="btn btn-sm" onclick="sendPrompt('¿Cómo funciona el filtro por familia ES en el sistema de insumos?')">Ayuda ↗</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="section active" id="sec-nps">
+        <div class="steps">
+          <div class="step current">1. Selección NPs</div>
+          <div class="step">2. Calcular insumos</div>
+          <div class="step">3. Ajustar cantidades</div>
+          <div class="step">4. Generar solicitud</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Filtros de búsqueda</div>
+          <div class="filter-row">
+            <label>Desde</label>
+            <input type="date" value="2026-04-01" style="width:130px">
+            <label>Hasta</label>
+            <input type="date" value="2026-04-30" style="width:130px">
+            <label>Estado</label>
+            <select style="width:110px"><option>En Prenda</option><option>Todos</option></select>
+            <button class="btn btn-primary btn-sm">Buscar NPs</button>
+
+            <!-- Agregar NP Externa -->
+            <label style="margin-left:auto;">Añadir Ext:</label>
+            <select style="width:150px"><option>Seleccione NP...</option><option>NP-EXT-001</option><option>NP-EXT-002</option></select>
+            <button class="btn btn-sm btn-success">+ Agregar NP</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="card-title" style="margin:0">NPs del periodo — Familia ES</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="selectAllNPs(true)">Seleccionar todos</button>
+              <button class="btn btn-sm" onclick="selectAllNPs(false)">Deseleccionar</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th style="width:32px"></th><th>N° NP</th><th>Descripción</th><th>Arte</th><th>Tamaño</th><th>Cant. Producir</th><th>Estado</th></tr></thead>
+            <tbody id="np-tbody">
+              <tr><td><input type="checkbox" checked class="np-check"></td><td>NP-2026-0421</td><td>Polo Básico Manga Corta</td><td>Estampado Pecho</td><td>15x20cm</td><td>350</td><td><span class="badge badge-info">En Prenda</span></td></tr>
+              <tr><td><input type="checkbox" checked class="np-check"></td><td>NP-2026-0422</td><td>Polo Sport Cuello V</td><td>Estampado Espalda</td><td>20x25cm</td><td>200</td><td><span class="badge badge-info">En Prenda</span></td></tr>
+              <tr><td><input type="checkbox" checked class="np-check"></td><td>NP-2026-0435</td><td>Casaca Universitaria</td><td>Estampado Manga</td><td>8x10cm</td><td>150</td><td><span class="badge badge-info">En Prenda</span></td></tr>
+              <tr><td><input type="checkbox" class="np-check"></td><td>NP-2026-0436</td><td>Polo Infantil</td><td>Estampado Pecho</td><td>10x12cm</td><td>500</td><td><span class="badge badge-info">En Prenda</span></td></tr>
+              <tr><td><input type="checkbox" checked class="np-check"></td><td>NP-2026-0440</td><td>Short Deportivo</td><td>Estampado Lateral</td><td>5x8cm</td><td>280</td><td><span class="badge badge-info">En Prenda</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--color-text-secondary)">4 de 5 NPs seleccionadas · 980 prendas totales</span>
+            <button class="btn btn-primary" onclick="showSection('insumos',document.querySelectorAll('.nav-item')[1])">Calcular insumos sugeridos →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-insumos">
+        <div class="steps">
+          <div class="step done">1. Selección NPs</div>
+          <div class="step done">2. Calcular insumos</div>
+          <div class="step current">3. Ajustar cantidades</div>
+          <div class="step">4. Generar solicitud</div>
+        </div>
+        <div class="grid3" style="margin-bottom:16px">
+          <div class="metric"><div class="metric-label">Insumos sugeridos</div><div class="metric-value">12</div></div>
+          <div class="metric"><div class="metric-label">Requieren compra</div><div class="metric-value" style="color:#A32D2D">7</div></div>
+          <div class="metric"><div class="metric-label">Con stock propio</div><div class="metric-value" style="color:#3B6D11">5</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="card-title" style="margin:0">Lista sugerida de insumos</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="sendPrompt('¿Cómo se calcula la variable arte para ajustar las cantidades de insumos?')">Variable arte ↗</button>
+              <button class="btn btn-sm btn-success">+ Insumo extra-receta</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Cód.</th><th>Insumo</th><th>Cant. sugerida</th><th>Cant. definida</th><th>Presentación</th><th>Cant. a pedir</th><th>Despacho</th><th>Proveedor</th></tr></thead>
+            <tbody>
+              <tr><td>INS-001</td><td>Tinta Plastisol Blanco</td><td>42.5 kg</td><td><input type="number" value="42.5" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Balde 20 kg</td><td>3 baldes (60 kg)</td><td><select class="dispatch-sel"><option>Total</option><option>Parcial</option><option>Vacío</option></select></td><td>Tintas Perú SAC</td></tr>
+              <tr><td>INS-002</td><td>Tinta Plastisol Negro</td><td>18.2 kg</td><td><input type="number" value="18.2" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Balde 20 kg</td><td>1 balde (20 kg)</td><td><select class="dispatch-sel"><option>Parcial</option><option>Total</option><option>Vacío</option></select></td><td>Tintas Perú SAC</td></tr>
+              <tr><td>INS-003</td><td>Fondo Estampado</td><td>35.0 lts</td><td><input type="number" value="35.0" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Galón 20 lts</td><td>2 galones (40 lts)</td><td><select class="dispatch-sel"><option>Total</option><option>Parcial</option><option>Vacío</option></select></td><td>QuimiPlast</td></tr>
+              <tr><td>INS-004</td><td>Catalizador UV</td><td>0.8 kg</td><td><input type="number" value="0.8" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Frasco 500 g</td><td>2 frascos (1 kg)</td><td><select class="dispatch-sel"><option selected>Vacío</option><option>Total</option><option>Parcial</option></select></td><td>— Stock propio</td></tr>
+              <tr><td>INS-005</td><td>Thinner Industrial</td><td>12.3 lts</td><td><input type="number" value="12.3" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Galón 3.785 lts</td><td>4 galones (15.14 lts)</td><td><select class="dispatch-sel"><option>Total</option><option>Parcial</option><option>Vacío</option></select></td><td>Disolventes Lima</td></tr>
+              <tr><td>INS-006</td><td>Mesh 110 blanco</td><td>8.5 m</td><td><input type="number" value="8.5" style="width:70px;height:24px;padding:2px 6px;text-align:right;font-size:12px;border:1px solid #ccc;border-radius:4px;"></td><td>Rollo 10 m</td><td>1 rollo (10 m)</td><td><select class="dispatch-sel"><option selected>Vacío</option><option>Total</option><option>Parcial</option></select></td><td>— Stock propio</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end">
+            <button class="btn btn-primary" onclick="showSection('solicitud',document.querySelectorAll('.nav-item')[3])">Generar solicitud →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Leyenda de estados de despacho</div>
+          <div style="display:flex;gap:16px;font-size:12px">
+            <div><span class="badge badge-total">Total</span><span style="margin-left:6px;color:var(--color-text-secondary)">Sin stock, compra completa</span></div>
+            <div><span class="badge badge-parcial">Parcial</span><span style="margin-left:6px;color:var(--color-text-secondary)">Stock insuficiente, compra diferencia</span></div>
+            <div><span class="badge badge-vacio">Vacío</span><span style="margin-left:6px;color:var(--color-text-secondary)">Stock comprado en bloque</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-proveedores">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="card-title" style="margin:0">Proveedores, precios y presentaciones</div>
+            <button class="btn btn-sm btn-success">+ Nuevo proveedor</button>
+          </div>
+          <div class="filter-row">
+            <label>Buscar</label>
+            <input type="text" placeholder="Proveedor o insumo..." style="width:200px">
+            <label>Insumo</label>
+            <select style="width:150px"><option>Todos</option><option>Tinta Plastisol</option><option>Fondo Estampado</option><option>Thinner</option></select>
+          </div>
+          <table>
+            <thead><tr><th>Proveedor</th><th>Insumo relacionado</th><th>Presentación</th><th>Unidad</th><th>Precio unit.</th><th>Precio presentación</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td>Tintas Perú SAC</td><td>Tinta Plastisol Blanco</td><td>Balde 20 kg</td><td>kg</td><td>S/ 12.50</td><td>S/ 250.00</td><td><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td>Tintas Perú SAC</td><td>Tinta Plastisol Negro</td><td>Balde 20 kg</td><td>kg</td><td>S/ 11.80</td><td>S/ 236.00</td><td><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td>QuimiPlast</td><td>Fondo Estampado</td><td>Galón 20 lts</td><td>litro</td><td>S/ 8.20</td><td>S/ 164.00</td><td><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td>Disolventes Lima</td><td>Thinner Industrial</td><td>Galón 3.785 lts</td><td>litro</td><td>S/ 6.50</td><td>S/ 24.60</td><td><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td>Serigraf SAC</td><td>Mesh 110 blanco</td><td>Rollo 10 m</td><td>metro</td><td>S/ 18.00</td><td>S/ 180.00</td><td><button class="btn btn-sm">Editar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" id="sec-solicitud">
+        <div class="steps">
+          <div class="step done">1. Selección NPs</div>
+          <div class="step done">2. Calcular insumos</div>
+          <div class="step done">3. Ajustar cantidades</div>
+          <div class="step current">4. Generar solicitud</div>
+        </div>
+        <div class="grid2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title">Cabecera de solicitud</div>
+            <table style="font-size:12px">
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0;width:120px">Motivo</td><td>COMPRA</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Observación</td><td>Mes de Abril 2026</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">NPs incluidas</td><td>4 NPs seleccionadas</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Módulo destino</td><td>Gestión de Pedidos</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Ruta</td><td style="font-size:11px">Movimientos › Repuestos › Solicitud</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-title">Resumen de compra</div>
+            <table style="font-size:12px">
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Ítems a comprar</td><td style="font-weight:500">7 insumos</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Ítems con stock</td><td style="font-weight:500">5 insumos</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Costo estimado</td><td style="font-weight:500">S/ 1,248.60</td></tr>
+              <tr><td style="color:var(--color-text-secondary);padding:5px 0">Proveedores</td><td style="font-weight:500">3 proveedores</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ítems a cargar en Gestión de Pedidos</div>
+          <table>
+            <thead><tr><th>Cód. insumo</th><th>Descripción</th><th>Cantidad</th><th>Presentación</th><th>Precio unit.</th><th>Total</th><th>Despacho</th></tr></thead>
+            <tbody>
+              <tr><td>INS-001</td><td>Tinta Plastisol Blanco</td><td>3</td><td>Balde 20 kg</td><td>S/ 250.00</td><td>S/ 750.00</td><td><span class="badge badge-total">Total</span></td></tr>
+              <tr><td>INS-002</td><td>Tinta Plastisol Negro</td><td>1</td><td>Balde 20 kg</td><td>S/ 236.00</td><td>S/ 236.00</td><td><span class="badge badge-parcial">Parcial</span></td></tr>
+              <tr><td>INS-003</td><td>Fondo Estampado</td><td>2</td><td>Galón 20 lts</td><td>S/ 164.00</td><td>S/ 328.00</td><td><span class="badge badge-total">Total</span></td></tr>
+              <tr><td>INS-005</td><td>Thinner Industrial</td><td>4</td><td>Galón 3.785 lts</td><td>S/ 24.60</td><td>S/ 98.40</td><td><span class="badge badge-total">Total</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn" onclick="sendPrompt('¿Qué validaciones debe tener el botón de carga automática hacia Gestión de Pedidos?')">Ver validaciones ↗</button>
+            <button class="btn btn-success" onclick="showSection('voucher',document.querySelectorAll('.nav-item')[4])">Cargar en Gestión de Pedidos →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-voucher">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="font-size:13px;font-weight:500">Vista previa del voucher</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="sendPrompt('¿Qué campos adicionales debería tener el voucher de requerimiento de compra?')">Personalizar ↗</button>
+            <button class="btn btn-sm btn-primary">Imprimir voucher</button>
+          </div>
+        </div>
+        <div class="voucher-box">
+          <div class="voucher-header">
+            <div>
+              <div style="font-size:15px;font-weight:500">Solicitud de Requerimiento de Compra</div>
+              <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">Almacén de Estampado — Módulo Insumos</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:13px;font-weight:500"># REQ-2026-0087</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">17/04/2026</div>
+              <span class="badge badge-info" style="margin-top:4px">Generado</span>
+            </div>
+          </div>
+          <div class="grid2" style="margin-bottom:16px;font-size:12px">
+            <div><span style="color:var(--color-text-secondary)">Motivo:</span> COMPRA</div>
+            <div><span style="color:var(--color-text-secondary)">Observación:</span> Mes de Abril 2026</div>
+            <div><span style="color:var(--color-text-secondary)">Responsable:</span> Manuel Illanes</div>
+            <div><span style="color:var(--color-text-secondary)">NPs incluidas:</span> 4 (NP-421, 422, 435, 440)</div>
+          </div>
+          <table style="margin-bottom:16px">
+            <thead><tr><th>#</th><th>Código</th><th>Descripción</th><th>Cant.</th><th>Unidad</th><th>P. Unit.</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>INS-001</td><td>Tinta Plastisol Blanco</td><td>3</td><td>Balde 20kg</td><td>S/ 250.00</td><td>S/ 750.00</td></tr>
+              <tr><td>2</td><td>INS-002</td><td>Tinta Plastisol Negro</td><td>1</td><td>Balde 20kg</td><td>S/ 236.00</td><td>S/ 236.00</td></tr>
+              <tr><td>3</td><td>INS-003</td><td>Fondo Estampado</td><td>2</td><td>Galón 20lt</td><td>S/ 164.00</td><td>S/ 328.00</td></tr>
+              <tr><td>4</td><td>INS-005</td><td>Thinner Industrial</td><td>4</td><td>Galón 3.78lt</td><td>S/ 24.60</td><td>S/ 98.40</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;justify-content:flex-end;font-size:13px;font-weight:500;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary)">
+            Total: S/ 1,412.40
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px;font-size:11px;color:var(--color-text-secondary)">
+            <div style="border-top:0.5px solid var(--color-border-secondary);padding-top:6px;text-align:center">Solicitado por</div>
+            <div style="border-top:0.5px solid var(--color-border-secondary);padding-top:6px;text-align:center">Aprobado por Logística</div>
+          </div>
+        </div>
+
+        <!-- REPORTE EXCEL (SEGUNDO REPORTE) -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:40px;margin-bottom:16px">
+          <span style="font-size:13px;font-weight:500"><i class="fas fa-file-excel" style="color:#23693e;margin-right:6px"></i> Reporte Detallado de Compra</span>
+          <button class="btn btn-sm btn-success" style="background:#23693e;border-color:#23693e;"><i class="fas fa-download"></i> Exportar a Excel</button>
+        </div>
+        
+        <div class="excel-report-box">
+          <div class="excel-header-title">REQUERIMIENTO DE COMPRA NRO:1267</div>
+          <div class="excel-details">
+            <div class="bold">AREA:</div>
+            <div>Confecciones</div>
+            <div class="bold">FECHA:</div>
+            <div>04/06/2026</div>
+
+            <div class="bold">MOTIVO:</div>
+            <div style="grid-column: span 3">COMPRA</div>
+
+            <div class="bold">SOLICITANTE:</div>
+            <div style="grid-column: span 3">002E2081 ILLANES MENDOZA MANUEL</div>
+
+            <div class="bold">OBSERVACION:</div>
+            <div style="grid-column: span 3">REQUERIMIENTO PARA MES DE ABRIL PARA PRODUCCION Y MUESTRAS</div>
+          </div>
+
+          <table class="excel-table">
+            <colgroup>
+               <col style="width: 70px" />
+               <col style="width: 120px" />
+               <col style="width: auto" />
+               <col style="width: 120px" />
+               <col style="width: 80px" />
+               <col style="width: 80px" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="border-left:1px solid #000">SECUENCIA</th>
+                <th>CODIGO REPUESTO</th>
+                <th>DESCRIPCION ITEM</th>
+                <th>CODIGO FABRICACION</th>
+                <th>CANTIDAD</th>
+                <th style="border-right:1px solid #000">UNIDAD MEDIDA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>PL000243</td>
+                <td>
+                  <div>DSC BASE DISCHARGE MAX 5K</div>
+                  <div class="ultimos-precios">
+                    Ultimos Precios :O/C:800-005927( 4.15USD) // O/C:800-005914( 4.15USD) // O/C:800-005882(<br>
+                    4.15USD) // O/C:800-005868( 4.15USD) // O/C:800-005832( 4.15USD) // O/C:800-005807( 4.15USD)<br>
+                    // O/C:800-005769( 4.15USD) //
+                  </div>
+                </td>
+                <td></td>
+                <td>100</td>
+                <td>KILOS</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>PL000223</td>
+                <td>
+                  <div>DTP COVER BASE</div>
+                  <div class="ultimos-precios">
+                    Ultimos Precios :O/C:800-005927( 7.00USD) // O/C:800-005905( 7.00USD) // O/C:800-005551(<br>
+                    8.84USD) // O/C:800-005296( 8.84USD) // O/C:800-005222( 8.90USD) // O/C:800-004989( 7.92USD)<br>
+                    // O/C:800-004707( 7.92USD) //
+                  </div>
+                </td>
+                <td></td>
+                <td>10</td>
+                <td>KILOS</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>AE000626</td>
+                <td>
+                  <div>SOLUCIÓN DE REMOVEDOR - LIQUIDATOR 100 X 1 Gal.</div>
+                  <div class="ultimos-precios">
+                    Ultimos Precios :O/C:800-005927( 63.44USD) // O/C:880-000147( 63.40USD) // O/C:800-005914(<br>
+                    63.40USD) // O/C:800-005882( 63.40USD) // O/C:800-005875( 63.40USD) // O/C:800-005868(<br>
+                    63.40USD) // O/C:800-005851( 63.40USD) //
+                  </div>
+                </td>
+                <td></td>
+                <td>3</td>
+                <td>GALONES</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="excel-signatures">
+            <div>Elaborado por MILLANES</div>
+            <div class="excel-signature-line">Sr.Pablo Rivera</div>
+            <div class="excel-signature-line">Ing. Maximo Ramos</div>
+            <div class="excel-signature-line">Ing. Ana Hurtado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANTENIMIENTO DE SOLICITUDES -->
+      <div class="section" id="sec-mantenimiento">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="card-title" style="margin:0">Mantenimiento de Solicitudes Generadas</div>
+            <div class="filter-row" style="margin-bottom:0;">
+              <input type="text" placeholder="Buscar por N° Req..." style="width:200px">
+              <button class="btn btn-sm btn-primary">Buscar</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>N° Req. Compra</th><th>Fecha</th><th>Área</th><th>Solicitante</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>REQ-2026-0087</td><td>17/04/2026</td><td>Confecciones</td><td>Manuel Illanes</td><td><span class="badge badge-info">Generado</span></td><td><button class="btn btn-sm btn-success"><i class="fas fa-file-excel"></i> Excel</button> <button class="btn btn-sm" style="color:var(--hialpesa-dark)"><i class="fas fa-times"></i> Anular</button></td></tr>
+              <tr><td>REQ-2026-0085</td><td>15/04/2026</td><td>Confecciones</td><td>Pablo Rivera</td><td><span class="badge" style="background:#208f49;color:#fff;">Aprobado</span></td><td><button class="btn btn-sm btn-success"><i class="fas fa-file-excel"></i> Excel</button> <button class="btn btn-sm" style="color:#aaa" disabled><i class="fas fa-times"></i> Anular</button></td></tr>
+              <tr><td>REQ-2026-0081</td><td>10/04/2026</td><td>Confecciones</td><td>Carlos G.</td><td><span class="badge" style="background:#A32D2D;color:#fff;">Anulado</span></td><td><button class="btn btn-sm btn-success" disabled><i class="fas fa-file-excel"></i> Excel</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showSection(id, navEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(navEl) navEl.classList.add('active');
+  const titles = {nps:'Agrupación de NPs — Abril 2026',insumos:'Lista de Insumos Sugerida',proveedores:'Proveedores y Presentaciones',solicitud:'Generar Solicitud de Requerimiento',voucher:'Voucher de Requerimiento de Compra',mantenimiento:'Mantenimiento de Solicitudes Generadas'};
+  document.getElementById('section-title').textContent = titles[id]||'';
+}
+function selectAllNPs(val) {
+  document.querySelectorAll('.np-check').forEach(c => c.checked = val);
+}
+</script>
+
+<!-- Enlace para volver a la página principal del aplicativo -->
+<a href="../Home/Index" class="back-link">
+    <i class="fas fa-arrow-left"></i> Volver al Login
+</a>
+
+</body>
+</html>
