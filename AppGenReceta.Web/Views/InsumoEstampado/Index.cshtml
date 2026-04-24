@@ -1,0 +1,641 @@
+@{
+    ViewBag.Title = "Gestión de Insumos - Agrupación de NPs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --hialpesa-dark: #002D72;
+            --hialpesa-accent: #f39c12;
+            --hialpesa-light-blue: #e6f0fa;
+            --color-text-primary: #333;
+            --color-text-secondary: #666;
+            --color-background-body: #f8f9fc;
+            --color-background-card: #ffffff;
+            --color-border: #e2e8f0;
+            --border-radius-lg: 12px;
+            --border-radius-md: 8px;
+            --font-family-main: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        .insumo-module-layout {
+            display: flex;
+            min-height: calc(100vh - 80px);
+            background-color: var(--color-background-body);
+        }
+
+        /* Parche: Romper el contenedor de Bootstrap global para esta vista */
+        body .container.main-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .insumo-sidebar {
+            width: 250px;
+            background-color: var(--hialpesa-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding-top: 24px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 0 16px;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header span {
+            font-size: 13px;
+            color: var(--hialpesa-accent);
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-nav li {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-nav a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sidebar-nav a:hover, .sidebar-nav li.active a {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .sidebar-nav li.active a {
+            font-weight: 600;
+            border-left: 4px solid var(--hialpesa-accent);
+            padding-left: 20px;
+        }
+
+        /* ----- RESTAURACIÓN DE ESTILOS DEL MÓDULO ----- */
+        .insumo-container {
+            flex: 1;
+            font-family: var(--font-family-main);
+            color: var(--color-text-primary);
+            background-color: var(--color-background-body);
+            padding: 30px 40px;
+        }
+
+        .insumo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .insumo-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--hialpesa-dark);
+            margin: 0;
+        }
+
+        .card-hialpesa {
+            background: var(--color-background-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title-hialpesa {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--hialpesa-dark);
+        }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            background: var(--color-background-card);
+            padding: 12px 24px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid var(--color-border);
+            gap: 16px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .step.done {
+            background: var(--hialpesa-light-blue);
+            color: var(--hialpesa-dark);
+        }
+
+        .step.current {
+            background: var(--hialpesa-dark);
+            color: #fff;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .filter-row label {
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        .form-control-hialpesa {
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-md);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--color-text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control-hialpesa:focus {
+            border-color: var(--hialpesa-dark);
+            box-shadow: 0 0 0 3px var(--hialpesa-light-blue);
+        }
+
+        .btn-hialpesa {
+            font-family: var(--font-family-main);
+            font-weight: 500;
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-primary-hialpesa {
+            background-color: var(--hialpesa-dark);
+            color: white;
+        }
+
+        .btn-primary-hialpesa:hover:not(:disabled) {
+            background-color: #001a41;
+            color: white;
+        }
+
+        .btn-primary-hialpesa:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-success-hialpesa {
+            background-color: #23693e;
+            color: white;
+        }
+
+        .btn-success-hialpesa:hover {
+            background-color: #1a4d2e;
+            color: white;
+        }
+
+        .btn-outline-hialpesa {
+            background: transparent;
+            border-color: var(--color-border);
+            color: var(--color-text-secondary);
+        }
+
+        .btn-outline-hialpesa:hover {
+            background: var(--color-background-body);
+            color: var(--hialpesa-dark);
+            border-color: var(--hialpesa-dark);
+        }
+
+        .badge-info {
+            background-color: var(--hialpesa-light-blue);
+            color: var(--hialpesa-dark);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--color-border);
+        }
+
+        table.modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        table.modern-table th {
+            background: var(--color-background-body);
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--color-border);
+            white-space: nowrap;
+        }
+
+        table.modern-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            vertical-align: middle;
+        }
+
+        table.modern-table tbody tr:hover {
+            background: #fdfdfd;
+        }
+
+        input[type="checkbox"].chk-hialpesa {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--hialpesa-dark);
+            cursor: pointer;
+        }
+        
+        .footer-action {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .resumen-text {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .ui-autocomplete {
+            z-index: 9999 !important;
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: inherit;
+            font-size: 13px;
+        }
+    </style>
+
+<div class="insumo-module-layout">
+    <!-- Menú Lateral -->
+    <div class="insumo-sidebar">
+        <div class="sidebar-header">
+            <h3>Insumos</h3>
+            <span>Almacén de Estampado</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="active"><a href="#"><i class="fas fa-list-alt"></i> Agrupación de NPs</a></li>
+            <li><a href="#"><i class="fas fa-cube"></i> Lista de Insumos</a></li>
+            <li><a href="#"><i class="fas fa-user-friends"></i> Proveedores</a></li>
+            <li><a href="#"><i class="fas fa-check-square"></i> Generar Solicitud</a></li>
+            <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
+            <li><a href="#"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="insumo-container">
+        <div class="insumo-header">
+        <h2 class="insumo-title">Agrupación de NPs — <span id="lblMesAnio"></span></h2>
+        <div style="display:flex;gap:8px">
+            <span class="badge-info">Familia: ES</span>
+            <button class="btn-hialpesa btn-outline-hialpesa">Ayuda <i class="fas fa-external-link-alt" style="margin-left:4px;font-size:10px;"></i></button>
+        </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="steps">
+        <div class="step current">1. Selección NPs</div>
+        <div class="step">2. Calcular insumos</div>
+        <div class="step">3. Ajustar cantidades</div>
+        <div class="step">4. Generar solicitud</div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card-hialpesa">
+        <div class="card-title-hialpesa">Filtros de búsqueda</div>
+        <div class="filter-row">
+            <label for="dtInicio">Desde</label>
+            <input type="date" id="dtInicio" class="form-control-hialpesa" value="@ViewBag.FechaInicio" style="width:140px">
+            
+            <label for="dtFin">Hasta</label>
+            <input type="date" id="dtFin" class="form-control-hialpesa" value="@ViewBag.FechaFin" style="width:140px">
+            
+
+            
+            <button id="btnBuscar" class="btn-hialpesa btn-primary-hialpesa"><i class="fas fa-search" style="margin-right:6px;"></i>Buscar NPs</button>
+
+            <!-- Agregar NP Externa -->
+            <label style="margin-left:auto;">Añadir Ext:</label>
+            <input type="text" id="txtNPAgregar" class="form-control-hialpesa" placeholder="Buscar NP..." style="width:160px">
+            <button id="btnAgregarNP" class="btn-hialpesa btn-success-hialpesa"><i class="fas fa-plus" style="margin-right:6px;"></i>Agregar NP</button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card-hialpesa">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div class="card-title-hialpesa" style="margin:0">NPs del periodo — Familia ES</div>
+            <div style="display:flex;gap:8px">
+                <button id="btnSeleccionarTodos" class="btn-hialpesa btn-outline-hialpesa">Seleccionar todos</button>
+                <button id="btnDeseleccionar" class="btn-hialpesa btn-outline-hialpesa">Deseleccionar</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;text-align:center;"><i class="fas fa-check-square"></i></th>
+                        <th>N° NP</th>
+                        <th>Combo</th>
+                        <th>Estilo Propio</th>
+                        <th>Estilo Cliente</th>
+                        <th>Fec. Despacho</th>
+                        <th>Cliente</th>
+                        <th style="text-align:right;">Cant. Producir</th>
+
+                    </tr>
+                </thead>
+                <tbody id="np-tbody">
+                    <tr><td colspan="8" style="text-align:center;color:#666;">Cargando información...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer-action">
+            <span id="lblResumen" class="resumen-text">0 de 0 NPs seleccionadas · 0 prendas totales</span>
+            <button id="btnCalcular" class="btn-hialpesa btn-primary-hialpesa" disabled>Calcular insumos sugeridos <i class="fas fa-arrow-right" style="margin-left:6px;"></i></button>
+    </div>
+</div>
+</div>
+
+@section scripts {
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var listaNPs = [];
+
+        $(document).ready(function () {
+            // Inicializar mes/año del título basado en fecha de inicio ViewBag
+            let dtInicioVal = $('#dtInicio').val();
+            if(dtInicioVal) {
+                let d = new Date(dtInicioVal + "T00:00:00");
+                const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+                $('#lblMesAnio').text(meses[d.getMonth()] + " " + d.getFullYear());
+            }
+
+            // Configurar Autocomplete para añadir NP externa
+            $("#txtNPAgregar").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: '@Url.Action("AutocompleteNP", "InsumoEstampado")',
+                        type: "GET",
+                        dataType: "json",
+                        data: { term: request.term },
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 4,
+                select: function (event, ui) {
+                    // Optional interaction logic on select can go here
+                }
+            });
+
+            // Eventos de botones
+            $('#btnBuscar').click(function () {
+                buscarNPs();
+            });
+
+            $('#btnSeleccionarTodos').click(function() {
+                $('.chk-np').prop('checked', true);
+                sincronizarChecks();
+            });
+
+            $('#btnDeseleccionar').click(function() {
+                $('.chk-np').prop('checked', false);
+                sincronizarChecks();
+            });
+
+            $('#btnAgregarNP').click(function () {
+                agregarNPExterna();
+            });
+
+            // Delegar evento on change para los checkboxes generados dinámicamente
+            $('#np-tbody').on('change', '.chk-np', function() {
+                sincronizarChecks();
+            });
+
+            $('#btnCalcular').click(function() {
+                const npsSeleccionadas = listaNPs.filter(x => x.Seleccionado === true);
+                if(npsSeleccionadas.length === 0) return;
+                
+                // Guardar en sessionStorage para el Paso 2
+                sessionStorage.setItem('insumos_nps_seleccionadas', JSON.stringify(npsSeleccionadas));
+                // Redirigir a otro action/paso (placeholder por ahora devolviendo un alert y console)
+                console.log("NPs a enviar:", npsSeleccionadas);
+                Swal.fire('¡Éxito!', 'NPs listas para cálculo: ' + npsSeleccionadas.length, 'success');
+                // window.location.href = '@Url.Action("CalcularInsumos", "InsumoEstampado")';
+            });
+
+            // Llamada inicial
+            buscarNPs();
+        });
+
+        function formatToDateAPI(isoString) {
+            // From yyyy-MM-dd to dd/MM/yyyy
+            if(!isoString) return "";
+            var parts = isoString.split('-');
+            if(parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+            return isoString;
+        }
+
+        function buscarNPs() {
+            var inicio = formatToDateAPI($('#dtInicio').val());
+            var fin = formatToDateAPI($('#dtFin').val());
+            
+            // Mostrar estado de carga
+            $('#btnBuscar').prop('disabled', true).html('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i> Buscando...');
+            $('#np-tbody').html('<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;"><i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Cargando información...</td></tr>');
+
+            $.ajax({
+                url: '@Url.Action("BuscarNPs", "InsumoEstampado")',
+                type: 'POST',
+                data: {
+                    fechaInicio: inicio,
+                    fechaFin: fin,
+                    np: '',
+                    tipoBusqueda: 'RANGO' // Default
+                },
+                success: function (res) {
+                    $('#btnBuscar').prop('disabled', false).html('<i class="fas fa-search" style="margin-right:6px;"></i>Buscar NPs');
+                    if (res.ok) {
+                        listaNPs = res.data;
+                        renderizarTabla();
+                    } else {
+                        $('#np-tbody').html('<tr><td colspan="8" style="text-align:center;color:red;">Error: ' + res.mensaje + '</td></tr>');
+                        Swal.fire('Error', res.mensaje, 'error');
+                    }
+                },
+                error: function (err) {
+                    $('#btnBuscar').prop('disabled', false).html('<i class="fas fa-search" style="margin-right:6px;"></i>Buscar NPs');
+                    $('#np-tbody').html('<tr><td colspan="8" style="text-align:center;color:red;">Error de conexión con el servidor.</td></tr>');
+                }
+            });
+        }
+
+        function agregarNPExterna() {
+            var np = $('#txtNPAgregar').val();
+            if (!np || np.trim().length === 0) {
+                Swal.fire('Atención', 'Ingrese un código de NP válido o búsquelo en la lista sugerida.', 'warning');
+                return;
+            }
+
+            $('#btnAgregarNP').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '@Url.Action("AgregarNP", "InsumoEstampado")',
+                type: 'POST',
+                dataType: 'json',
+                data: { 
+                    codigoNP: np,
+                    npsActualesJson: JSON.stringify(listaNPs)
+                },
+                success: function (res) {
+                    $('#btnAgregarNP').prop('disabled', false).html('<i class="fas fa-plus" style="margin-right:6px;"></i>Agregar NP');
+                    if (res.ok) {
+                        listaNPs = res.data;
+                        $('#txtNPAgregar').val('');
+                        renderizarTabla();
+                        Swal.fire('Éxito', res.mensaje, 'success');
+                    } else {
+                        Swal.fire('Error', res.mensaje, 'error');
+                    }
+                },
+                error: function () {
+                    $('#btnAgregarNP').prop('disabled', false).html('<i class="fas fa-plus" style="margin-right:6px;"></i>Agregar NP');
+                    Swal.fire('Error', 'No se pudo contactar al servidor', 'error');
+                }
+            });
+        }
+
+        function renderizarTabla() {
+            var tbody = $('#np-tbody');
+            tbody.empty();
+
+            if (!listaNPs || listaNPs.length === 0) {
+                tbody.html('<tr><td colspan="8" style="text-align:center;color:#666;">No se encontraron resultados para el periodo seleccionado.</td></tr>');
+                actualizarResumen();
+                return;
+            }
+
+            var html = '';
+            listaNPs.forEach(function (e, index) {
+                var checkedAttr = e.Seleccionado ? 'checked' : '';
+                var numProcesoRaw = parseInt(e.NUM_ENPROCESO) || 0;
+                
+                html += '<tr>' +
+                        '<td style="text-align:center;"><input type="checkbox" class="chk-hialpesa chk-np" data-index="'+index+'" ' + checkedAttr + ' /></td>' +
+                        '<td style="font-weight:500;">' + e.NP + '</td>' +
+                        '<td>' + (e.COMBO || '') + '</td>' +
+                        '<td>' + (e.ESTILO_PROPIO || '') + '</td>' +
+                        '<td>' + (e.ESTILO_CLIENTE || '') + '</td>' +
+                        '<td>' + (e.FEC_DESPACHO || '') + '</td>' +
+                        '<td>' + (e.NOM_CLIENTE || '') + '</td>' +
+                        '<td style="text-align:right;">' + numProcesoRaw + '</td>' +
+                        '</tr>';
+            });
+            tbody.html(html);
+
+            actualizarResumen();
+        }
+
+        function sincronizarChecks() {
+            // Leer estado del DOM y actualizar la lista en memoria
+            $('.chk-np').each(function() {
+                var idx = $(this).data('index');
+                var isChecked = $(this).is(':checked');
+                listaNPs[idx].Seleccionado = isChecked;
+            });
+            actualizarResumen();
+        }
+
+        function actualizarResumen() {
+            var seleccionados = 0;
+            var totalPrendas = 0;
+
+            listaNPs.forEach(function (e) {
+                if (e.Seleccionado) {
+                    seleccionados++;
+                    totalPrendas += (parseInt(e.NUM_ENPROCESO) || 0);
+                }
+            });
+
+            $('#lblResumen').text(`${seleccionados} de ${listaNPs.length} NPs seleccionadas · ${totalPrendas.toLocaleString()} prendas totales`);
+
+            if (seleccionados > 0) {
+                $('#btnCalcular').prop('disabled', false);
+            } else {
+                $('#btnCalcular').prop('disabled', true);
+            }
+        }
+    </script>
+}
