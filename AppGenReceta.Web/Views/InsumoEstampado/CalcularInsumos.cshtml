@@ -1,0 +1,370 @@
+@using AppGenReceta.BE
+@{
+    ViewBag.Title = "Paso 2: Calcular Insumos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<E_InsumoNP> listaIzquierda = ViewBag.NPsGuardadas as List<E_InsumoNP> ?? new List<E_InsumoNP>();
+    string sessionId = ViewBag.SessionID as string;
+}
+
+<style>
+    /* Estilos base reutilizados del layout anterior */
+    .insumo-module-layout {
+        display: flex;
+        min-height: calc(100vh - 80px);
+        background-color: var(--color-background-body);
+    }
+
+    body .container.main-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .insumo-sidebar {
+        width: 250px;
+        background-color: var(--hialpesa-dark);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        padding-top: 24px;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+        flex-shrink: 0;
+        z-index: 10;
+    }
+
+    .sidebar-header {
+        text-align: center;
+        margin-bottom: 24px;
+        padding: 0 16px;
+    }
+
+    .sidebar-header h3 { margin: 0; font-size: 20px; font-weight: 700; color: white; }
+    .sidebar-header span { font-size: 13px; color: var(--hialpesa-accent); font-weight: 600; }
+    
+    .sidebar-nav { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+    .sidebar-nav li { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-nav a { display: flex; align-items: center; padding: 16px 24px; color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .sidebar-nav a i { margin-right: 12px; width: 20px; text-align: center; font-size: 16px; }
+    .sidebar-nav a:hover, .sidebar-nav li.active a { background-color: rgba(255,255,255,0.1); color: white; }
+    .sidebar-nav li.active a { font-weight: 600; border-left: 4px solid var(--hialpesa-accent); padding-left: 20px; }
+
+    .insumo-container {
+        flex: 1;
+        font-family: var(--font-family-main);
+        color: var(--color-text-primary);
+        background-color: var(--color-background-body);
+        padding: 30px 40px;
+    }
+
+    .insumo-title { font-size: 20px; font-weight: 600; color: var(--hialpesa-dark); margin: 0; margin-bottom: 24px; }
+
+    .steps {
+        display: flex; align-items: center; margin-bottom: 24px; background: var(--color-background-card);
+        padding: 12px 24px; border-radius: var(--border-radius-lg); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        border: 1px solid var(--color-border); gap: 16px;
+    }
+    .step { display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); padding: 8px 16px; border-radius: 20px; }
+    .step.done { background: var(--hialpesa-light-blue); color: var(--hialpesa-dark); }
+    .step.current { background: var(--hialpesa-dark); color: #fff; }
+
+    /* TWIN LIST STYLES */
+    .twin-list-container {
+        display: flex;
+        align-items: stretch;
+        gap: 20px;
+        min-height: 500px;
+    }
+
+    .list-box {
+        flex: 1;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .list-header {
+        background: #f1f5f9;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--color-border);
+        font-weight: 600;
+        color: var(--hialpesa-dark);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .list-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .middle-action {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Tablas internas */
+    table.compact-table {
+        width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    table.compact-table th {
+        background: #fafafa; color: #666; padding: 8px; border-bottom: 1px solid #eee; text-align: left; position: sticky; top: 0;
+    }
+    table.compact-table td {
+        padding: 8px; border-bottom: 1px solid #eee;
+    }
+    table.compact-table tbody tr:hover { background: #fdfdfd; }
+
+    .btn-hialpesa {
+        font-family: inherit; font-weight: 500; font-size: 13px; padding: 10px 20px;
+        border-radius: var(--border-radius-md); cursor: pointer; border: 1px solid transparent;
+        transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-primary-hialpesa { background-color: var(--hialpesa-dark); color: white; }
+    .btn-primary-hialpesa:hover:not(:disabled) { background-color: #001a41; }
+    .btn-primary-hialpesa:disabled { background-color: #a0aec0; cursor: not-allowed; }
+    
+    .btn-success-hialpesa { background-color: #23693e; color: white; margin-top: 24px; float: right; font-size: 14px; padding: 12px 24px; }
+    .btn-success-hialpesa:hover { background-color: #1a4d2e; }
+
+    .badge-count { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+
+</style>
+
+<div class="insumo-module-layout">
+    
+    <!-- Mismo Sidebar -->
+    <div class="insumo-sidebar">
+        <div class="sidebar-header">
+            <h3>Insumos</h3>
+            <span>Almacén de Estampado</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="active"><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
+            <li><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
+            <li><a href="#"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
+            <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
+            <li><a href="#"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+        </ul>
+    </div>
+
+    <div class="insumo-container">
+        
+        <h2 class="insumo-title">Cálculo de Insumos</h2>
+
+        <!-- Resumen Pasos -->
+        <div class="steps">
+            <div class="step done"><i class="fas fa-check-circle" style="margin-right:6px"></i> 1. Selección NPs</div>
+            <div class="step current"><i class="fas fa-circle" style="margin-right:6px"></i> 2. Calcular insumos</div>
+            <div class="step">3. Ajustar cantidades</div>
+            <div class="step">4. Generar solicitud</div>
+        </div>
+
+        <div class="twin-list-container">
+            
+            <!-- LISTA IZQUIERDA -->
+            <div class="list-box" style="flex: 0.8">
+                <div class="list-header">
+                    <span>NPs Agrupadas</span>
+                    <span class="badge-count">@listaIzquierda.Count NPs</span>
+                </div>
+                <div class="list-body">
+                    <table class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>N° NP</th>
+                                <th>Combo</th>
+                                <th>Cliente</th>
+                                <th style="text-align:right">Cant.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (listaIzquierda.Count == 0)
+                            {
+                                <tr><td colspan="4" style="text-align:center;color:#999;padding:20px;">No hay NPs en esta agrupación.</td></tr>
+                            }
+                            else
+                            {
+                                foreach (var np in listaIzquierda)
+                                {
+                                    <tr>
+                                        <td style="font-weight:600">
+                                            <input type="hidden" class="hdn-estilo-propio" value="@np.ESTILO_PROPIO" />
+                                            @np.NP
+                                        </td>
+                                        <td>@np.COMBO</td>
+                                        <td>@np.NOM_CLIENTE</td>
+                                        <td style="text-align:right">@np.NUM_ENPROCESO</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- BOTÓN INTERMEDIO -->
+            <div class="middle-action">
+                <button id="btnEjecutarCalculo" class="btn-hialpesa btn-primary-hialpesa" 
+                        @(listaIzquierda.Count > 0 ? "" : "disabled")
+                        style="border-radius: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); white-space: nowrap;">
+                    Calcular Insumos <i class="fas fa-cogs" style="margin-left:8px"></i>
+                </button>
+            </div>
+
+            <!-- LISTA DERECHA -->
+            <div class="list-box" style="flex: 1.2">
+                <div class="list-header">
+                    <span>Insumos Necesarios</span>
+                    <span id="lblCountCalculados" class="badge-count">0 Items</span>
+                </div>
+                <div class="list-body">
+                    <table class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Color</th>
+                                <th>Prueba</th>
+                                <th style="text-align:right">Gramos UDP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbInsumos">
+                            <tr><td colspan="5" style="text-align:center;color:#999;padding:40px;">Haga clic en 'Calcular Insumos' para procesar los requerimientos.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <button id="btnGuardarCalculo" class="btn-hialpesa btn-success-hialpesa" style="display:none;">
+            Procesar y Guardar Cálculo <i class="fas fa-save" style="margin-left:8px"></i>
+        </button>
+
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var sessionId = '@sessionId';
+        var listaCalculada = [];
+
+        $(document).ready(function() {
+
+            $('#btnEjecutarCalculo').click(function() {
+                var btn = $(this);
+
+                // Recolectar estilos propios del DOM
+                var estilosSet = [];
+                $('.hdn-estilo-propio').each(function() {
+                    var val = $(this).val();
+                    if(val && val.trim() !== '' && estilosSet.indexOf(val) === -1) {
+                        estilosSet.push(val.trim());
+                    }
+                });
+                var estilosCsv = estilosSet.join(',');
+
+                btn.prop('disabled', true).html('Calculando... <i class="fas fa-spinner fa-spin" style="margin-left:8px"></i>');
+                
+                $('#tbInsumos').html('<tr><td colspan="5" style="text-align:center;padding:40px;color:#666;"><i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Consultando fórmulas de explosión...</td></tr>');
+
+                $.ajax({
+                    url: '@Url.Action("EjecutarCalculo", "InsumoEstampado")',
+                    type: 'POST',
+                    data: { 
+                        sid: sessionId,
+                        estilosCsv: estilosCsv
+                    },
+                    success: function(res) {
+                        btn.prop('disabled', false).html('Recalcular <i class="fas fa-sync" style="margin-left:8px"></i>');
+                        if (res.ok) {
+                            listaCalculada = res.data;
+                            renderListaInsumos();
+                        } else {
+                            $('#tbInsumos').html('<tr><td colspan="5" style="text-align:center;color:red;">Error: ' + res.mensaje + '</td></tr>');
+                            Swal.fire('Error', res.mensaje, 'error');
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).html('Reintentar <i class="fas fa-exclamation-triangle" style="margin-left:8px"></i>');
+                        $('#tbInsumos').html('<tr><td colspan="5" style="text-align:center;color:red;">Fallo de conexión.</td></tr>');
+                    }
+                });
+            });
+
+            $('#btnGuardarCalculo').click(function() {
+                if(listaCalculada.length === 0) return;
+
+                var btn = $(this);
+                btn.prop('disabled', true).html('Guardando... <i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '@Url.Action("ConfirmarCalculo", "InsumoEstampado")',
+                    type: 'POST',
+                    data: { 
+                        jsonData: JSON.stringify(listaCalculada),
+                        sid: sessionId
+                    },
+                    success: function(res) {
+                        btn.prop('disabled', false).html('Procesar y Guardar Cálculo <i class="fas fa-save" style="margin-left:8px"></i>');
+                        if(res.ok) {
+                            Swal.fire({
+                                title: '¡Guardado!',
+                                text: 'Los insumos calculados se guardaron correctamente. Pasando a etapa 3...',
+                                icon: 'success',
+                                confirmButtonColor: '#23693e'
+                            }).then((result) => {
+                                // Redirigir al paso 3: Ajustar cantidades
+                                window.location.href = res.redirect;
+                            });
+                        } else {
+                            Swal.fire('Error', res.mensaje, 'error');
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).html('Procesar y Guardar Cálculo <i class="fas fa-save" style="margin-left:8px"></i>');
+                        Swal.fire('Error', 'Fallo de conexión.', 'error');
+                    }
+                });
+            });
+
+        });
+
+        function renderListaInsumos() {
+            var tbody = $('#tbInsumos');
+            tbody.empty();
+            $('#lblCountCalculados').text(listaCalculada.length + ' Items');
+
+            if(listaCalculada.length === 0) {
+                tbody.html('<tr><td colspan="5" style="text-align:center;color:#999;padding:40px;">No se encontraron insumos necesarios (Fórmula Vacía).</td></tr>');
+                $('#btnGuardarCalculo').hide();
+                return;
+            }
+
+            var html = '';
+            listaCalculada.forEach(function(item) {
+                html += '<tr>' +
+                        '<td>' + (item.CodigoInsumo || '') + '</td>' +
+                        '<td style="font-weight:500;">' + (item.Descripcion || '') + '</td>' +
+                        '<td>' + (item.NombreColor || '') + '</td>' +
+                        '<td>' + (item.NombrePrueba || '') + '</td>' +
+                        '<td style="text-align:right; font-weight:600; color:var(--hialpesa-dark);">' + parseFloat(item.GramosUDP).toFixed(4) + '</td>' +
+                        '</tr>';
+            });
+            tbody.html(html);
+
+            $('#btnGuardarCalculo').show();
+        }
+    </script>
+}

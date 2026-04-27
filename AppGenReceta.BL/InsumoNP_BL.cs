@@ -84,5 +84,45 @@ namespace AppGenReceta.BL
             listaActual.AddRange(npEncontradas);
             return listaActual;
         }
+
+        // ==========================================
+        // PASO 2: CÁLCULOS
+        // ==========================================
+        public string GuardarAgrupacionNP(List<E_InsumoNP> lista, string usuarioParams)
+        {
+            if (lista == null || lista.Count == 0) throw new Exception("No hay NPs para agrupar.");
+            
+            // Generamos un GUID de sesión para rastrear esta agrupación temporalmente/permanentemente
+            string sessionId = Guid.NewGuid().ToString();
+            bool guardado = da.GuardarAgrupacionNP(lista, sessionId, usuarioParams);
+
+            if (!guardado) throw new Exception("Error interno al intentar guardar la agrupación en Base de Datos.");
+
+            return sessionId;
+        }
+
+        public List<E_InsumoNP> ObtenerAgrupacionNP(string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return new List<E_InsumoNP>();
+            return da.ObtenerAgrupacionNP(sessionId);
+        }
+
+        public List<E_InsumoCalculado> CalcularInsumos(string sessionId, string estilosCsv)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) throw new Exception("Session ID inválido.");
+            return da.CalcularInsumosAgrupacion(sessionId, estilosCsv);
+        }
+
+        public bool GuardarInsumosCalculados(List<E_InsumoCalculado> calculados, string sessionId, string usuario)
+        {
+            if (calculados == null || !calculados.Any()) throw new Exception("La lista de insumos calculados está vacía.");
+            return da.GuardarInsumosCalculados(calculados, sessionId, usuario);
+        }
+
+        public List<E_InsumoCalculado> ObtenerInsumosCalculados(string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return new List<E_InsumoCalculado>();
+            return da.ObtenerInsumosCalculados(sessionId);
+        }
     }
 }

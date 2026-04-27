@@ -488,12 +488,26 @@
                 const npsSeleccionadas = listaNPs.filter(x => x.Seleccionado === true);
                 if(npsSeleccionadas.length === 0) return;
                 
-                // Guardar en sessionStorage para el Paso 2
-                sessionStorage.setItem('insumos_nps_seleccionadas', JSON.stringify(npsSeleccionadas));
-                // Redirigir a otro action/paso (placeholder por ahora devolviendo un alert y console)
-                console.log("NPs a enviar:", npsSeleccionadas);
-                Swal.fire('¡Éxito!', 'NPs listas para cálculo: ' + npsSeleccionadas.length, 'success');
-                // window.location.href = '@Url.Action("CalcularInsumos", "InsumoEstampado")';
+                var btn = $(this);
+                btn.prop('disabled', true).html('Guardando... <i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '@Url.Action("GuardarAgrupacion", "InsumoEstampado")',
+                    type: 'POST',
+                    data: { jsonData: JSON.stringify(npsSeleccionadas) },
+                    success: function (res) {
+                        if (res.ok) {
+                            window.location.href = res.redirect;
+                        } else {
+                            btn.prop('disabled', false).html('Calcular insumos sugeridos <i class="fas fa-arrow-right"></i>');
+                            Swal.fire('Error', res.mensaje, 'error');
+                        }
+                    },
+                    error: function () {
+                        btn.prop('disabled', false).html('Calcular insumos sugeridos <i class="fas fa-arrow-right"></i>');
+                        Swal.fire('Error', 'No se pudo contactar al servidor', 'error');
+                    }
+                });
             });
 
             // Llamada inicial

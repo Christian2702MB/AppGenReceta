@@ -96,5 +96,94 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { ok = false, data = new List<E_InsumoNP>(), mensaje = ex.Message });
             }
         }
+
+        // ==========================================
+        // PASO 2: CÁLCULO DE INSUMOS
+        // ==========================================
+
+        [HttpPost]
+        public JsonResult GuardarAgrupacion(string jsonData)
+        {
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                serializer.MaxJsonLength = int.MaxValue;
+                List<E_InsumoNP> lista = serializer.Deserialize<List<E_InsumoNP>>(jsonData);
+
+                // Asumimos un usuario de sesión (mock por ahora)
+                string usuarioCrea = Session["Usuario"] != null ? Session["Usuario"].ToString() : "GUEST";
+                
+                string sid = bl.GuardarAgrupacionNP(lista, usuarioCrea);
+                Session["CurrentAgrupacion"] = sid; // Guardamos en sesión web por seguridad si se prefiere no enviar por url
+
+                return Json(new { ok = true, sessionId = sid, redirect = Url.Action("CalcularInsumos", "InsumoEstampado", new { sid = sid }) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, mensaje = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public ActionResult CalcularInsumos(string sid)
+        {
+            if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
+
+            List<E_InsumoNP> listaIzquierda = bl.ObtenerAgrupacionNP(sid);
+            ViewBag.SessionID = sid;
+            ViewBag.NPsGuardadas = listaIzquierda;
+
+            return View();
+        }
+
+        [HttpPost]
+        public JsonResult EjecutarCalculo(string sid, string estilosCsv)
+        {
+            try
+            {
+                List<E_InsumoCalculado> resultadoSP = bl.CalcularInsumos(sid, estilosCsv);
+                return Json(new { ok = true, data = resultadoSP, mensaje = "Cálculo ejecutado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, data = new List<E_InsumoCalculado>(), mensaje = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult ConfirmarCalculo(string jsonData, string sid)
+        {
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                serializer.MaxJsonLength = int.MaxValue;
+                List<E_InsumoCalculado> lista = serializer.Deserialize<List<E_InsumoCalculado>>(jsonData);
+
+                string usuarioProcesa = Session["Usuario"] != null ? Session["Usuario"].ToString() : "GUEST";
+
+                bl.GuardarInsumosCalculados(lista, sid, usuarioProcesa);
+
+                return Json(new { ok = true, mensaje = "Insumos guardados exitosamente.", redirect = Url.Action("AjustarCantidades", "InsumoEstampado", new { sid = sid }) });
+            }
+            catch(Exception ex)
+            {
+                return Json(new { ok = false, mensaje = ex.Message });
+            }
+        }
+
+        // ==========================================
+        // PASO 3: AJUSTAR CANTIDADES
+        // ==========================================
+        [HttpGet]
+        public ActionResult AjustarCantidades(string sid)
+        {
+            if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
+
+            List<E_InsumoCalculado> calculados = bl.ObtenerInsumosCalculados(sid);
+            ViewBag.SessionID = sid;
+            ViewBag.InsumosCalculados = calculados;
+
+            return View();
+        }
     }
 }
