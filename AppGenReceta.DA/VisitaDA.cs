@@ -305,7 +305,7 @@ namespace AppGenReceta.DA
             return lista;
         }
 
-        public List<RecetaInsumoBE> ListarInsumos()
+        public List<RecetaInsumoBE>  ListarInsumos()
         {
             List<RecetaInsumoBE> lista = new List<RecetaInsumoBE>();
             using (SqlConnection cnx = new SqlConnection(ConnectionString))

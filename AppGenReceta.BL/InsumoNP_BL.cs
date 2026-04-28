@@ -124,5 +124,15 @@ namespace AppGenReceta.BL
             if (string.IsNullOrWhiteSpace(sessionId)) return new List<E_InsumoCalculado>();
             return da.ObtenerInsumosCalculados(sessionId);
         }
+
+        public bool ActualizarAjustesInsumosCalculados(List<E_InsumoCalculado> calculados)
+        {
+            return da.ActualizarAjustesInsumosCalculados(calculados);
+        }
+
+        public List<E_InsumoCalculado> BuscarInsumosFiltro(string query)
+        {
+            return da.BuscarInsumosFiltro(query);
+        }
     }
 }

@@ -361,7 +361,91 @@ namespace AppGenReceta.DA
                             e.NombreColor = GetStringSafe(dr, "COLOR");
                             e.NombrePrueba = GetStringSafe(dr, "PRESENTACION"); // mapeado inverso
                             e.GramosUDP = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"); // map inverso
+                            
+                            // Mock provisional del SP USP_EST_OBTENER_STOCK_ACTUAL
+                            // Como esto es paso a paso, insertamos una lógica hardcode provisional para simular:
+                            e.StockActual = new Random().Next((int)e.GramosUDP - 5, (int)e.GramosUDP + 20);
+                            if(e.StockActual < 0) e.StockActual = 0;
+                            // En el futuro, reemplázalo llamando al SP de la BD. 
+                            
+                            e.CapacidadNumerica = 20; // Hardcodeado preventivo simulando (ej. un Balde=20)
+                            
                             e.SESSION_ID = sessionId;
+                            lista.Add(e);
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
+        public bool ActualizarAjustesInsumosCalculados(List<E_InsumoCalculado> calculados)
+        {
+            if (calculados == null || !calculados.Any()) return false;
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                using (SqlTransaction tr = con.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var item in calculados)
+                        {
+                            string sql = @"UPDATE TBL_ESTAMPADO_INSUMO_CALCULADO SET
+                                CANTIDAD_DEFINIDA = @CANTIDAD_DEFINIDA,
+                                CANTIDAD_A_PEDIR = @CANTIDAD_A_PEDIR,
+                                TIPO_DESPACHO = @TIPO_DESPACHO,
+                                ID_PROVEEDOR_ASIGNADO = @ID_PROVEEDOR_ASIGNADO,
+                                STOCK_CONSULTADO = @STOCK_CONSULTADO
+                                WHERE ID_CALCULO = @ID_CALCULO";
+                                
+                            using (SqlCommand cmd = new SqlCommand(sql, con, tr))
+                            {
+                                cmd.Parameters.AddWithValue("@ID_CALCULO", item.ID_CALCULO);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA", item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR", item.CantidadAPedir);
+                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO", item.TipoDespacho ?? "Total");
+                                cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO", item.IdProveedorAsignado);
+                                cmd.Parameters.AddWithValue("@STOCK_CONSULTADO", item.StockActual);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                        tr.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        throw new Exception("Error al actualizar la tabla TBL_ESTAMPADO_INSUMO_CALCULADO: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        public List<E_InsumoCalculado> BuscarInsumosFiltro(string query)
+        {
+            List<E_InsumoCalculado> lista = new List<E_InsumoCalculado>();
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                using (SqlCommand cmd = new SqlCommand("SP_LISTAR_INSUMOS", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FILTRO", query); // Parámetro genérico por si es Filtro, Texto, etc. Normalmente en ASP.NET con BD de este tipo
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            E_InsumoCalculado e = new E_InsumoCalculado();
+                            // Se mapea con lo tipico de un catalogo. Manejado via GetStringSafe(dr,"...")
+                            e.CodigoInsumo = GetStringSafe(dr, "Cod_Insumo"); // Ajustar según las columnas reales
+                            if (string.IsNullOrEmpty(e.CodigoInsumo))
+                                e.CodigoInsumo = GetStringSafe(dr, "COD_ARTICULO");
+
+                            e.Descripcion = GetStringSafe(dr, "Des_Insumo");
+                            if (string.IsNullOrEmpty(e.Descripcion))
+                                e.Descripcion = GetStringSafe(dr, "DESCRIPCION");
+                                
                             lista.Add(e);
                         }
                     }

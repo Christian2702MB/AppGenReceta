@@ -1,99 +1,342 @@
 @using AppGenReceta.BE
 @{
     ViewBag.Title = "Paso 3: Ajustar Cantidades";
+
     Layout = "~/Views/Shared/_Layout.cshtml";
-    List<E_InsumoCalculado> calculados = ViewBag.InsumosCalculados as List<E_InsumoCalculado> ?? new List<E_InsumoCalculado>();
+
+    List<E_InsumoCalculado> calculados = ViewBag.InsumosCalculados as List<E_InsumoCalculado> ?? new
+    List<E_InsumoCalculado>();
+
     string sessionId = ViewBag.SessionID as string;
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    /* VARIABLES GLOBALES ESTANDARIZADAS MÓDULO NP */
+    :root {
+        --hialpesa-dark: #002D72;
+        --hialpesa-accent: #f39c12;
+        --hialpesa-light-blue: #e6f0fa;
+        --color-text-primary: #333;
+        --color-text-secondary: #666;
+        --color-background-body: #f8f9fc;
+        --color-background-card: #ffffff;
+        --color-border: #e2e8f0;
+        --border-radius-lg: 12px;
+        --border-radius-md: 8px;
+        --font-family-main: 'Inter', 'Segoe UI', sans-serif;
+    }
 
-    /* VARIABLES Y LAYOUT */
-    body { background-color: #f8fafc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .insumo-module-layout { display: flex; min-height: calc(100vh - 80px); font-family: 'Inter', sans-serif; }
+    body {
+        background-color: var(--color-background-body);
+        font-family: var(--font-family-main);
+    }
+
+    .insumo-module-layout { 
+        display: flex; 
+        min-height: calc(100vh - 80px); 
+        background-color: var(--color-background-body);
+    }
+    
     body .container.main-container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
     /* SIDEBAR */
-    .insumo-sidebar { width: 250px; background-color: var(--hialpesa-dark); color: white; display: flex; flex-direction: column; padding-top: 24px; z-index: 10; }
+    .insumo-sidebar { 
+        width: 250px; 
+        background-color: var(--hialpesa-dark); 
+        color: white; 
+        display: flex; 
+        flex-direction: column; 
+        padding-top: 24px; 
+        box-shadow: 4px 0 10px rgba(0,0,0,0.05); 
+        flex-shrink: 0; 
+        z-index: 10;
+    }
     .sidebar-header { text-align: center; margin-bottom: 24px; padding: 0 16px; }
-    .sidebar-header h3 { margin: 0; font-size: 20px; font-weight: 700; color: white; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;}
-    .sidebar-header span { font-size: 13px; color: var(--hialpesa-accent); font-weight: 600; font-family: 'Inter', sans-serif;}
+    .sidebar-header h3 { margin: 0; font-size: 20px; font-weight: 700; color: white; letter-spacing: 0.5px;}
+    .sidebar-header span { font-size: 13px; color: var(--hialpesa-accent); font-weight: 600;} 
+    
     .sidebar-nav { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
     .sidebar-nav li { border-bottom: 1px solid rgba(255,255,255,0.05); }
     .sidebar-nav a { display: flex; align-items: center; padding: 16px 24px; color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; }
     .sidebar-nav a i { margin-right: 12px; width: 20px; text-align: center; font-size: 16px; }
-    .sidebar-nav a:hover { background-color: rgba(255,255,255,0.1); color: white; }
-    .sidebar-nav li.active a { background-color: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--hialpesa-accent); padding-left: 20px; font-weight: 600;}
+    
+    .sidebar-nav a:hover, .sidebar-nav li.active a { 
+        background-color: rgba(255,255,255,0.1); 
+        color: white; 
+    }
+    .sidebar-nav li.active a { 
+        font-weight: 600; 
+        border-left: 4px solid var(--hialpesa-accent); 
+        padding-left: 20px;
+    }
 
-    /* MAIN CONTAINER */
-    .insumo-container { flex: 1; padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
-    
-    /* TOP HEADER */
-    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .top-header h2 { font-size: 18px; font-weight: 700; color: var(--hialpesa-dark); margin: 0; letter-spacing: -0.3px;}
+    /* MAIN AREA */
+    .insumo-container { flex: 1; padding: 30px 40px; display: flex; flex-direction: column; gap: 16px; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid var(--color-border); padding-bottom: 16px;}
+    .top-header h2 { font-size: 20px; font-weight: 600; color: var(--hialpesa-dark); margin: 0;}
     .top-actions { display: flex; gap: 10px; }
-    .btn-outline { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
-    
+    .btn-outline { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+
     /* STEPS BAR */
-    .steps-bar { display: flex; background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-    .step-item { flex: 1; text-align: center; padding: 14px; font-size: 12px; font-weight: 600; color: #64748b; border-right: 1px solid #e2e8f0; background: #f8fafc; letter-spacing: 0.2px;}
-    .step-item:last-child { border-right: none; }
-    .step-item.active { background: var(--hialpesa-dark); color: white; border-color: var(--hialpesa-dark); }
-    
+    .steps-bar {
+        display: flex;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .step-item {
+        flex: 1;
+        text-align: center;
+        padding: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        border-right: 1px solid #e2e8f0;
+        background: #f8fafc;
+        letter-spacing: 0.2px;
+    }
+
+    .step-item:last-child {
+        border-right: none;
+    }
+
+    .step-item.active {
+        background: var(--hialpesa-dark);
+        color: white;
+        border-color: var(--hialpesa-dark);
+    }
+
     /* STAT CARDS */
-    .stat-cards { display: flex; gap: 16px; margin-bottom: 8px;}
-    .stat-card { flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
-    .stat-card.blue { border-left: 4px solid var(--hialpesa-dark); }
-    .stat-card.red { border-left: 4px solid #ef4444; }
-    .stat-card.green { border-left: 4px solid #10b981; }
-    .stat-title { font-size: 13px; font-weight: 500; color: #64748b; margin-bottom: 8px; }
-    .stat-value { font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -0.5px;}
-    .stat-card.blue .stat-value { color: var(--hialpesa-dark); }
-    .stat-card.red .stat-value { color: #ef4444; }
-    .stat-card.green .stat-value { color: #10b981; }
+    .stat-cards {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .stat-card.blue {
+        border-left: 4px solid var(--hialpesa-dark);
+    }
+
+    .stat-card.red {
+        border-left: 4px solid #ef4444;
+    }
+
+    .stat-card.green {
+        border-left: 4px solid #10b981;
+    }
+
+    .stat-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.5px;
+    }
+
+    .stat-card.blue .stat-value {
+        color: var(--hialpesa-dark);
+    }
+
+    .stat-card.red .stat-value {
+        color: #ef4444;
+    }
+
+    .stat-card.green .stat-value {
+        color: #10b981;
+    }
 
     /* TABLE SECTION */
-    .table-section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
-    .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .table-toolbar h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--hialpesa-dark); letter-spacing: -0.3px;}
-    .toolbar-actions { display: flex; gap: 10px; }
-    .btn-green { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);}
+    .table-section {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
 
-    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .data-table th { color: #64748b; font-weight: 600; padding: 14px 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 11px; letter-spacing: 0.5px; background: white;}
-    .data-table td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
-    
-    .input-box { width: 75px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-size: 13px; font-weight: 500; color: #0f172a; font-family: 'Inter', sans-serif;}
-    .select-box { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; color: #475569; width: 100%; font-family: 'Inter', sans-serif; height: 32px; background: white;}
+    .table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .table-toolbar h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--hialpesa-dark);
+        letter-spacing: -0.3px;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-green {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .data-table th {
+        color: #64748b;
+        font-weight: 600;
+        padding: 14px 10px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: left;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        background: white;
+    }
+
+    .data-table td {
+        padding: 14px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .input-box {
+        width: 75px;
+        padding: 6px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+        color: #0f172a;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .select-box {
+        padding: 6px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #475569;
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        height: 32px;
+        background: white;
+    }
 
     /* FOOTER ACTIONS */
-    .footer-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
-    .btn-primary-dark { background: var(--hialpesa-dark); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); letter-spacing: 0.2px;}
+    .footer-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-primary-dark {
+        background: var(--hialpesa-dark);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        letter-spacing: 0.2px;
+    }
 
     /* LEGEND */
-    .legend-section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
-    .legend-section h5 { margin: 0 0 16px 0; font-size: 14px; font-weight: 700; color: var(--hialpesa-dark); letter-spacing: -0.3px;}
-    .badges-container { display: flex; gap: 24px; font-size: 12px; color: #64748b; align-items: center; font-weight: 500;}
-    
-    .badge-estado { padding: 4px 10px; border-radius: 12px; font-weight: 600; font-size: 11px; margin-right: 6px; letter-spacing: 0.3px;}
-    .badge-yellow { background: #fef08a; color: #854d0e; }
-    .badge-pink { background: #fbcfe8; color: #9d174d; }
-    .badge-green { background: #bbf7d0; color: #166534; }
+    .legend-section {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .legend-section h5 {
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--hialpesa-dark);
+        letter-spacing: -0.3px;
+    }
+
+    .badges-container {
+        display: flex;
+        gap: 24px;
+        font-size: 12px;
+        color: #64748b;
+        align-items: center;
+        font-weight: 500;
+    }
+
+    .badge-estado {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 11px;
+        margin-right: 6px;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-yellow {
+        background: #fef08a;
+        color: #854d0e;
+    }
+
+    .badge-pink {
+        background: #fbcfe8;
+        color: #9d174d;
+    }
+
+    .badge-green {
+        background: #bbf7d0;
+        color: #166534;
+    }
 </style>
 
 <div class="insumo-module-layout">
-    
+
     <!-- SIDEBAR -->
     <div class="insumo-sidebar">
         <div class="sidebar-header">
             <h3>Insumos</h3>
-            <span>Almacén de Estampado</span>
+            <span style="color: #f59e0b;">Almacén de Estampado</span>
         </div>
         <ul class="sidebar-nav">
             <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
             <li class="active"><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
-            <li><a href="#"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
             <li><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
             <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
             <li><a href="#"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
@@ -125,11 +368,11 @@
             </div>
             <div class="stat-card red">
                 <div class="stat-title">Requieren compra</div>
-                <div class="stat-value">@(calculados.Count > 0 ? new Random().Next(1, calculados.Count/2 + 1) : 0)</div>
+                <div class="stat-value" id="lblRequierenCompra">0</div>
             </div>
             <div class="stat-card green">
                 <div class="stat-title">Con stock propio</div>
-                <div class="stat-value">@(calculados.Count > 0 ? calculados.Count - new Random().Next(1, calculados.Count/2 + 1) : 0)</div>
+                <div class="stat-value" id="lblConStock">0</div>
             </div>
         </div>
 
@@ -138,63 +381,74 @@
                 <h4>Lista sugerida de insumos</h4>
                 <div class="toolbar-actions">
                     <button class="btn-outline">Variable arte <i class="fas fa-location-arrow"></i></button>
-                    <button class="btn-green">+ Insumo extra-receta</button>
+                    <button class="btn-green" onclick="abrirModalExtra()">+ Insumo extra-receta</button>
                 </div>
             </div>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>COD.</th>
-                        <th>INSUMO</th>
-                        <th style="text-align:center">CANT. SUGERIDA</th>
-                        <th style="text-align:center">CANT. DEFINIDA</th>
-                        <th>PRESENTACION</th>
-                        <th>CANT. A PEDIR</th>
-                        <th>DESPACHO</th>
-                        <th>PROVEEDOR</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if(calculados.Count == 0)
-                    {
-                        <tr><td colspan="8" style="text-align:center; padding: 40px; color:#94a3b8;">No se encontró información requerida.</td></tr>
-                    }
-                    else
-                    {
-                        foreach(var item in calculados)
+            <div style="overflow-x:auto;">
+                <table class="data-table" id="tbAjustes">
+                    <thead>
+                        <tr>
+                            <th>COD.</th>
+                            <th>INSUMO</th>
+                            <th style="text-align:center">CANT. SUGERIDA</th>
+                            <th style="text-align:center">CANT. DEFINIDA</th>
+                            <th>PRESENTACIÓN</th>
+                            <th style="text-align:center">STOCK ACTUAL</th>
+                            <th style="text-align:center">CANT. A PEDIR</th>
+                            <th>DESPACHO</th>
+                            <th>PROVEEDOR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if(calculados.Count == 0)
                         {
-                            <tr>
-                                <td style="font-weight:600;">@item.CodigoInsumo</td>
-                                <td>@item.Descripcion<br/><small style="color:#94a3b8">@item.NombreColor</small></td>
-                                <td style="text-align:center">@item.GramosUDP.ToString("N1") gr</td>
-                                <td style="text-align:center"><input type="number" step="0.1" class="input-box" value="@item.GramosUDP.ToString("0.#").Replace(",",".")" /></td>
-                                <td>@item.NombrePrueba</td>
-                                <td><span style="color:#64748b; font-style:italic">Calcular...</span></td>
-                                <td>
-                                    <select class="select-box">
-                                        <option>Total</option>
-                                        <option>Parcial</option>
-                                        <option>Vacio</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="select-box">
-                                        <option>Tintas Perú SAC</option>
-                                        <option>QuimiPlast</option>
-                                        <option>Disolventes Lima</option>
-                                        <option>--- Stock propio</option>
-                                    </select>
-                                </td>
-                            </tr>
+                            <tr><td colspan="9" style="text-align:center; padding: 40px; color:#94a3b8;">No se encontró información requerida.</td></tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            foreach(var item in calculados)
+                            {
+                                <tr data-idcalculo="@item.ID_CALCULO" data-capacidad="@item.CapacidadNumerica.ToString("0.####")" data-stock="@item.StockActual.ToString("0.####")">
+                                    <td style="font-weight:600;">@item.CodigoInsumo</td>
+                                    <td>@item.Descripcion<br/><small style="color:#94a3b8">@item.NombreColor</small></td>
+                                    <td style="text-align:center">@(item.GramosUDP > 0 ? item.GramosUDP.ToString("N1") + " gr" : "-")</td>
+                                    <td style="text-align:center">
+                                        <input type="number" step="0.1" class="input-box cant-definida" value="@item.GramosUDP.ToString("0.#").Replace(",",".")" onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
+                                    </td>
+                                    <td>@item.NombrePrueba (Cap: @item.CapacidadNumerica.ToString("0.#"))</td>
+                                    <td style="text-align:center; font-weight:600" class="stock-actual">
+                                        @item.StockActual.ToString("0.##")
+                                    </td>
+                                    <td style="text-align:center; font-weight:700; color:var(--hialpesa-dark); font-size:14px" class="cant-pedir">
+                                        0
+                                    </td>
+                                    <td>
+                                        <select class="select-box drop-despacho">
+                                            <option value="Total">Total</option>
+                                            <option value="Parcial">Parcial</option>
+                                            <option value="Vacio">Vacio</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="select-box drop-prov" onchange="actualizarCapacidad(this, @item.ID_CALCULO)">
+                                            <!-- Usamos data-capacidad en las Opciones para que cambie la matemática del JS -->
+                                            <option value="1" data-capacidad="20">Tintas Perú SAC (Balde 20kg)</option>
+                                            <option value="2" data-capacidad="3.7">QuimiPlast (Galon 3.7Ltrs)</option>
+                                            <option value="3" data-capacidad="50">Disolventes Lima (Cilindro 50kg)</option>
+                                            <option value="99" data-capacidad="1">--- Stock propio (Unidad)</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
             @if(calculados.Count > 0){
                 <div class="footer-actions">
-                    <button id="btnGenerarSolicitud" class="btn-primary-dark">Generar solicitud &rarr;</button>
+                    <button id="btnGenerarSolicitud" class="btn-primary-dark">Validar y Generar Solicitud &rarr;</button>
                 </div>
             }
         </div>
@@ -204,25 +458,190 @@
             <div class="badges-container">
                 <div><span class="badge-estado badge-yellow">Total</span> Sin stock, compra completa</div>
                 <div><span class="badge-estado badge-pink">Parcial</span> Stock insuficiente, compra diferencia</div>
-                <div><span class="badge-estado badge-green">Vacio</span> Stock comprado en bloque</div>
+                <div><span class="badge-estado badge-green">Vacio</span> Stock comprado en bloque o cubierto</div>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- Modal Insumo Extra (Simulado y Conectado) -->
+<div id="modalExtra" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; width:600px; border-radius:8px; padding:24px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+            <h3 style="margin:0; font-family:'Inter'; color:#0f172a; font-size:18px;">Buscar Insumo Extra-Receta</h3>
+            <span style="cursor:pointer; font-size:20px; color:#64748b" onclick="$('#modalExtra').css('display','none')">&times;</span>
+        </div>
+        <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Escriba al menos 4 caracteres para buscar en el maestro de insumos.</p>
+        <input type="text" id="txtBuscarInsumo" placeholder="🔍 Buscar por código o descripción..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:16px; font-family:'Inter';" />
+        
+        <div style="max-height:250px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:4px">
+            <table id="tbResultadosBusqueda" style="width:100%; text-align:left; font-size:13px; border-collapse:collapse;">
+                <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc; position:sticky; top:0"><th style="padding:8px">Cód.</th><th style="padding:8px">Insumo</th><th style="padding:8px">Acción</th></tr>
+                <!-- Se llenará con ajax -->
+            </table>
+        </div>
     </div>
 </div>
 
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function() {
-            $('#btnGenerarSolicitud').click(function() {
-                Swal.fire({
-                    title: '¡Solicitud Generada!',
-                    text: 'Derivación lista para envío a SAP/Módulo de Compras.',
-                    icon: 'success',
-                    confirmButtonColor: '#0f172a'
+        $(document).ready(function () {
+            // Inicializamos seteando la capacidad local de todos desde su drop prov.
+            $('.drop-prov').each(function(){
+                var cap = $(this).find('option:selected').attr('data-capacidad') || "1";
+                $(this).closest('tr').attr('data-capacidad', cap);
+            });
+            recalcularFilas();
+
+            $('#btnGenerarSolicitud').click(function () {
+                var payload = recolectarDatosTabla();
+                $.ajax({
+                    url: '@Url.Action("GuardarAjustesEtapa3", "InsumoEstampado")',
+                    type: 'POST',
+                    data: { jsonData: JSON.stringify(payload) },
+                    success: function(r){
+                        if(r.ok){
+                            Swal.fire({ title: '¡Solicitud Generada!', text: r.mensaje, icon: 'success', confirmButtonColor: '#0f172a' })
+                            .then(() => {
+                                alert("Ir a Paso 4");
+                            });
+                        }else{
+                            Swal.fire('Error', r.mensaje, 'error');
+                        }
+                    }
                 });
             });
+
+            // Buscador Autocomplete
+            $('#txtBuscarInsumo').on('keyup', function(){
+                var val = $(this).val();
+                if(val.length >= 4){
+                    $.ajax({
+                        url: '@Url.Action("BuscarInsumoExtraReceta", "InsumoEstampado")?q=' + encodeURIComponent(val),
+                        type: 'GET',
+                        success: function(r){
+                            var tb = $('#tbResultadosBusqueda');
+                            var html = `<tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc; position:sticky; top:0"><th style="padding:8px">Cód.</th><th style="padding:8px">Insumo</th><th style="padding:8px">Acción</th></tr>`;
+                            if(r.ok && r.data && r.data.length > 0){
+                                $.each(r.data, function(i, it){
+                                    html += `<tr style="border-bottom:1px solid #f8fafc;">
+                                               <td style="padding:8px">${it.id}</td>
+                                               <td style="padding:8px">${it.text}</td>
+                                               <td style="padding:8px"><button class="btn-green" style="padding:4px 8px; font-size:11px" onclick="agregarInsumoExtra('${it.id}','${it.text.replace(/'/g,"")}')">Añadir</button></td>
+                                             </tr>`;
+                                });
+                            } else {
+                                html += `<tr><td colspan="3" style="padding:15px; text-align:center; color:#94a3b8">No se hallaron coincidencias</td></tr>`;
+                            }
+                            tb.html(html);
+                        }
+                    });
+                }
+            });
         });
+
+        function abrirModalExtra() {
+            $('#txtBuscarInsumo').val('');
+            $('#tbResultadosBusqueda').find('tr:gt(0)').remove();
+            $('#modalExtra').css('display', 'flex');
+        }
+
+        function actualizarCapacidad(selectObj, idCalc){
+            var cap = $(selectObj).find('option:selected').attr('data-capacidad') || "1";
+            var tr = $(selectObj).closest('tr');
+            tr.attr('data-capacidad', cap);
+            // Actualizar texto visual para el usuario
+            tr.find('td:eq(4)').html('Múltiple <small>(Cap: ' + cap + ')</small>');
+            recalcularFilas();
+        }
+
+        function agregarInsumoExtra(codigo, desc) {
+            var html = `<tr data-idcalculo="0" data-capacidad="1" data-stock="0">
+                            <td style="font-weight:600;">${codigo} <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 4px; border-radius:4px" title="Extra-receta">EXTRA</span></td>
+                            <td>${desc}</td>
+                            <td style="text-align:center">-</td>
+                            <td style="text-align:center">
+                                <input type="number" step="1" class="input-box cant-definida" value="1" onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
+                            </td>
+                            <td>Unidad Base (Cap: 1)</td>
+                            <td style="text-align:center; font-weight:600" class="stock-actual">0</td>
+                            <td style="text-align:center; font-weight:700; color:var(--hialpesa-dark); font-size:14px" class="cant-pedir">0</td>
+                            <td>
+                                <select class="select-box drop-despacho"><option value="Total">Total</option></select>
+                            </td>
+                            <td>
+                                <select class="select-box drop-prov"><option value="99">--- Stock propio</option></select>
+                            </td>
+                        </tr>`;
+            $('#tbAjustes tbody').append(html);
+            $('#modalExtra').css('display', 'none');
+            recalcularFilas();
+        }
+
+        // LÓGICA DE NEGOCIO PRINCIPAL: Ceiling y Stock
+        function recalcularFilas(){
+            var ReqCompra = 0, ConStock = 0;
+
+            $('#tbAjustes tbody tr').each(function(){
+                var tr = $(this);
+                // Si es la fila de vacio/nula
+                if(tr.find('td').length < 5) return;
+
+                var idCalculo = parseInt(tr.attr('data-idcalculo') || "0");
+                var capacidad = parseFloat(tr.attr('data-capacidad') || "1");
+                var stockActual = parseFloat(tr.attr('data-stock') || "0");
+                var cantDefinida = parseFloat(tr.find('.cant-definida').val() || "0");
+                
+                // CONDICIÓN: Sólo pedimos compra si stock == 0 o es menor a la cantDefinida
+                var cantAPedir = 0;
+                var combDespacho = tr.find('.drop-despacho');
+
+                if (cantDefinida <= stockActual) {
+                    // Cubierto por stock
+                    cantAPedir = 0;
+                    combDespacho.val('Vacio');
+                    ConStock++;
+                } else {
+                    // Hay déficit, calcular la diferencia o el total
+                    var faltante = cantDefinida - stockActual;
+
+                    // REDONDEO SUPERIOR (Ceiling matemático a entero dependiendo de la capacidad del envase)
+                    // Ej. Si falta 35 y cap es 20 = Math.ceil(35/20) = 2 Envases.
+                    var envasesRequeridos = Math.ceil(faltante / capacidad);
+                    cantAPedir = envasesRequeridos;
+                    
+                    if(stockActual > 0) combDespacho.val('Parcial'); // Hubo algo de stock, se cubre el resto
+                    else combDespacho.val('Total'); // Sin stock en absoluto
+                    
+                    ReqCompra++;
+                }
+
+                // Asignar al texto de cant-pedir
+                tr.find('.cant-pedir').text(cantAPedir);
+            });
+
+            $('#lblRequierenCompra').text(ReqCompra);
+            $('#lblConStock').text(ConStock);
+        }
+
+        function recolectarDatosTabla() {
+            var lista = [];
+            $('#tbAjustes tbody tr').each(function(){
+                var tr = $(this);
+                if(tr.find('td').length > 5){
+                    var obj = {
+                        ID_CALCULO: parseInt(tr.attr('data-idcalculo')),
+                        GramosUDP: parseFloat(tr.find('.cant-definida').val()),
+                        CantidadAPedir: parseFloat(tr.find('.cant-pedir').text()),
+                        TipoDespacho: tr.find('.drop-despacho').val(),
+                        IdProveedorAsignado: parseInt(tr.find('.drop-prov').val()),
+                        StockActual: parseFloat(tr.attr('data-stock'))
+                    };
+                    lista.push(obj);
+                }
+            });
+            return lista;
+        }
     </script>
 }

@@ -703,6 +703,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InsumoEstampadoController.cs" />
+    <Compile Include="Controllers\ProveedorController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -715,6 +716,8 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\InsumoEstampado\Index.cshtml" />
+    <Content Include="Views\Proveedor\Index.cshtml" />
+    <Content Include="Views\Proveedor\_ListaProveedoresGrid.cshtml" />
     <Content Include="Views\InsumoEstampado\CalcularInsumos.cshtml" />
     <Content Include="Views\InsumoEstampado\AjustarCantidades.cshtml" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

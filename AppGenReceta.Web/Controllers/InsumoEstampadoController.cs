@@ -185,5 +185,42 @@ namespace AppGenReceta.Web.Controllers
 
             return View();
         }
+
+        [HttpPost]
+        public JsonResult GuardarAjustesEtapa3(string jsonData)
+        {
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                serializer.MaxJsonLength = int.MaxValue;
+                List<E_InsumoCalculado> lista = serializer.Deserialize<List<E_InsumoCalculado>>(jsonData);
+
+                // Llamar a través de la capa de Negocio (BL)
+                bool exito = bl.ActualizarAjustesInsumosCalculados(lista);
+                
+                return Json(new { ok = exito, mensaje = "Cantidades y proveedores guardados. Derivando a Paso 4."});
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, mensaje = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult BuscarInsumoExtraReceta(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 4) return Json(new { ok = false, data = new List<dynamic>() }, JsonRequestBehavior.AllowGet);
+            
+            try
+            {
+                // Llamar a través de la capa de Negocio (BL)
+                var resultados = bl.BuscarInsumosFiltro(q);
+                return Json(new { ok = true, data = resultados.Select(x => new { id = x.CodigoInsumo, text = x.Descripcion }).ToList() }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, mensaje = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }

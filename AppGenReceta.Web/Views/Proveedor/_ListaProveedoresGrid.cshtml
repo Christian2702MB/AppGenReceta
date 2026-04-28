@@ -1,0 +1,39 @@
+@model List<AppGenReceta.BE.E_InsumoProveedor>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>PROVEEDOR</th>
+            <th>INSUMO RELACIONADO</th>
+            <th>PRESENTACIÓN</th>
+            <th>UNIDAD</th>
+            <th>PRECIO UNIT.</th>
+            <th>PRECIO PRESENTACIÓN</th>
+            <th>ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if(Model.Count == 0)
+        {
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8">No se encontraron resultados para los filtros seleccionados.</td></tr>
+        }
+        else
+        {
+            foreach(var item in Model)
+            {
+                <tr>
+                    <td style="font-weight: 500;">@item.RazonSocial</td>
+                    <td>@item.DescripcionInsumo</td>
+                    <td>@item.DescripcionPresentacion</td>
+                    <td>@item.UnidadMedida</td>
+                    <td>S/ @item.PrecioUnitario.ToString("0.00")</td>
+                    <td>S/ @item.PrecioPresentacion.ToString("0.00")</td>
+                    <td style="display:flex; gap:5px;">
+                        <button class="btn-text" onclick="editarProveedor(@item.IdProveedor)">Editar</button>
+                        <button class="btn-text" style="color:#ef4444; border-color:#ef4444;" onclick="eliminarRelacionGrid(@item.IdRelacion)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

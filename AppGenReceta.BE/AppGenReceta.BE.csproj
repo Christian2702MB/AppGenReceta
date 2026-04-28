@@ -42,10 +42,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="E_InsumoNP.cs" />
+    <Compile Include="E_Proveedor.cs" />
     <Compile Include="E_InsumoCalculado.cs" />
     <Compile Include="E_InsumoNPFiltro.cs" />
     <Compile Include="E_NpAutocomplete.cs" />
     <Compile Include="NPBE.cs" />
+    <Compile Include="PeruApi_Response.cs" />
     <Compile Include="RecetaColorBE.cs" />
     <Compile Include="RecetaInsumoBE.cs" />
     <Compile Include="Respuesta_Json.cs" />
