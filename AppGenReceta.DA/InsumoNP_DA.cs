@@ -616,7 +616,7 @@ namespace AppGenReceta.DA
                 // 1. NPs incluidas en la agrupacion
                 using (SqlCommand cmdNP = new SqlCommand(@"
                     SELECT DISTINCT N.NP
-                    FROM TBL_ESTAMPADO_NP_AGRUPACION N
+                    FROM TBL_ESTAMPADO_AGRUPACION_NP N
                     INNER JOIN TBL_ESTAMPADO_AGRUPACION_NP A ON N.ID_AGRUPACION = A.ID_AGRUPACION
                     WHERE A.SESSION_ID = @SID", con))
                 {
