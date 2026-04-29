@@ -339,45 +339,146 @@ namespace AppGenReceta.DA
             List<E_InsumoCalculado> lista = new List<E_InsumoCalculado>();
             using (SqlConnection con = new SqlConnection(GetConnectionString()))
             {
-                // Obtenemos los insumos usando el ID_AGRUPACION asociado al SESSION_ID
-                string sql = @"
-                    SELECT I.* 
+                con.Open();
+
+                // PASO 1: Insumos base del session
+                string sqlBase = @"
+                    SELECT I.*
                     FROM TBL_ESTAMPADO_INSUMO_CALCULADO I
                     INNER JOIN TBL_ESTAMPADO_AGRUPACION_NP A ON I.ID_AGRUPACION = A.ID_AGRUPACION
                     WHERE A.SESSION_ID = @SESSION_ID";
 
-                using (SqlCommand cmd = new SqlCommand(sql, con))
+                using (SqlCommand cmd = new SqlCommand(sqlBase, con))
                 {
                     cmd.Parameters.AddWithValue("@SESSION_ID", sessionId);
-                    con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
                         {
-                            E_InsumoCalculado e = new E_InsumoCalculado();
-                            e.ID_CALCULO = GetIntSafe(dr, "ID_CALCULO");
-                            e.CodigoInsumo = GetStringSafe(dr, "COD_ARTICULO");
-                            e.Descripcion = GetStringSafe(dr, "DES_ARTICULO");
-                            e.NombreColor = GetStringSafe(dr, "COLOR");
-                            e.NombrePrueba = GetStringSafe(dr, "PRESENTACION"); // mapeado inverso
-                            e.GramosUDP = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"); // map inverso
-                            
-                            // Mock provisional del SP USP_EST_OBTENER_STOCK_ACTUAL
-                            // Como esto es paso a paso, insertamos una lógica hardcode provisional para simular:
-                            e.StockActual = new Random().Next((int)e.GramosUDP - 5, (int)e.GramosUDP + 20);
-                            if(e.StockActual < 0) e.StockActual = 0;
-                            // En el futuro, reemplázalo llamando al SP de la BD. 
-                            
-                            e.CapacidadNumerica = 20; // Hardcodeado preventivo simulando (ej. un Balde=20)
-                            
-                            e.SESSION_ID = sessionId;
-                            lista.Add(e);
+                            lista.Add(new E_InsumoCalculado
+                            {
+                                ID_CALCULO        = GetIntSafe(dr, "ID_CALCULO"),
+                                CodigoInsumo      = GetStringSafe(dr, "COD_ARTICULO"),
+                                Descripcion       = GetStringSafe(dr, "DES_ARTICULO"),
+                                NombreColor       = GetStringSafe(dr, "COLOR"),
+                                NombrePrueba      = GetStringSafe(dr, "PRESENTACION"),
+                                GramosUDP         = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"),
+                                GramosUDPSugerido = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"),
+                                SESSION_ID        = sessionId,
+                                ProveedoresOpciones = new List<E_ProveedorOpcion>()
+                            });
                         }
                     }
+                }
+
+                if (!lista.Any()) return lista;
+
+                // PASO 2: Batch query proveedores+presentaciones (anti-N+1)
+                // Formula: DES_PRESENTACION + CAPACIDAD_NUMERICA + UNIDAD_MEDIDA -> "Balde 20 kg"
+                var codigos    = lista.Select(x => x.CodigoInsumo).Distinct().ToList();
+                var paramNames = codigos.Select((_, i) => "@p" + i).ToList();
+                string inClause = string.Join(",", paramNames);
+
+                string sqlProv = @"
+                    SELECT
+                        IP.COD_ARTICULO,
+                        P.ID_PROVEEDOR,
+                        P.RAZON_SOCIAL,
+                        IP.DES_PRESENTACION,
+                        IP.CAPACIDAD_NUMERICA,
+                        IP.UNIDAD_MEDIDA,
+                        LTRIM(RTRIM(
+                            ISNULL(IP.DES_PRESENTACION,'') + ' ' +
+                            ISNULL(CONVERT(VARCHAR,CONVERT(DECIMAL(18,2),IP.CAPACIDAD_NUMERICA)),'') + ' ' +
+                            ISNULL(IP.UNIDAD_MEDIDA,'')
+                        )) AS TEXTO_PRESENTACION
+                    FROM TBL_ESTAMPADO_INSUMO_PROVEEDOR IP
+                    INNER JOIN TBL_ESTAMPADO_PROVEEDOR P ON IP.ID_PROVEEDOR = P.ID_PROVEEDOR
+                    WHERE IP.COD_ARTICULO IN (" + inClause + @")
+                      AND P.ES_ACTIVO = 1
+                    ORDER BY IP.COD_ARTICULO, P.RAZON_SOCIAL";
+
+                var mapProv = new Dictionary<string, List<E_ProveedorOpcion>>(StringComparer.OrdinalIgnoreCase);
+
+                using (SqlCommand cmdProv = new SqlCommand(sqlProv, con))
+                {
+                    for (int i = 0; i < codigos.Count; i++)
+                        cmdProv.Parameters.AddWithValue(paramNames[i], codigos[i]);
+
+                    using (SqlDataReader dr = cmdProv.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            string cod    = GetStringSafe(dr, "COD_ARTICULO");
+                            int    idProv = GetIntSafe(dr, "ID_PROVEEDOR");
+
+                            if (!mapProv.ContainsKey(cod))
+                                mapProv[cod] = new List<E_ProveedorOpcion>();
+
+                            // Evitar duplicados de proveedor por insumo
+                            if (mapProv[cod].Any(x => x.IdProveedor == idProv)) continue;
+
+                            mapProv[cod].Add(new E_ProveedorOpcion
+                            {
+                                IdProveedor       = idProv,
+                                RazonSocial       = GetStringSafe(dr, "RAZON_SOCIAL"),
+                                CapacidadNumerica = GetDecimalSafe(dr, "CAPACIDAD_NUMERICA"),
+                                Presentacion      = GetStringSafe(dr, "TEXTO_PRESENTACION")
+                            });
+                        }
+                    }
+                }
+
+                // Asignar proveedores y presentacion a cada insumo
+                foreach (var e in lista)
+                {
+                    if (mapProv.ContainsKey(e.CodigoInsumo) && mapProv[e.CodigoInsumo].Any())
+                    {
+                        e.ProveedoresOpciones = mapProv[e.CodigoInsumo];
+                        var primero           = e.ProveedoresOpciones.First();
+                        e.Presentacion        = string.IsNullOrWhiteSpace(primero.Presentacion)
+                                               ? "Sin presentacion" : primero.Presentacion;
+                        e.CapacidadNumerica   = primero.CapacidadNumerica;
+                    }
+                    else
+                    {
+                        // Sin proveedor: combo mostrara solo Stock propio
+                        e.Presentacion        = "Unidad Base";
+                        e.CapacidadNumerica   = 1;
+                    }
+                }
+
+                // PASO 3: Stock real via USP_EST_OBTENER_STOCK_ACTUAL
+                foreach (var e in lista)
+                {
+                    try
+                    {
+                        using (SqlCommand cmdStock = new SqlCommand("USP_EST_OBTENER_STOCK_ACTUAL", con))
+                        {
+                            cmdStock.CommandType = CommandType.StoredProcedure;
+                            cmdStock.Parameters.AddWithValue("@COD_ARTICULO", e.CodigoInsumo);
+                            using (SqlDataReader dr = cmdStock.ExecuteReader())
+                            {
+                                if (dr.Read())
+                                {
+                                    string raw    = GetStringSafe(dr, "Stock_Libras");
+                                    decimal stock = 0;
+                                    if (!string.IsNullOrWhiteSpace(raw))
+                                        decimal.TryParse(raw.Split(' ')[0].Trim(),
+                                            System.Globalization.NumberStyles.Any,
+                                            System.Globalization.CultureInfo.InvariantCulture,
+                                            out stock);
+                                    e.StockActual = stock;
+                                }
+                            }
+                        }
+                    }
+                    catch { e.StockActual = 0; }
                 }
             }
             return lista;
         }
+
 
         public bool ActualizarAjustesInsumosCalculados(List<E_InsumoCalculado> calculados)
         {
@@ -392,21 +493,24 @@ namespace AppGenReceta.DA
                         foreach (var item in calculados)
                         {
                             string sql = @"UPDATE TBL_ESTAMPADO_INSUMO_CALCULADO SET
-                                CANTIDAD_DEFINIDA = @CANTIDAD_DEFINIDA,
-                                CANTIDAD_A_PEDIR = @CANTIDAD_A_PEDIR,
-                                TIPO_DESPACHO = @TIPO_DESPACHO,
+                                CANTIDAD_DEFINIDA    = @CANTIDAD_DEFINIDA,
+                                CANTIDAD_SUGERIDA    = @CANTIDAD_SUGERIDA,
+                                CANTIDAD_A_PEDIR     = @CANTIDAD_A_PEDIR,
+                                TIPO_DESPACHO        = @TIPO_DESPACHO,
                                 ID_PROVEEDOR_ASIGNADO = @ID_PROVEEDOR_ASIGNADO,
-                                STOCK_CONSULTADO = @STOCK_CONSULTADO
+                                STOCK_CONSULTADO     = @STOCK_CONSULTADO
                                 WHERE ID_CALCULO = @ID_CALCULO";
                                 
                             using (SqlCommand cmd = new SqlCommand(sql, con, tr))
                             {
-                                cmd.Parameters.AddWithValue("@ID_CALCULO", item.ID_CALCULO);
-                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA", item.GramosUDP);
-                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR", item.CantidadAPedir);
-                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO", item.TipoDespacho ?? "Total");
+                                cmd.Parameters.AddWithValue("@ID_CALCULO",            item.ID_CALCULO);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA",     item.GramosUDP);
+                                // Guardamos la cantidad sugerida (la original calculada, no editada por el usuario)
+                                cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",     item.GramosUDPSugerido > 0 ? item.GramosUDPSugerido : item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR",      item.CantidadAPedir);
+                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO",         item.TipoDespacho ?? "Total");
                                 cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO", item.IdProveedorAsignado);
-                                cmd.Parameters.AddWithValue("@STOCK_CONSULTADO", item.StockActual);
+                                cmd.Parameters.AddWithValue("@STOCK_CONSULTADO",      item.StockActual);
                                 cmd.ExecuteNonQuery();
                             }
                         }
@@ -427,30 +531,36 @@ namespace AppGenReceta.DA
             List<E_InsumoCalculado> lista = new List<E_InsumoCalculado>();
             using (SqlConnection con = new SqlConnection(GetConnectionString()))
             {
+                // Usamos el mismo SP que funciona en la receta (sin parámetros, filtra en memoria)
                 using (SqlCommand cmd = new SqlCommand("SP_LISTAR_INSUMOS", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@FILTRO", query); // Parámetro genérico por si es Filtro, Texto, etc. Normalmente en ASP.NET con BD de este tipo
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
                         {
                             E_InsumoCalculado e = new E_InsumoCalculado();
-                            // Se mapea con lo tipico de un catalogo. Manejado via GetStringSafe(dr,"...")
-                            e.CodigoInsumo = GetStringSafe(dr, "Cod_Insumo"); // Ajustar según las columnas reales
-                            if (string.IsNullOrEmpty(e.CodigoInsumo))
-                                e.CodigoInsumo = GetStringSafe(dr, "COD_ARTICULO");
-
-                            e.Descripcion = GetStringSafe(dr, "Des_Insumo");
-                            if (string.IsNullOrEmpty(e.Descripcion))
-                                e.Descripcion = GetStringSafe(dr, "DESCRIPCION");
-                                
+                            // El SP devuelve columnas: Codigo, Descripcion, Stock
+                            e.CodigoInsumo = GetStringSafe(dr, "Codigo");
+                            e.Descripcion  = GetStringSafe(dr, "Descripcion");
                             lista.Add(e);
                         }
                     }
                 }
             }
+
+            // Filtrar en memoria igual que BuscarInsumosSelect2 en HomeController
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                string q = query.Trim().ToUpper();
+                lista = lista
+                    .Where(x => (x.CodigoInsumo != null && x.CodigoInsumo.ToUpper().Contains(q))
+                             || (x.Descripcion   != null && x.Descripcion.ToUpper().Contains(q)))
+                    .Take(50)
+                    .ToList();
+            }
+
             return lista;
         }
     }

@@ -209,7 +209,7 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public JsonResult BuscarInsumoExtraReceta(string q)
         {
-            if (string.IsNullOrWhiteSpace(q) || q.Length < 4) return Json(new { ok = false, data = new List<dynamic>() }, JsonRequestBehavior.AllowGet);
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 3) return Json(new { ok = false, data = new List<dynamic>() }, JsonRequestBehavior.AllowGet);
             
             try
             {

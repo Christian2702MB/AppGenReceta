@@ -1,4 +1,4 @@
-@using AppGenReceta.BE
+﻿@using AppGenReceta.BE
 @{
     ViewBag.Title = "Paso 3: Ajustar Cantidades";
 
@@ -409,14 +409,18 @@
                         {
                             foreach(var item in calculados)
                             {
-                                <tr data-idcalculo="@item.ID_CALCULO" data-capacidad="@item.CapacidadNumerica.ToString("0.####")" data-stock="@item.StockActual.ToString("0.####")">
+                                <tr data-idcalculo="@item.ID_CALCULO"
+                                    data-capacidad="@item.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)"
+                                    data-stock="@item.StockActual.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)">
                                     <td style="font-weight:600;">@item.CodigoInsumo</td>
                                     <td>@item.Descripcion<br/><small style="color:#94a3b8">@item.NombreColor</small></td>
                                     <td style="text-align:center">@(item.GramosUDP > 0 ? item.GramosUDP.ToString("N1") + " gr" : "-")</td>
                                     <td style="text-align:center">
-                                        <input type="number" step="0.1" class="input-box cant-definida" value="@item.GramosUDP.ToString("0.#").Replace(",",".")" onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
+                                        <input type="number" step="0.1" class="input-box cant-definida"
+                                               value="@item.GramosUDP.ToString("0.#").Replace(",",".")"
+                                               onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
                                     </td>
-                                    <td>@item.NombrePrueba (Cap: @item.CapacidadNumerica.ToString("0.#"))</td>
+                                    <td>@(string.IsNullOrWhiteSpace(item.Presentacion) ? "Sin presentación" : item.Presentacion)</td>
                                     <td style="text-align:center; font-weight:600" class="stock-actual">
                                         @item.StockActual.ToString("0.##")
                                     </td>
@@ -432,11 +436,20 @@
                                     </td>
                                     <td>
                                         <select class="select-box drop-prov" onchange="actualizarCapacidad(this, @item.ID_CALCULO)">
-                                            <!-- Usamos data-capacidad en las Opciones para que cambie la matemática del JS -->
-                                            <option value="1" data-capacidad="20">Tintas Perú SAC (Balde 20kg)</option>
-                                            <option value="2" data-capacidad="3.7">QuimiPlast (Galon 3.7Ltrs)</option>
-                                            <option value="3" data-capacidad="50">Disolventes Lima (Cilindro 50kg)</option>
-                                            <option value="99" data-capacidad="1">--- Stock propio (Unidad)</option>
+                                            @if (item.ProveedoresOpciones != null && item.ProveedoresOpciones.Any())
+                                            {
+                                                foreach (var prov in item.ProveedoresOpciones)
+                                                {
+                                                    <option value="@prov.IdProveedor"
+                                                            data-capacidad="@prov.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)">
+                                                        @(prov.RazonSocial + " (" + prov.Presentacion + ")")
+                                                    </option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option value="0" data-capacidad="1">--- Stock propio</option>
+                                            }
                                         </select>
                                     </td>
                                 </tr>
@@ -471,7 +484,7 @@
             <h3 style="margin:0; font-family:'Inter'; color:#0f172a; font-size:18px;">Buscar Insumo Extra-Receta</h3>
             <span style="cursor:pointer; font-size:20px; color:#64748b" onclick="$('#modalExtra').css('display','none')">&times;</span>
         </div>
-        <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Escriba al menos 4 caracteres para buscar en el maestro de insumos.</p>
+        <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Escriba al menos 3 caracteres para buscar en el maestro de insumos.</p>
         <input type="text" id="txtBuscarInsumo" placeholder="🔍 Buscar por código o descripción..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:16px; font-family:'Inter';" />
         
         <div style="max-height:250px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:4px">
@@ -516,7 +529,7 @@
             // Buscador Autocomplete
             $('#txtBuscarInsumo').on('keyup', function(){
                 var val = $(this).val();
-                if(val.length >= 4){
+                if(val.length >= 3){
                     $.ajax({
                         url: '@Url.Action("BuscarInsumoExtraReceta", "InsumoEstampado")?q=' + encodeURIComponent(val),
                         type: 'GET',
