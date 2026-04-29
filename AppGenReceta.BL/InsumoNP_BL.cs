@@ -134,5 +134,37 @@ namespace AppGenReceta.BL
         {
             return da.BuscarInsumosFiltro(query);
         }
+
+        // =====================================================
+        // PASO 3→4: GUARDAR Y AVANZAR A GENERAR SOLICITUD
+        // =====================================================
+
+        /// <summary>
+        /// Persiste todos los ajustes del Paso 3 y avanza al Paso 4.
+        /// - Insumos con ID_CALCULO > 0 → UPDATE (incluye PRESENTACION)
+        /// - Insumos con ID_CALCULO = 0 → INSERT como extra-receta
+        /// </summary>
+        public void GuardarYAvanzarPaso4(List<E_InsumoCalculado> lista, string sessionId)
+        {
+            if (lista == null || !lista.Any()) throw new Exception("La lista de insumos está vacía.");
+
+            var existentes = lista.Where(x => x.ID_CALCULO > 0).ToList();
+            var extras     = lista.Where(x => x.ID_CALCULO == 0).ToList();
+
+            if (existentes.Any())
+                da.ActualizarAjustesInsumosCalculados(existentes);
+
+            if (extras.Any())
+                da.InsertarInsumosExtraReceta(sessionId, extras);
+        }
+
+        /// <summary>
+        /// Obtiene el resumen para el Paso 4: métricas de compra + ítems de la tabla.
+        /// </summary>
+        public E_SolicitudResumen ObtenerResumenSolicitud(string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return new E_SolicitudResumen();
+            return da.ObtenerResumenSolicitud(sessionId);
+        }
     }
 }

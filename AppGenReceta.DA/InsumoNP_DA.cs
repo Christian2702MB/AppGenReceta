@@ -308,7 +308,7 @@ namespace AppGenReceta.DA
                                 (ID_AGRUPACION, COD_ARTICULO, DES_ARTICULO, COLOR, UNIDAD_MEDIDA, CANTIDAD_DEFINIDA, PRESENTACION, USUARIO_PROCESA, FECHA_PROCESO)
                                 VALUES
                                 ((SELECT TOP 1 ID_AGRUPACION FROM TBL_ESTAMPADO_AGRUPACION_NP WHERE SESSION_ID = @SESSION_ID ORDER BY ID_AGRUPACION DESC),
-                                 @COD_ARTICULO, @DES_ARTICULO, @COLOR, 'UDP', @CANTIDAD_DEFINIDA, @PRESENTACION, @USUARIO_PROCESA, GETDATE())";
+                                 @COD_ARTICULO, @DES_ARTICULO, @COLOR, 'UDP', @CANTIDAD_DEFINIDA, '', @USUARIO_PROCESA, GETDATE())";
                             
                             using (SqlCommand cmd = new SqlCommand(sql, con, tr))
                             {
@@ -317,7 +317,7 @@ namespace AppGenReceta.DA
                                 cmd.Parameters.AddWithValue("@DES_ARTICULO", item.Descripcion ?? "");
                                 cmd.Parameters.AddWithValue("@COLOR", item.NombreColor ?? "");
                                 cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA", item.GramosUDP);
-                                cmd.Parameters.AddWithValue("@PRESENTACION", item.NombrePrueba ?? "");
+                                //cmd.Parameters.AddWithValue("@PRESENTACION", item.NombrePrueba ?? "");
                                 cmd.Parameters.AddWithValue("@USUARIO_PROCESA", usuario ?? "");
                                 cmd.ExecuteNonQuery();
                             }
@@ -480,6 +480,14 @@ namespace AppGenReceta.DA
         }
 
 
+        // =====================================================
+        // PASO 3: PERSISTENCIA AL CONFIRMAR AJUSTES
+        // =====================================================
+
+        /// <summary>
+        /// Actualiza insumos existentes (ID_CALCULO > 0) con todos los campos del Paso 3.
+        /// Incluye PRESENTACION seleccionada por el usuario.
+        /// </summary>
         public bool ActualizarAjustesInsumosCalculados(List<E_InsumoCalculado> calculados)
         {
             if (calculados == null || !calculados.Any()) return false;
@@ -490,27 +498,28 @@ namespace AppGenReceta.DA
                 {
                     try
                     {
-                        foreach (var item in calculados)
+                        foreach (var item in calculados.Where(x => x.ID_CALCULO > 0))
                         {
                             string sql = @"UPDATE TBL_ESTAMPADO_INSUMO_CALCULADO SET
-                                CANTIDAD_DEFINIDA    = @CANTIDAD_DEFINIDA,
-                                CANTIDAD_SUGERIDA    = @CANTIDAD_SUGERIDA,
-                                CANTIDAD_A_PEDIR     = @CANTIDAD_A_PEDIR,
-                                TIPO_DESPACHO        = @TIPO_DESPACHO,
+                                CANTIDAD_DEFINIDA     = @CANTIDAD_DEFINIDA,
+                                CANTIDAD_SUGERIDA     = @CANTIDAD_SUGERIDA,
+                                CANTIDAD_A_PEDIR      = @CANTIDAD_A_PEDIR,
+                                TIPO_DESPACHO         = @TIPO_DESPACHO,
                                 ID_PROVEEDOR_ASIGNADO = @ID_PROVEEDOR_ASIGNADO,
-                                STOCK_CONSULTADO     = @STOCK_CONSULTADO
+                                STOCK_CONSULTADO      = @STOCK_CONSULTADO,
+                                PRESENTACION          = @PRESENTACION
                                 WHERE ID_CALCULO = @ID_CALCULO";
-                                
+
                             using (SqlCommand cmd = new SqlCommand(sql, con, tr))
                             {
-                                cmd.Parameters.AddWithValue("@ID_CALCULO",            item.ID_CALCULO);
-                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA",     item.GramosUDP);
-                                // Guardamos la cantidad sugerida (la original calculada, no editada por el usuario)
-                                cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",     item.GramosUDPSugerido > 0 ? item.GramosUDPSugerido : item.GramosUDP);
-                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR",      item.CantidadAPedir);
-                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO",         item.TipoDespacho ?? "Total");
-                                cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO", item.IdProveedorAsignado);
-                                cmd.Parameters.AddWithValue("@STOCK_CONSULTADO",      item.StockActual);
+                                cmd.Parameters.AddWithValue("@ID_CALCULO",             item.ID_CALCULO);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA",      item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",      item.GramosUDPSugerido > 0 ? item.GramosUDPSugerido : item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR",       item.CantidadAPedir);
+                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO",          item.TipoDespacho ?? "Total");
+                                cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO",  item.IdProveedorAsignado);
+                                cmd.Parameters.AddWithValue("@STOCK_CONSULTADO",       item.StockActual);
+                                cmd.Parameters.AddWithValue("@PRESENTACION",           item.Presentacion ?? (object)DBNull.Value);
                                 cmd.ExecuteNonQuery();
                             }
                         }
@@ -520,18 +529,174 @@ namespace AppGenReceta.DA
                     catch (Exception ex)
                     {
                         tr.Rollback();
-                        throw new Exception("Error al actualizar la tabla TBL_ESTAMPADO_INSUMO_CALCULADO: " + ex.Message);
+                        throw new Exception("Error al actualizar TBL_ESTAMPADO_INSUMO_CALCULADO: " + ex.Message);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Inserta los insumos extra-receta (ID_CALCULO=0) en TBL_ESTAMPADO_INSUMO_CALCULADO.
+        /// Obtiene el ID_AGRUPACION desde el SESSION_ID.
+        /// </summary>
+        public bool InsertarInsumosExtraReceta(string sessionId, List<E_InsumoCalculado> extras)
+        {
+            if (extras == null || !extras.Any()) return true; // Nada que insertar es OK
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+
+                // Obtener ID_AGRUPACION del session
+                int idAgrupacion = 0;
+                using (SqlCommand cmdAg = new SqlCommand(
+                    "SELECT TOP 1 ID_AGRUPACION FROM TBL_ESTAMPADO_AGRUPACION_NP WHERE SESSION_ID = @SID", con))
+                {
+                    cmdAg.Parameters.AddWithValue("@SID", sessionId);
+                    object res = cmdAg.ExecuteScalar();
+                    if (res == null || res == DBNull.Value)
+                        throw new Exception("No se encontrÃ³ agrupaciÃ³n para el session: " + sessionId);
+                    idAgrupacion = Convert.ToInt32(res);
+                }
+
+                using (SqlTransaction tr = con.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var item in extras)
+                        {
+                            string sql = @"
+                                INSERT INTO TBL_ESTAMPADO_INSUMO_CALCULADO
+                                    (ID_AGRUPACION, COD_ARTICULO, DES_ARTICULO,
+                                     CANTIDAD_DEFINIDA, CANTIDAD_SUGERIDA, CANTIDAD_A_PEDIR,
+                                     TIPO_DESPACHO, ID_PROVEEDOR_ASIGNADO,
+                                     PRESENTACION, STOCK_CONSULTADO, ES_EXTRA_RECETA)
+                                VALUES
+                                    (@ID_AGRUPACION, @COD_ARTICULO, @DES_ARTICULO,
+                                     @CANTIDAD_DEFINIDA, @CANTIDAD_SUGERIDA, @CANTIDAD_A_PEDIR,
+                                     @TIPO_DESPACHO, @ID_PROVEEDOR_ASIGNADO,
+                                     @PRESENTACION, 0, 1)";
+
+                            using (SqlCommand cmd = new SqlCommand(sql, con, tr))
+                            {
+                                cmd.Parameters.AddWithValue("@ID_AGRUPACION",          idAgrupacion);
+                                cmd.Parameters.AddWithValue("@COD_ARTICULO",           item.CodigoInsumo ?? "");
+                                cmd.Parameters.AddWithValue("@DES_ARTICULO",           item.Descripcion  ?? "");
+                                cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA",      item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",      item.GramosUDP);
+                                cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR",       item.CantidadAPedir);
+                                cmd.Parameters.AddWithValue("@TIPO_DESPACHO",          item.TipoDespacho  ?? "Total");
+                                cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO",  item.IdProveedorAsignado);
+                                cmd.Parameters.AddWithValue("@PRESENTACION",           item.Presentacion  ?? (object)DBNull.Value);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                        tr.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        throw new Exception("Error al insertar insumos extra-receta: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el resumen completo del Paso 4: insumos calculados + precio unitario del proveedor.
+        /// Solo retorna filas que requieren compra (CANTIDAD_A_PEDIR > 0).
+        /// </summary>
+        public E_SolicitudResumen ObtenerResumenSolicitud(string sessionId)
+        {
+            var resumen = new E_SolicitudResumen { SessionId = sessionId };
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+
+                // 1. NPs incluidas en la agrupacion
+                using (SqlCommand cmdNP = new SqlCommand(@"
+                    SELECT DISTINCT N.NP
+                    FROM TBL_ESTAMPADO_NP_AGRUPACION N
+                    INNER JOIN TBL_ESTAMPADO_AGRUPACION_NP A ON N.ID_AGRUPACION = A.ID_AGRUPACION
+                    WHERE A.SESSION_ID = @SID", con))
+                {
+                    cmdNP.Parameters.AddWithValue("@SID", sessionId);
+                    using (SqlDataReader dr = cmdNP.ExecuteReader())
+                    {
+                        while (dr.Read()) resumen.NPsIncluidas.Add(dr[0].ToString());
+                    }
+                }
+
+                // 2. Insumos calculados con precio unitario del proveedor asignado
+                string sqlItems = @"
+                    SELECT
+                        IC.ID_CALCULO,
+                        IC.COD_ARTICULO,
+                        IC.DES_ARTICULO,
+                        IC.COLOR,
+                        IC.CANTIDAD_DEFINIDA,
+                        IC.CANTIDAD_A_PEDIR,
+                        IC.TIPO_DESPACHO,
+                        IC.ID_PROVEEDOR_ASIGNADO,
+                        IC.PRESENTACION,
+                        IC.STOCK_CONSULTADO,
+                        IC.ES_EXTRA_RECETA,
+                        ISNULL(IP.PRECIO_UNITARIO, 0) AS PRECIO_UNITARIO
+                    FROM TBL_ESTAMPADO_INSUMO_CALCULADO IC
+                    INNER JOIN TBL_ESTAMPADO_AGRUPACION_NP A ON IC.ID_AGRUPACION = A.ID_AGRUPACION
+                    LEFT JOIN TBL_ESTAMPADO_INSUMO_PROVEEDOR IP
+                        ON IP.COD_ARTICULO = IC.COD_ARTICULO
+                       AND IP.ID_PROVEEDOR = IC.ID_PROVEEDOR_ASIGNADO
+                    WHERE A.SESSION_ID = @SID";
+
+                var todosLosItems = new List<E_InsumoCalculado>();
+                using (SqlCommand cmdItems = new SqlCommand(sqlItems, con))
+                {
+                    cmdItems.Parameters.AddWithValue("@SID", sessionId);
+                    using (SqlDataReader dr = cmdItems.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            todosLosItems.Add(new E_InsumoCalculado
+                            {
+                                ID_CALCULO          = GetIntSafe(dr, "ID_CALCULO"),
+                                CodigoInsumo        = GetStringSafe(dr, "COD_ARTICULO"),
+                                Descripcion         = GetStringSafe(dr, "DES_ARTICULO"),
+                                NombreColor         = GetStringSafe(dr, "COLOR"),
+                                GramosUDP           = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"),
+                                CantidadAPedir      = GetDecimalSafe(dr, "CANTIDAD_A_PEDIR"),
+                                TipoDespacho        = GetStringSafe(dr, "TIPO_DESPACHO"),
+                                IdProveedorAsignado = GetIntSafe(dr, "ID_PROVEEDOR_ASIGNADO"),
+                                Presentacion        = GetStringSafe(dr, "PRESENTACION"),
+                                StockActual         = GetDecimalSafe(dr, "STOCK_CONSULTADO"),
+                                EsExtraReceta       = dr["ES_EXTRA_RECETA"] != DBNull.Value && Convert.ToBoolean(dr["ES_EXTRA_RECETA"]),
+                                PrecioUnitario      = GetDecimalSafe(dr, "PRECIO_UNITARIO")
+                            });
+                        }
+                    }
+                }
+
+                // 3. Calcular mÃ©tricas del resumen con LINQ
+                resumen.ItemsAComprar      = todosLosItems.Count(x => x.TipoDespacho != "Vacio" && x.CantidadAPedir > 0);
+                resumen.ItemsConStock      = todosLosItems.Count(x => x.StockActual > 0);
+                resumen.CantidadProveedores = todosLosItems.Where(x => x.IdProveedorAsignado > 0).Select(x => x.IdProveedorAsignado).Distinct().Count();
+                resumen.CostoEstimado      = todosLosItems.Where(x => x.CantidadAPedir > 0).Sum(x => x.CantidadAPedir * x.PrecioUnitario);
+
+                // Solo Ã­tems que requieren compra para la tabla inferior
+                resumen.Items = todosLosItems.Where(x => x.CantidadAPedir > 0).OrderBy(x => x.CodigoInsumo).ToList();
+            }
+            return resumen;
+        }
+
+        /// <summary>
+        /// Busca insumos en el maestro por código o descripción (mínimo 3 caracteres).
+        /// Usado para agregar insumos extra-receta en el Paso 3.
+        /// </summary>
         public List<E_InsumoCalculado> BuscarInsumosFiltro(string query)
         {
             List<E_InsumoCalculado> lista = new List<E_InsumoCalculado>();
             using (SqlConnection con = new SqlConnection(GetConnectionString()))
             {
-                // Usamos el mismo SP que funciona en la receta (sin parámetros, filtra en memoria)
                 using (SqlCommand cmd = new SqlCommand("SP_LISTAR_INSUMOS", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -541,7 +706,6 @@ namespace AppGenReceta.DA
                         while (dr.Read())
                         {
                             E_InsumoCalculado e = new E_InsumoCalculado();
-                            // El SP devuelve columnas: Codigo, Descripcion, Stock
                             e.CodigoInsumo = GetStringSafe(dr, "Codigo");
                             e.Descripcion  = GetStringSafe(dr, "Descripcion");
                             lista.Add(e);
@@ -550,7 +714,7 @@ namespace AppGenReceta.DA
                 }
             }
 
-            // Filtrar en memoria igual que BuscarInsumosSelect2 en HomeController
+            // Filtrar en memoria por código o descripción
             if (!string.IsNullOrWhiteSpace(query))
             {
                 string q = query.Trim().ToUpper();

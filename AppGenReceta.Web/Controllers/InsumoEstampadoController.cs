@@ -187,7 +187,7 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpPost]
-        public JsonResult GuardarAjustesEtapa3(string jsonData)
+        public JsonResult GuardarAjustesEtapa3(string jsonData, string sid)
         {
             try
             {
@@ -195,10 +195,11 @@ namespace AppGenReceta.Web.Controllers
                 serializer.MaxJsonLength = int.MaxValue;
                 List<E_InsumoCalculado> lista = serializer.Deserialize<List<E_InsumoCalculado>>(jsonData);
 
-                // Llamar a través de la capa de Negocio (BL)
-                bool exito = bl.ActualizarAjustesInsumosCalculados(lista);
-                
-                return Json(new { ok = exito, mensaje = "Cantidades y proveedores guardados. Derivando a Paso 4."});
+                // Persiste existentes (UPDATE) y extras (INSERT) en un solo método
+                bl.GuardarYAvanzarPaso4(lista, sid);
+
+                string urlPaso4 = Url.Action("GenerarSolicitud", "InsumoEstampado", new { sid = sid });
+                return Json(new { ok = true, mensaje = "Ajustes guardados. Derivando a Paso 4.", redirect = urlPaso4 });
             }
             catch (Exception ex)
             {
@@ -221,6 +222,19 @@ namespace AppGenReceta.Web.Controllers
             {
                 return Json(new { ok = false, mensaje = ex.Message }, JsonRequestBehavior.AllowGet);
             }
+        }
+
+        // ==========================================
+        // PASO 4: GENERAR SOLICITUD DE REQUERIMIENTO
+        // ==========================================
+        [HttpGet]
+        public ActionResult GenerarSolicitud(string sid)
+        {
+            if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
+
+            E_SolicitudResumen resumen = bl.ObtenerResumenSolicitud(sid);
+            ViewBag.SessionID = sid;
+            return View(resumen);
         }
     }
 }

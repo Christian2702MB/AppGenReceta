@@ -18,6 +18,9 @@ namespace AppGenReceta.BE
 
         /// <summary>Capacidad numérica del envase (divisor matemático para cant. a pedir)</summary>
         public decimal CapacidadNumerica { get; set; }
+
+        /// <summary>Precio unitario de la presentación (para costo estimado en Paso 4)</summary>
+        public decimal PrecioUnitario { get; set; }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -27,34 +30,30 @@ namespace AppGenReceta.BE
     {
         public int ID_CALCULO { get; set; }
 
-        // ── Campos del SP GRI_CALCULAR_INSUMOS ──────────────
+        // ── Campos del cálculo de insumos ────────────────────
         public string CodigoInsumo { get; set; }
         public string Descripcion  { get; set; }
         public string NombreColor  { get; set; }
         public string NombrePrueba { get; set; }
         public decimal GramosUDP   { get; set; }
 
-        // ── Cantidad sugerida (original, no editada) ─────────
-        /// <summary>Valor calculado original antes de que el usuario lo edite</summary>
+        // ── Cantidad sugerida (original antes de edición) ────
         public decimal GramosUDPSugerido { get; set; }
 
-        // ── Stock real (desde USP_EST_OBTENER_STOCK_ACTUAL) ──
+        // ── Stock real (USP_EST_OBTENER_STOCK_ACTUAL) ─────────
         public decimal StockActual { get; set; }
 
-        // ── Presentación del primer proveedor ───────────────
-        /// <summary>
-        /// Texto: des_presentacion + ' ' + capacidad_numerica + ' ' + unidad_medida
-        /// Ej.: "Balde 20 kg"
-        /// </summary>
+        // ── Presentación y capacidad (proveedor seleccionado) ─
+        /// <summary>Texto: DES_PRESENTACION + CAPACIDAD_NUMERICA + UNIDAD_MEDIDA → "Balde 20 kg"</summary>
         public string Presentacion { get; set; }
 
-        /// <summary>Capacidad numérica del proveedor principal (divisor para calcular envases)</summary>
+        /// <summary>Capacidad del proveedor/presentación principal (divisor para envases)</summary>
         public decimal CapacidadNumerica { get; set; }
 
         // ── Proveedores relacionados al insumo ───────────────
         /// <summary>
-        /// Lista de proveedores que tienen TBL_ESTAMPADO_INSUMO_PROVEEDOR para este COD_ARTICULO.
-        /// Vacía → se muestra "Stock propio" en el combo.
+        /// Lista tipada de proveedores para este COD_ARTICULO.
+        /// Vacía → combo muestra solo "Stock propio".
         /// </summary>
         public List<E_ProveedorOpcion> ProveedoresOpciones { get; set; }
             = new List<E_ProveedorOpcion>();
@@ -63,6 +62,13 @@ namespace AppGenReceta.BE
         public decimal CantidadAPedir      { get; set; }
         public string  TipoDespacho        { get; set; }
         public int     IdProveedorAsignado { get; set; }
+
+        // ── Precio unitario (para resumen Paso 4) ────────────
+        public decimal PrecioUnitario { get; set; }
+
+        // ── Marca insumo agregado manualmente ────────────────
+        /// <summary>true = agregado con botón "Insumo extra-receta" (no viene del cálculo)</summary>
+        public bool EsExtraReceta { get; set; }
 
         // ── Auditoría ────────────────────────────────────────
         public string USUARIO_PROCESA { get; set; }

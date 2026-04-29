@@ -1,0 +1,310 @@
+@model AppGenReceta.BE.E_SolicitudResumen
+@{
+    ViewBag.Title = "Generar Solicitud de Requerimiento";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sid = ViewBag.SessionID as string ?? "";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --hialpesa-dark: #0f172a;
+        --hialpesa-blue: #1e40af;
+        --hialpesa-teal: #0d9488;
+        --step-active-bg: #0f172a;
+        --card-border: #e2e8f0;
+    }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+
+    /* ── Steps bar ── */
+    .steps-bar { display:flex; background:#fff; border-bottom:1px solid #e2e8f0; padding:0 32px; }
+    .step-item { flex:1; text-align:center; padding:18px 0; font-size:13px; color:#64748b;
+                 border-bottom:3px solid transparent; cursor:default; font-weight:500; }
+    .step-item.active { color:#fff; background:var(--step-active-bg); border-radius:0; font-weight:600; }
+
+    /* ── Layout principal ── */
+    .page-wrap { max-width:1180px; margin:0 auto; padding:32px 24px; }
+    .page-title { font-size:22px; font-weight:700; color:var(--hialpesa-dark); margin-bottom:28px; }
+
+    /* ── Paneles ── */
+    .panels-row { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px; }
+    .panel-card { background:#fff; border:1px solid var(--card-border); border-radius:12px; padding:24px; }
+    .panel-title { font-size:15px; font-weight:700; color:var(--hialpesa-dark); margin-bottom:18px;
+                   padding-bottom:10px; border-bottom:2px solid #f1f5f9; }
+
+    /* ── Cabecera fields ── */
+    .field-row { display:flex; align-items:flex-start; padding:10px 0; border-bottom:1px solid #f1f5f9; gap:12px; }
+    .field-row:last-child { border-bottom:none; }
+    .field-label { font-size:12px; color:#64748b; font-weight:600; text-transform:uppercase;
+                   letter-spacing:.4px; min-width:120px; padding-top:4px; }
+    .field-value { font-size:14px; color:var(--hialpesa-dark); font-weight:500; flex:1; }
+    .field-value.nps { display:flex; flex-wrap:wrap; gap:6px; }
+    .np-badge { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;
+                padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+    textarea.obs-input { width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px;
+                         font-family:'Inter'; font-size:13px; color:#0f172a; resize:vertical;
+                         min-height:70px; transition:border .2s; }
+    textarea.obs-input:focus { outline:none; border-color:#1e40af; }
+
+    /* ── Resumen métricas ── */
+    .metric-row { display:flex; justify-content:space-between; align-items:center;
+                  padding:12px 0; border-bottom:1px solid #f1f5f9; }
+    .metric-row:last-child { border-bottom:none; }
+    .metric-label { font-size:13px; color:#64748b; }
+    .metric-value { font-size:15px; font-weight:700; color:var(--hialpesa-dark); }
+    .metric-value.highlight { color:var(--hialpesa-blue); }
+    .metric-value.cost { color:#059669; }
+
+    /* ── Tabla ítems ── */
+    .section-title { font-size:16px; font-weight:700; color:var(--hialpesa-dark);
+                     margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #f1f5f9; }
+    .table-wrap { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:24px; }
+    .items-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .items-table thead th { background:#f8fafc; color:#64748b; font-weight:600; font-size:11px;
+                            text-transform:uppercase; letter-spacing:.5px; padding:12px 16px;
+                            border-bottom:1px solid #e2e8f0; text-align:left; }
+    .items-table tbody tr { border-bottom:1px solid #f1f5f9; transition:background .15s; }
+    .items-table tbody tr:last-child { border-bottom:none; }
+    .items-table tbody tr:hover { background:#f8fafc; }
+    .items-table td { padding:14px 16px; color:#334155; vertical-align:middle; }
+    .cod-cell { font-weight:700; color:var(--hialpesa-blue); font-size:13px; }
+    .desc-cell { color:#0f172a; font-weight:500; }
+    .qty-cell { font-weight:700; color:var(--hialpesa-dark); text-align:center; }
+    .price-cell { text-align:right; color:#64748b; }
+    .total-cell { text-align:right; font-weight:700; color:#059669; }
+
+    /* ── Badge despacho ── */
+    .badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;
+             text-transform:uppercase; letter-spacing:.4px; display:inline-block; }
+    .badge-total   { background:#fef9c3; color:#854d0e; }
+    .badge-parcial { background:#fce7f3; color:#9d174d; }
+    .badge-vacio   { background:#dcfce7; color:#166534; }
+
+    /* ── Footer acciones ── */
+    .footer-actions { display:flex; justify-content:space-between; align-items:center;
+                      background:#fff; border-top:1px solid #e2e8f0; padding:20px 24px;
+                      border-radius:0 0 12px 12px; }
+    .btn-validaciones { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:10px 20px;
+                        border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+                        transition:all .2s; display:flex; align-items:center; gap:8px; }
+    .btn-validaciones:hover { background:#e2e8f0; }
+    .btn-cargar { background:var(--hialpesa-dark); color:#fff; border:none; padding:12px 28px;
+                  border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;
+                  transition:all .2s; display:flex; align-items:center; gap:8px; }
+    .btn-cargar:hover { background:#1e293b; transform:translateY(-1px); }
+    .btn-cargar:disabled { background:#94a3b8; cursor:not-allowed; transform:none; }
+
+    /* ── Validaciones dropdown ── */
+    .validaciones-panel { background:#fff; border:1px solid #e2e8f0; border-radius:8px;
+                          padding:16px; margin-bottom:16px; display:none; }
+    .validacion-ok   { color:#059669; font-size:13px; display:flex; align-items:center; gap:8px; margin:4px 0; }
+    .validacion-warn { color:#d97706; font-size:13px; display:flex; align-items:center; gap:8px; margin:4px 0; }
+
+    /* ── Costo 0 aviso ── */
+    .cost-note { font-size:11px; color:#94a3b8; margin-top:4px; }
+
+    @@media (max-width: 768px) {
+        .panels-row { grid-template-columns: 1fr; }
+    }
+</style>
+
+<!-- Steps Bar -->
+<div class="steps-bar">
+    <div class="step-item">1. Selección NPs</div>
+    <div class="step-item">2. Calcular insumos</div>
+    <div class="step-item">3. Ajustar cantidades</div>
+    <div class="step-item active">4. Generar solicitud</div>
+</div>
+
+<div class="page-wrap">
+    <div class="page-title">Generar Solicitud de Requerimiento</div>
+
+    <div class="panels-row">
+        <!-- Panel Izquierdo: Cabecera -->
+        <div class="panel-card">
+            <div class="panel-title">Cabecera de solicitud</div>
+
+            <div class="field-row">
+                <span class="field-label">Motivo</span>
+                <span class="field-value">@Model.Motivo</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">Observación</span>
+                <div class="field-value">
+                    <textarea id="txtObservacion" class="obs-input" placeholder="Ingrese observaciones para la solicitud...">@Model.Observacion</textarea>
+                </div>
+            </div>
+            <div class="field-row">
+                <span class="field-label">NPs incluidas</span>
+                <div class="field-value nps">
+                    @if (Model.NPsIncluidas != null && Model.NPsIncluidas.Any())
+                    {
+                        foreach (var np in Model.NPsIncluidas)
+                        {
+                            <span class="np-badge">@np</span>
+                        }
+                    }
+                    else
+                    {
+                        <span style="color:#94a3b8; font-size:13px">Sin NPs registradas</span>
+                    }
+                </div>
+            </div>
+            <div class="field-row">
+                <span class="field-label">Módulo destino</span>
+                <span class="field-value">@Model.ModuloDestino</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">Ruta</span>
+                <span class="field-value" style="color:#64748b">@Model.Ruta</span>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Resumen de compra -->
+        <div class="panel-card">
+            <div class="panel-title">Resumen de compra</div>
+
+            <div class="metric-row">
+                <span class="metric-label">Ítems a comprar</span>
+                <span class="metric-value highlight">@Model.ItemsAComprar insumos</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Ítems con stock</span>
+                <span class="metric-value">@Model.ItemsConStock insumos</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Costo estimado</span>
+                <div>
+                    <div class="metric-value cost">
+                        S/ @Model.CostoEstimado.ToString("N2")
+                    </div>
+                    @if (Model.CostoEstimado == 0)
+                    {
+                        <div class="cost-note">* Precios pendientes de configurar en TBL_ESTAMPADO_INSUMO_PROVEEDOR</div>
+                    }
+                </div>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Proveedores</span>
+                <span class="metric-value">@Model.CantidadProveedores proveedores</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de ítems -->
+    <div class="section-title">Ítems a cargar en Gestión de Pedidos</div>
+
+    <!-- Panel de validaciones (oculto por defecto) -->
+    <div id="panelValidaciones" class="validaciones-panel">
+        @{
+            var sinProveedor = Model.Items?.Where(x => x.IdProveedorAsignado == 0).ToList();
+            var conProveedor = Model.Items?.Where(x => x.IdProveedorAsignado > 0).ToList();
+        }
+        @if (conProveedor != null && conProveedor.Any())
+        {
+            <div class="validacion-ok">✔ @conProveedor.Count insumo(s) con proveedor asignado</div>
+        }
+        @if (sinProveedor != null && sinProveedor.Any())
+        {
+            <div class="validacion-warn">⚠ @sinProveedor.Count insumo(s) sin proveedor asignado (Stock propio)</div>
+            foreach (var item in sinProveedor)
+            {
+                <div class="validacion-warn" style="padding-left:20px; font-size:12px">· @item.CodigoInsumo — @item.Descripcion</div>
+            }
+        }
+        @if (Model.Items == null || !Model.Items.Any())
+        {
+            <div class="validacion-warn">⚠ No hay ítems de compra. Verifique las cantidades en el Paso 3.</div>
+        }
+    </div>
+
+    <div class="table-wrap">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Cód. Insumo</th>
+                    <th>Descripción</th>
+                    <th style="text-align:center">Cantidad</th>
+                    <th>Presentación</th>
+                    <th style="text-align:right">Precio Unit.</th>
+                    <th style="text-align:right">Total</th>
+                    <th style="text-align:center">Despacho</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items == null || !Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8">
+                            No hay ítems que requieran compra. Todos los insumos están cubiertos por stock.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        var total = item.CantidadAPedir * item.PrecioUnitario;
+                        var badgeClass = item.TipoDespacho == "Parcial" ? "badge-parcial"
+                                       : item.TipoDespacho == "Vacio"   ? "badge-vacio"
+                                       : "badge-total";
+                        <tr>
+                            <td class="cod-cell">@item.CodigoInsumo</td>
+                            <td class="desc-cell">
+                                @item.Descripcion
+                                @if (item.EsExtraReceta)
+                                {
+                                    <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:6px">EXTRA</span>
+                                }
+                            </td>
+                            <td class="qty-cell">@((int)item.CantidadAPedir)</td>
+                            <td>@(string.IsNullOrWhiteSpace(item.Presentacion) ? "—" : item.Presentacion)</td>
+                            <td class="price-cell">
+                                @(item.PrecioUnitario > 0 ? "S/ " + item.PrecioUnitario.ToString("N2") : "—")
+                            </td>
+                            <td class="total-cell">
+                                @(total > 0 ? "S/ " + total.ToString("N2") : "—")
+                            </td>
+                            <td style="text-align:center">
+                                <span class="badge @badgeClass">@item.TipoDespacho</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="footer-actions">
+            <button id="btnVerValidaciones" class="btn-validaciones" onclick="toggleValidaciones()">
+                ✓ Ver validaciones
+            </button>
+            <button id="btnCargarPedidos" class="btn-cargar" @(Model.Items == null || !Model.Items.Any() ? "disabled" : "")>
+                Cargar en Gestión de Pedidos &rarr;
+            </button>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function toggleValidaciones() {
+            var panel = document.getElementById('panelValidaciones');
+            var btn   = document.getElementById('btnVerValidaciones');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+                btn.innerHTML = '✓ Ocultar validaciones';
+            } else {
+                panel.style.display = 'none';
+                btn.innerHTML = '✓ Ver validaciones';
+            }
+        }
+
+        document.getElementById('btnCargarPedidos').addEventListener('click', function(){
+            if(this.disabled) return;
+            var obs = document.getElementById('txtObservacion').value;
+            // Placeholder: aquí se integrará con el ERP
+            alert('Funcionalidad "Cargar en Gestión de Pedidos" pendiente de integración con ERP.\nObservación: ' + obs);
+        });
+    </script>
+}

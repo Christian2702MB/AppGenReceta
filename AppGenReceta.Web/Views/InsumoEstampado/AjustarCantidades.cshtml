@@ -1,4 +1,4 @@
-﻿@using AppGenReceta.BE
+@using AppGenReceta.BE
 @{
     ViewBag.Title = "Paso 3: Ajustar Cantidades";
 
@@ -407,7 +407,7 @@
                         }
                         else
                         {
-                            foreach(var item in calculados)
+                            foreach (var item in calculados)
                             {
                                 <tr data-idcalculo="@item.ID_CALCULO"
                                     data-capacidad="@item.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)"
@@ -420,7 +420,27 @@
                                                value="@item.GramosUDP.ToString("0.#").Replace(",",".")"
                                                onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
                                     </td>
-                                    <td>@(string.IsNullOrWhiteSpace(item.Presentacion) ? "Sin presentación" : item.Presentacion)</td>
+                                    @* REQ-1: Dropdown si hay más de una presentación, texto si solo hay una *@
+                                    <td class="td-presentacion">
+                                        @if (item.ProveedoresOpciones != null && item.ProveedoresOpciones.Count > 1)
+                                        {
+                                            <select class="select-box drop-presentacion"
+                                                    onchange="actualizarPresentacion(this)">
+                                                @foreach (var prov in item.ProveedoresOpciones)
+                                                {
+                                                    <option value="@prov.IdProveedor"
+                                                            data-capacidad="@prov.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)"
+                                                            data-presentacion="@prov.Presentacion">
+                                                        @prov.Presentacion
+                                                    </option>
+                                                }
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            @(string.IsNullOrWhiteSpace(item.Presentacion) ? "Sin presentación" : item.Presentacion)
+                                        }
+                                    </td>
                                     <td style="text-align:center; font-weight:600" class="stock-actual">
                                         @item.StockActual.ToString("0.##")
                                     </td>
@@ -441,14 +461,15 @@
                                                 foreach (var prov in item.ProveedoresOpciones)
                                                 {
                                                     <option value="@prov.IdProveedor"
-                                                            data-capacidad="@prov.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)">
+                                                            data-capacidad="@prov.CapacidadNumerica.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)"
+                                                            data-presentacion="@prov.Presentacion">
                                                         @(prov.RazonSocial + " (" + prov.Presentacion + ")")
                                                     </option>
                                                 }
                                             }
                                             else
                                             {
-                                                <option value="0" data-capacidad="1">--- Stock propio</option>
+                                                <option value="0" data-capacidad="1" data-presentacion="Stock propio">--- Stock propio</option>
                                             }
                                         </select>
                                     </td>
@@ -508,17 +529,28 @@
             recalcularFilas();
 
             $('#btnGenerarSolicitud').click(function () {
+                var sid = '@ViewBag.SessionID';
                 var payload = recolectarDatosTabla();
+                if(payload.length === 0){
+                    Swal.fire('Sin datos','No hay insumos para guardar.','warning');
+                    return;
+                }
                 $.ajax({
                     url: '@Url.Action("GuardarAjustesEtapa3", "InsumoEstampado")',
                     type: 'POST',
-                    data: { jsonData: JSON.stringify(payload) },
+                    data: { jsonData: JSON.stringify(payload), sid: sid },
                     success: function(r){
                         if(r.ok){
-                            Swal.fire({ title: '¡Solicitud Generada!', text: r.mensaje, icon: 'success', confirmButtonColor: '#0f172a' })
-                            .then(() => {
-                                alert("Ir a Paso 4");
-                            });
+                            Swal.fire({ title: 'Guardado!', text: r.mensaje, icon: 'success', timer: 1500, showConfirmButton: false })
+                            .then(() => { window.location.href = r.redirect; });
+                        }else{
+                            Swal.fire('Error', r.mensaje, 'error');
+                        }
+                    },
+                    error: function(){
+                        Swal.fire('Error', 'Error de conexion.', 'error');
+                    }
+                });});
                         }else{
                             Swal.fire('Error', r.mensaje, 'error');
                         }
@@ -560,31 +592,46 @@
             $('#modalExtra').css('display', 'flex');
         }
 
-        function actualizarCapacidad(selectObj, idCalc){
-            var cap = $(selectObj).find('option:selected').attr('data-capacidad') || "1";
+                function actualizarCapacidad(selectObj, idCalc){
+            var opt = $(selectObj).find('option:selected');
+            var cap = opt.attr('data-capacidad') || '1';
+            var presentacion = opt.attr('data-presentacion') || '';
             var tr = $(selectObj).closest('tr');
             tr.attr('data-capacidad', cap);
-            // Actualizar texto visual para el usuario
-            tr.find('td:eq(4)').html('Múltiple <small>(Cap: ' + cap + ')</small>');
+            var tdPres = tr.find('.td-presentacion');
+            if(tdPres.find('select.drop-presentacion').length === 0){
+                tdPres.text(presentacion);
+            }
+            recalcularFilas();
+        }
+
+        function actualizarPresentacion(selectObj){
+            var opt = $(selectObj).find('option:selected');
+            var cap = opt.attr('data-capacidad') || '1';
+            var tr = $(selectObj).closest('tr');
+            tr.attr('data-capacidad', cap);
+            var idProv = opt.val();
+            tr.find('.drop-prov option[value='+idProv+']').prop('selected', true);
             recalcularFilas();
         }
 
         function agregarInsumoExtra(codigo, desc) {
-            var html = `<tr data-idcalculo="0" data-capacidad="1" data-stock="0">
-                            <td style="font-weight:600;">${codigo} <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 4px; border-radius:4px" title="Extra-receta">EXTRA</span></td>
+            var html = `<tr data-idcalculo="0" data-capacidad="1" data-stock="0"
+                            data-cod="${codigo}" data-desc="${desc}">
+                            <td style="font-weight:600;">${codigo} <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 4px; border-radius:4px">EXTRA</span></td>
                             <td>${desc}</td>
                             <td style="text-align:center">-</td>
                             <td style="text-align:center">
                                 <input type="number" step="1" class="input-box cant-definida" value="1" onkeyup="recalcularFilas()" onchange="recalcularFilas()" />
                             </td>
-                            <td>Unidad Base (Cap: 1)</td>
+                            <td class="td-presentacion">Unidad Base</td>
                             <td style="text-align:center; font-weight:600" class="stock-actual">0</td>
                             <td style="text-align:center; font-weight:700; color:var(--hialpesa-dark); font-size:14px" class="cant-pedir">0</td>
                             <td>
-                                <select class="select-box drop-despacho"><option value="Total">Total</option></select>
+                                <select class="select-box drop-despacho"><option value="Total">Total</option><option value="Parcial">Parcial</option><option value="Vacio">Vacio</option></select>
                             </td>
                             <td>
-                                <select class="select-box drop-prov"><option value="99">--- Stock propio</option></select>
+                                <select class="select-box drop-prov"><option value="0" data-capacidad="1" data-presentacion="Stock propio">--- Stock propio</option></select>
                             </td>
                         </tr>`;
             $('#tbAjustes tbody').append(html);
@@ -621,7 +668,7 @@
 
                     // REDONDEO SUPERIOR (Ceiling matemático a entero dependiendo de la capacidad del envase)
                     // Ej. Si falta 35 y cap es 20 = Math.ceil(35/20) = 2 Envases.
-                    var envasesRequeridos = Math.ceil(faltante / capacidad);
+                    var envasesRequeridos = parseInt(Math.ceil(faltante / capacidad));
                     cantAPedir = envasesRequeridos;
                     
                     if(stockActual > 0) combDespacho.val('Parcial'); // Hubo algo de stock, se cubre el resto
@@ -643,13 +690,31 @@
             $('#tbAjustes tbody tr').each(function(){
                 var tr = $(this);
                 if(tr.find('td').length > 5){
+                    // REQ-4: Capturar Presentacion del td (texto o select activo)
+                    var tdPres = tr.find('.td-presentacion');
+                    var presentacionTexto = '';
+                    var dropPres = tdPres.find('select.drop-presentacion');
+                    if(dropPres.length > 0){
+                        presentacionTexto = dropPres.find('option:selected').attr('data-presentacion') || dropPres.find('option:selected').text();
+                    } else {
+                        presentacionTexto = tdPres.text().trim();
+                    }
+
+                    // REQ-3: Capturar datos de extra-receta (ID_CALCULO=0)
+                    var idCalculo = parseInt(tr.attr('data-idcalculo') || '0');
+                    var esExtra   = idCalculo === 0;
+
                     var obj = {
-                        ID_CALCULO: parseInt(tr.attr('data-idcalculo')),
-                        GramosUDP: parseFloat(tr.find('.cant-definida').val()),
-                        CantidadAPedir: parseFloat(tr.find('.cant-pedir').text()),
-                        TipoDespacho: tr.find('.drop-despacho').val(),
-                        IdProveedorAsignado: parseInt(tr.find('.drop-prov').val()),
-                        StockActual: parseFloat(tr.attr('data-stock'))
+                        ID_CALCULO:          idCalculo,
+                        CodigoInsumo:        esExtra ? tr.attr('data-cod') || tr.find('td:first').text().replace('EXTRA','').trim() : '',
+                        Descripcion:         esExtra ? tr.attr('data-desc') || tr.find('td:eq(1)').text().trim() : '',
+                        GramosUDP:           parseFloat(tr.find('.cant-definida').val()) || 0,
+                        CantidadAPedir:      parseInt(tr.find('.cant-pedir').text()) || 0,
+                        TipoDespacho:        tr.find('.drop-despacho').val(),
+                        IdProveedorAsignado: parseInt(tr.find('.drop-prov').val()) || 0,
+                        StockActual:         parseFloat(tr.attr('data-stock')) || 0,
+                        Presentacion:        presentacionTexto,
+                        EsExtraReceta:       esExtra
                     };
                     lista.push(obj);
                 }

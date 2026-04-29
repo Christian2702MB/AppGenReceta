@@ -720,6 +720,7 @@
     <Content Include="Views\Proveedor\_ListaProveedoresGrid.cshtml" />
     <Content Include="Views\InsumoEstampado\CalcularInsumos.cshtml" />
     <Content Include="Views\InsumoEstampado\AjustarCantidades.cshtml" />
+    <Content Include="Views\InsumoEstampado\GenerarSolicitud.cshtml" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
