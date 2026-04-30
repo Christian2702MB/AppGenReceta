@@ -305,10 +305,10 @@ namespace AppGenReceta.DA
                         foreach (var item in calculados)
                         {
                             string sql = @"INSERT INTO TBL_ESTAMPADO_INSUMO_CALCULADO 
-                                (ID_AGRUPACION, COD_ARTICULO, DES_ARTICULO, COLOR, UNIDAD_MEDIDA, CANTIDAD_DEFINIDA, PRESENTACION, USUARIO_PROCESA, FECHA_PROCESO)
+                                (ID_AGRUPACION, COD_ARTICULO, DES_ARTICULO, COLOR, UNIDAD_MEDIDA, CANTIDAD_SUGERIDA, CANTIDAD_DEFINIDA, PRESENTACION, USUARIO_PROCESA, FECHA_PROCESO)
                                 VALUES
                                 ((SELECT TOP 1 ID_AGRUPACION FROM TBL_ESTAMPADO_AGRUPACION_NP WHERE SESSION_ID = @SESSION_ID ORDER BY ID_AGRUPACION DESC),
-                                 @COD_ARTICULO, @DES_ARTICULO, @COLOR, 'UDP', @CANTIDAD_DEFINIDA, '', @USUARIO_PROCESA, GETDATE())";
+                                 @COD_ARTICULO, @DES_ARTICULO, @COLOR, 'UDP', @CANTIDAD_DEFINIDA, @CANTIDAD_DEFINIDA, '', @USUARIO_PROCESA, GETDATE())";
                             
                             using (SqlCommand cmd = new SqlCommand(sql, con, tr))
                             {
@@ -363,7 +363,7 @@ namespace AppGenReceta.DA
                                 NombreColor       = GetStringSafe(dr, "COLOR"),
                                 NombrePrueba      = GetStringSafe(dr, "PRESENTACION"),
                                 GramosUDP         = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"),
-                                GramosUDPSugerido = GetDecimalSafe(dr, "CANTIDAD_DEFINIDA"),
+                                GramosUDPSugerido = GetDecimalSafe(dr, "CANTIDAD_SUGERIDA"),
                                 SESSION_ID        = sessionId,
                                 ProveedoresOpciones = new List<E_ProveedorOpcion>()
                             });

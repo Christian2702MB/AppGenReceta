@@ -9,27 +9,181 @@
 
 <style>
     :root {
-        --hialpesa-dark: #0f172a;
-        --hialpesa-blue: #1e40af;
-        --hialpesa-teal: #0d9488;
-        --step-active-bg: #0f172a;
-        --card-border: #e2e8f0;
+        --hialpesa-dark: #002D72;
+        --hialpesa-accent: #f39c12;
+        --hialpesa-light-blue: #e6f0fa;
+        --color-text-primary: #333;
+        --color-text-secondary: #666;
+        --color-background-body: #f8f9fc;
+        --color-background-card: #ffffff;
+        --color-border: #e2e8f0;
+        --border-radius-lg: 12px;
+        --border-radius-md: 8px;
+        --font-family-main: 'Inter', 'Segoe UI', sans-serif;
     }
-    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+
+    body {
+        background-color: var(--color-background-body);
+        font-family: var(--font-family-main);
+        margin: 0;
+    }
+
+    /* Override master container for full width */
+    body .container.main-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .insumo-module-layout {
+        display: flex;
+        background-color: var(--color-background-body);
+    }
+
+    body .main-container { margin-top: 0 !important; }
+    body .content-body { padding: 0 !important; }
+
+    /* SIDEBAR */
+    .insumo-sidebar {
+        width: 260px;
+        background-color: var(--hialpesa-dark);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        padding-top: 20px;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+        z-index: 10;
+        border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-header {
+        padding: 0 24px 24px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .sidebar-header span {
+        font-size: 11px;
+        color: #f39c12; /* Orange sub-text */
+        font-weight: 600;
+        display: block;
+        margin-top: 4px;
+        text-transform: none;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-nav li {
+        margin: 4px 12px;
+    }
+
+    .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        border-radius: 8px;
+    }
+
+    .sidebar-nav a i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+        opacity: 0.8;
+    }
+
+    .sidebar-nav a:hover,
+    .sidebar-nav li.active a {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .sidebar-nav li.active a {
+        font-weight: 600;
+        border-left: 4px solid var(--hialpesa-accent);
+        padding-left: 20px;
+    }
+
+    /* MAIN AREA */
+    .insumo-container {
+        flex: 1;
+        padding: 30px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 16px;
+    }
+
+    .top-header h2 {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--hialpesa-dark);
+        margin: 0;
+    }
+
+    .top-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-outline {
+        background: white;
+        border: 1px solid #cbd5e1;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
 
     /* ── Steps bar ── */
-    .steps-bar { display:flex; background:#fff; border-bottom:1px solid #e2e8f0; padding:0 32px; }
+    .steps-bar { display:flex; background:#fff; border: 1px solid var(--color-border); border-radius: 8px; padding:0 32px; margin-bottom: 16px; }
     .step-item { flex:1; text-align:center; padding:18px 0; font-size:13px; color:#64748b;
                  border-bottom:3px solid transparent; cursor:default; font-weight:500; }
-    .step-item.active { color:#fff; background:var(--step-active-bg); border-radius:0; font-weight:600; }
-
-    /* ── Layout principal ── */
-    .page-wrap { max-width:1180px; margin:0 auto; padding:32px 24px; }
-    .page-title { font-size:22px; font-weight:700; color:var(--hialpesa-dark); margin-bottom:28px; }
+    .step-item.active {
+        background-color: var(--hialpesa-dark);
+        color: white;
+        font-weight: 500;
+        border-radius: 20px;
+    }
 
     /* ── Paneles ── */
     .panels-row { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px; }
-    .panel-card { background:#fff; border:1px solid var(--card-border); border-radius:12px; padding:24px; }
+    .panel-card { background:#fff; border:1px solid var(--color-border); border-radius:12px; padding:24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .panel-title { font-size:15px; font-weight:700; color:var(--hialpesa-dark); margin-bottom:18px;
                    padding-bottom:10px; border-bottom:2px solid #f1f5f9; }
 
@@ -59,7 +213,7 @@
     /* ── Tabla ítems ── */
     .section-title { font-size:16px; font-weight:700; color:var(--hialpesa-dark);
                      margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #f1f5f9; }
-    .table-wrap { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:24px; }
+    .table-wrap { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .items-table { width:100%; border-collapse:collapse; font-size:13px; }
     .items-table thead th { background:#f8fafc; color:#64748b; font-weight:600; font-size:11px;
                             text-transform:uppercase; letter-spacing:.5px; padding:12px 16px;
@@ -109,179 +263,206 @@
     }
 </style>
 
-<!-- Steps Bar -->
-<div class="steps-bar">
-    <div class="step-item">1. Selección NPs</div>
-    <div class="step-item">2. Calcular insumos</div>
-    <div class="step-item">3. Ajustar cantidades</div>
-    <div class="step-item active">4. Generar solicitud</div>
-</div>
+<div class="insumo-module-layout">
 
-<div class="page-wrap">
-    <div class="page-title">Generar Solicitud de Requerimiento</div>
+    <!-- SIDEBAR -->
+    <div class="insumo-sidebar">
+        <div class="sidebar-header">
+            <h3>Insumos</h3>
+            <span>Almacén de Estampado</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
+            <li><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
+            <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li class="active"><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
+            <li><a href="#"><i class="fas fa-file-invoice"></i> Voucher</a></li>
+            <li><a href="#"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+        </ul>
+    </div>
 
-    <div class="panels-row">
-        <!-- Panel Izquierdo: Cabecera -->
-        <div class="panel-card">
-            <div class="panel-title">Cabecera de solicitud</div>
+    <!-- MAIN AREA -->
+    <div class="insumo-container">
 
-            <div class="field-row">
-                <span class="field-label">Motivo</span>
-                <span class="field-value">@Model.Motivo</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">Observación</span>
-                <div class="field-value">
-                    <textarea id="txtObservacion" class="obs-input" placeholder="Ingrese observaciones para la solicitud...">@Model.Observacion</textarea>
-                </div>
-            </div>
-            <div class="field-row">
-                <span class="field-label">NPs incluidas</span>
-                <div class="field-value nps">
-                    @if (Model.NPsIncluidas != null && Model.NPsIncluidas.Any())
-                    {
-                        foreach (var np in Model.NPsIncluidas)
-                        {
-                            <span class="np-badge">@np</span>
-                        }
-                    }
-                    else
-                    {
-                        <span style="color:#94a3b8; font-size:13px">Sin NPs registradas</span>
-                    }
-                </div>
-            </div>
-            <div class="field-row">
-                <span class="field-label">Módulo destino</span>
-                <span class="field-value">@Model.ModuloDestino</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">Ruta</span>
-                <span class="field-value" style="color:#64748b">@Model.Ruta</span>
+        <div class="top-header">
+            <h2>Generar Solicitud de Requerimiento</h2>
+            <div class="top-actions">
+                <button class="btn-outline">Familia: ES</button>
+                <button class="btn-outline">Ayuda <i class="fas fa-external-link-alt"></i></button>
             </div>
         </div>
 
-        <!-- Panel Derecho: Resumen de compra -->
-        <div class="panel-card">
-            <div class="panel-title">Resumen de compra</div>
+        <!-- Steps Bar -->
+        <div class="steps-bar">
+            <div class="step-item">1. Selección NPs</div>
+            <div class="step-item">2. Calcular insumos</div>
+            <div class="step-item">3. Ajustar cantidades</div>
+            <div class="step-item active">4. Generar solicitud</div>
+        </div>
 
-            <div class="metric-row">
-                <span class="metric-label">Ítems a comprar</span>
-                <span class="metric-value highlight">@Model.ItemsAComprar insumos</span>
-            </div>
-            <div class="metric-row">
-                <span class="metric-label">Ítems con stock</span>
-                <span class="metric-value">@Model.ItemsConStock insumos</span>
-            </div>
-            <div class="metric-row">
-                <span class="metric-label">Costo estimado</span>
-                <div>
-                    <div class="metric-value cost">
-                        S/ @Model.CostoEstimado.ToString("N2")
+        <div class="panels-row">
+            <!-- Panel Izquierdo: Cabecera -->
+            <div class="panel-card">
+                <div class="panel-title">Cabecera de solicitud</div>
+
+                <div class="field-row">
+                    <span class="field-label">Motivo</span>
+                    <span class="field-value">@Model.Motivo</span>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Observación</span>
+                    <div class="field-value">
+                        <textarea id="txtObservacion" class="obs-input" placeholder="Ingrese observaciones para la solicitud...">@Model.Observacion</textarea>
                     </div>
-                    @if (Model.CostoEstimado == 0)
-                    {
-                        <div class="cost-note">* Precios pendientes de configurar en TBL_ESTAMPADO_INSUMO_PROVEEDOR</div>
-                    }
+                </div>
+                <div class="field-row">
+                    <span class="field-label">NPs incluidas</span>
+                    <div class="field-value nps">
+                        @if (Model.NPsIncluidas != null && Model.NPsIncluidas.Any())
+                        {
+                            foreach (var np in Model.NPsIncluidas)
+                            {
+                                <span class="np-badge">@np</span>
+                            }
+                        }
+                        else
+                        {
+                            <span style="color:#94a3b8; font-size:13px">Sin NPs registradas</span>
+                        }
+                    </div>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Módulo destino</span>
+                    <span class="field-value">@Model.ModuloDestino</span>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Ruta</span>
+                    <span class="field-value" style="color:#64748b">@Model.Ruta</span>
                 </div>
             </div>
-            <div class="metric-row">
-                <span class="metric-label">Proveedores</span>
-                <span class="metric-value">@Model.CantidadProveedores proveedores</span>
+
+            <!-- Panel Derecho: Resumen de compra -->
+            <div class="panel-card">
+                <div class="panel-title">Resumen de compra</div>
+
+                <div class="metric-row">
+                    <span class="metric-label">Ítems a comprar</span>
+                    <span class="metric-value highlight">@Model.ItemsAComprar insumos</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Ítems con stock</span>
+                    <span class="metric-value">@Model.ItemsConStock insumos</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Costo estimado</span>
+                    <div>
+                        <div class="metric-value cost">
+                            S/ @Model.CostoEstimado.ToString("N2")
+                        </div>
+                        @if (Model.CostoEstimado == 0)
+                        {
+                            <div class="cost-note">* Precios pendientes de configurar en TBL_ESTAMPADO_INSUMO_PROVEEDOR</div>
+                        }
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Proveedores</span>
+                    <span class="metric-value">@Model.CantidadProveedores proveedores</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Tabla de ítems -->
-    <div class="section-title">Ítems a cargar en Gestión de Pedidos</div>
+        <!-- Tabla de ítems -->
+        <div class="section-title">Ítems a cargar en Gestión de Pedidos</div>
 
-    <!-- Panel de validaciones (oculto por defecto) -->
-    <div id="panelValidaciones" class="validaciones-panel">
-        @{
-            var sinProveedor = Model.Items?.Where(x => x.IdProveedorAsignado == 0).ToList();
-            var conProveedor = Model.Items?.Where(x => x.IdProveedorAsignado > 0).ToList();
-        }
-        @if (conProveedor != null && conProveedor.Any())
-        {
-            <div class="validacion-ok">✔ @conProveedor.Count insumo(s) con proveedor asignado</div>
-        }
-        @if (sinProveedor != null && sinProveedor.Any())
-        {
-            <div class="validacion-warn">⚠ @sinProveedor.Count insumo(s) sin proveedor asignado (Stock propio)</div>
-            foreach (var item in sinProveedor)
-            {
-                <div class="validacion-warn" style="padding-left:20px; font-size:12px">· @item.CodigoInsumo — @item.Descripcion</div>
+        <!-- Panel de validaciones (oculto por defecto) -->
+        <div id="panelValidaciones" class="validaciones-panel">
+            @{
+                var sinProveedor = Model.Items?.Where(x => x.IdProveedorAsignado == 0).ToList();
+                var conProveedor = Model.Items?.Where(x => x.IdProveedorAsignado > 0).ToList();
             }
-        }
-        @if (Model.Items == null || !Model.Items.Any())
-        {
-            <div class="validacion-warn">⚠ No hay ítems de compra. Verifique las cantidades en el Paso 3.</div>
-        }
-    </div>
-
-    <div class="table-wrap">
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th>Cód. Insumo</th>
-                    <th>Descripción</th>
-                    <th style="text-align:center">Cantidad</th>
-                    <th>Presentación</th>
-                    <th style="text-align:right">Precio Unit.</th>
-                    <th style="text-align:right">Total</th>
-                    <th style="text-align:center">Despacho</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Items == null || !Model.Items.Any())
+            @if (conProveedor != null && conProveedor.Any())
+            {
+                <div class="validacion-ok">✔ @conProveedor.Count insumo(s) con proveedor asignado</div>
+            }
+            @if (sinProveedor != null && sinProveedor.Any())
+            {
+                <div class="validacion-warn">⚠ @sinProveedor.Count insumo(s) sin proveedor asignado (Stock propio)</div>
+                foreach (var item in sinProveedor)
                 {
-                    <tr>
-                        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8">
-                            No hay ítems que requieran compra. Todos los insumos están cubiertos por stock.
-                        </td>
-                    </tr>
+                    <div class="validacion-warn" style="padding-left:20px; font-size:12px">· @item.CodigoInsumo — @item.Descripcion</div>
                 }
-                else
-                {
-                    foreach (var item in Model.Items)
+            }
+            @if (Model.Items == null || !Model.Items.Any())
+            {
+                <div class="validacion-warn">⚠ No hay ítems de compra. Verifique las cantidades en el Paso 3.</div>
+            }
+        </div>
+
+        <div class="table-wrap">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Cód. Insumo</th>
+                        <th>Descripción</th>
+                        <th style="text-align:center">Cantidad</th>
+                        <th>Presentación</th>
+                        <th style="text-align:right">Precio Unit.</th>
+                        <th style="text-align:right">Total</th>
+                        <th style="text-align:center">Despacho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items == null || !Model.Items.Any())
                     {
-                        var total = item.CantidadAPedir * item.PrecioUnitario;
-                        var badgeClass = item.TipoDespacho == "Parcial" ? "badge-parcial"
-                                       : item.TipoDespacho == "Vacio"   ? "badge-vacio"
-                                       : "badge-total";
                         <tr>
-                            <td class="cod-cell">@item.CodigoInsumo</td>
-                            <td class="desc-cell">
-                                @item.Descripcion
-                                @if (item.EsExtraReceta)
-                                {
-                                    <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:6px">EXTRA</span>
-                                }
-                            </td>
-                            <td class="qty-cell">@((int)item.CantidadAPedir)</td>
-                            <td>@(string.IsNullOrWhiteSpace(item.Presentacion) ? "—" : item.Presentacion)</td>
-                            <td class="price-cell">
-                                @(item.PrecioUnitario > 0 ? "S/ " + item.PrecioUnitario.ToString("N2") : "—")
-                            </td>
-                            <td class="total-cell">
-                                @(total > 0 ? "S/ " + total.ToString("N2") : "—")
-                            </td>
-                            <td style="text-align:center">
-                                <span class="badge @badgeClass">@item.TipoDespacho</span>
+                            <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8">
+                                No hay ítems que requieran compra. Todos los insumos están cubiertos por stock.
                             </td>
                         </tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            var total = item.CantidadAPedir * item.PrecioUnitario;
+                            var badgeClass = item.TipoDespacho == "Parcial" ? "badge-parcial"
+                                           : item.TipoDespacho == "Vacio" ? "badge-vacio"
+                                           : "badge-total";
+                            <tr>
+                                <td class="cod-cell">@item.CodigoInsumo</td>
+                                <td class="desc-cell">
+                                    @item.Descripcion
+                                    @if (item.EsExtraReceta)
+                                    {
+                                        <span style="background:#bbf7d0; color:#166534; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:6px">EXTRA</span>
+                                    }
+                                </td>
+                                <td class="qty-cell">@((int)item.CantidadAPedir)</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Presentacion) ? "—" : item.Presentacion)</td>
+                                <td class="price-cell">
+                                    @(item.PrecioUnitario > 0 ? "S/ " + item.PrecioUnitario.ToString("N2") : "—")
+                                </td>
+                                <td class="total-cell">
+                                    @(total > 0 ? "S/ " + total.ToString("N2") : "—")
+                                </td>
+                                <td style="text-align:center">
+                                    <span class="badge @badgeClass">@item.TipoDespacho</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
 
-        <div class="footer-actions">
-            <button id="btnVerValidaciones" class="btn-validaciones" onclick="toggleValidaciones()">
-                ✓ Ver validaciones
-            </button>
-            <button id="btnCargarPedidos" class="btn-cargar" @(Model.Items == null || !Model.Items.Any() ? "disabled" : "")>
-                Cargar en Gestión de Pedidos &rarr;
-            </button>
+            <div class="footer-actions">
+                <button id="btnVerValidaciones" class="btn-validaciones" onclick="toggleValidaciones()">
+                    ✓ Ver validaciones
+                </button>
+                <button id="btnCargarPedidos" class="btn-cargar" @(Model.Items == null || !Model.Items.Any() ? "disabled" : "")>
+                    Cargar en Gestión de Pedidos &rarr;
+                </button>
+            </div>
         </div>
     </div>
 </div>
