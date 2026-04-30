@@ -561,7 +561,7 @@
                                     </td>
                                     <td style="text-align:center; font-weight:700; color:var(--hialpesa-dark); font-size:14px"
                                         class="cant-pedir">
-                                        0
+                                        @item.CantidadAPedir.ToString("N0")
                                     </td>
                                     <td>
                                         <select class="select-box drop-despacho">
@@ -592,7 +592,7 @@
                                             else
 
                                             {
-                                                <option value="0" data-capacidad="1" data-presentacion="Stock propio">--- Stock
+                                                <option value="0" data-capacidad="0" data-presentacion="Stock propio">--- Stock
                                                     propio</option>
                                             }
                                         </select>
@@ -659,7 +659,7 @@
         $(document).ready(function () {
             // Inicializamos seteando la capacidad local de todos desde su drop prov.
             $('.drop-prov').each(function () {
-                var cap = $(this).find('option:selected').attr('data-capacidad') || "1";
+                var cap = $(this).find('option:selected').attr('data-capacidad') || "0";
                 $(this).closest('tr').attr('data-capacidad', cap);
             });
             recalcularFilas();
@@ -797,10 +797,14 @@
                     // Hay déficit, calcular la diferencia o el total
                     var faltante = cantDefinida - stockActual;
 
-                    // REDONDEO SUPERIOR (Ceiling matemático a entero dependiendo de la capacidad del envase)
-                    // Ej. Si falta 35 y cap es 20 = Math.ceil(35/20) = 2 Envases.
-                    var envasesRequeridos = parseInt(Math.ceil(faltante / capacidad));
-                    cantAPedir = envasesRequeridos;
+                    // VALIDACIÓN REQUERIMIENTO: Si capacidad es 0 o nula, Cant. a pedir debe ser 0
+                    if (capacidad <= 0) {
+                        cantAPedir = 0;
+                    } else {
+                        // REDONDEO SUPERIOR (Ceiling matemático a entero dependiendo de la capacidad del envase)
+                        // Ej. Si falta 35 y cap es 20 = Math.ceil(35/20) = 2 Envases.
+                        cantAPedir = Math.ceil(faltante / capacidad);
+                    }
 
                     if (stockActual > 0) combDespacho.val('Parcial'); // Hubo algo de stock, se cubre el resto
                     else combDespacho.val('Total'); // Sin stock en absoluto

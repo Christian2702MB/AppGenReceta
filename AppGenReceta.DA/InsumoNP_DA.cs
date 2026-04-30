@@ -444,11 +444,11 @@ namespace AppGenReceta.DA
                     {
                         // Sin proveedor: combo mostrara solo Stock propio
                         e.Presentacion        = "Unidad Base";
-                        e.CapacidadNumerica   = 1;
+                        e.CapacidadNumerica   = 0; // Se cambia a 0 para que no calcule compra si no hay proveedor/capacidad
                     }
                 }
 
-                // PASO 3: Stock real via USP_EST_OBTENER_STOCK_ACTUAL
+                // PASO 3: Stock real via USP_EST_OBTENER_STOCK_ACTUAL y Cálculo inicial
                 foreach (var e in lista)
                 {
                     try
@@ -474,6 +474,17 @@ namespace AppGenReceta.DA
                         }
                     }
                     catch { e.StockActual = 0; }
+
+                    // LÓGICA DE NEGOCIO: Cantidad a Pedir (Ceiling)
+                    if (e.GramosUDP > e.StockActual && e.CapacidadNumerica > 0)
+                    {
+                        decimal faltante = e.GramosUDP - e.StockActual;
+                        e.CantidadAPedir = (decimal)Math.Ceiling((double)(faltante / e.CapacidadNumerica));
+                    }
+                    else
+                    {
+                        e.CantidadAPedir = 0;
+                    }
                 }
             }
             return lista;
@@ -502,7 +513,6 @@ namespace AppGenReceta.DA
                         {
                             string sql = @"UPDATE TBL_ESTAMPADO_INSUMO_CALCULADO SET
                                 CANTIDAD_DEFINIDA     = @CANTIDAD_DEFINIDA,
-                                CANTIDAD_SUGERIDA     = @CANTIDAD_SUGERIDA,
                                 CANTIDAD_A_PEDIR      = @CANTIDAD_A_PEDIR,
                                 TIPO_DESPACHO         = @TIPO_DESPACHO,
                                 ID_PROVEEDOR_ASIGNADO = @ID_PROVEEDOR_ASIGNADO,
@@ -514,7 +524,7 @@ namespace AppGenReceta.DA
                             {
                                 cmd.Parameters.AddWithValue("@ID_CALCULO",             item.ID_CALCULO);
                                 cmd.Parameters.AddWithValue("@CANTIDAD_DEFINIDA",      item.GramosUDP);
-                                cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",      item.GramosUDPSugerido > 0 ? item.GramosUDPSugerido : item.GramosUDP);
+                                //cmd.Parameters.AddWithValue("@CANTIDAD_SUGERIDA",      item.GramosUDPSugerido > 0 ? item.GramosUDPSugerido : item.GramosUDP);
                                 cmd.Parameters.AddWithValue("@CANTIDAD_A_PEDIR",       item.CantidadAPedir);
                                 cmd.Parameters.AddWithValue("@TIPO_DESPACHO",          item.TipoDespacho ?? "Total");
                                 cmd.Parameters.AddWithValue("@ID_PROVEEDOR_ASIGNADO",  item.IdProveedorAsignado);
