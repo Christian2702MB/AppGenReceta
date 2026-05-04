@@ -718,6 +718,7 @@ namespace AppGenReceta.DA
                             E_InsumoCalculado e = new E_InsumoCalculado();
                             e.CodigoInsumo = GetStringSafe(dr, "Codigo");
                             e.Descripcion  = GetStringSafe(dr, "Descripcion");
+                            e.UnidadMedida = GetStringSafe(dr, "Unid_Med");
                             lista.Add(e);
                         }
                     }
@@ -830,6 +831,152 @@ namespace AppGenReceta.DA
                         tr.Rollback();
                         throw new Exception("Error en Cascada ERP: " + ex.Message);
                     }
+                }
+            }
+        }
+
+        public List<E_VoucherDetalle> ObtenerVoucherDesdeERP(string area, string numReq)
+        {
+            List<E_VoucherDetalle> list = new List<E_VoucherDetalle>();
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("LG_VOUCHER_REQUERIMIENTO", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@COD_AREA", area);
+                    // Aseguramos que sea un entero para el SP
+                    int nReq = 0;
+                    int.TryParse(numReq, out nReq);
+                    cmd.Parameters.AddWithValue("@NUM_REQUERIMIENTO", nReq);
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            E_VoucherDetalle item = new E_VoucherDetalle();
+                            item.NumRequerimiento = dr["NUM_REQUERIMIENTO"] != DBNull.Value ? dr["NUM_REQUERIMIENTO"].ToString() : string.Empty;
+                            item.NomArea = dr["DES_AREA"] != DBNull.Value ? dr["DES_AREA"].ToString() : string.Empty;
+                            item.Fecha = dr["Fec_Requerimiento"] != DBNull.Value ? dr["Fec_Requerimiento"].ToString() : string.Empty;
+                            item.Observacion = dr["Observacion"] != DBNull.Value ? dr["Observacion"].ToString() : string.Empty;
+                            //item.Trabajador = dr["Cod_Fabrica_Solicitante"] != DBNull.Value ? dr["Cod_Fabrica_Solicitante"].ToString() : string.Empty;
+                            //item.Trabajador = dr["Tip_Trabajador_Solicitante"] != DBNull.Value ? dr["Tip_Trabajador_Solicitante"].ToString() : string.Empty;
+                            item.Trabajador = dr["Cod_Trabajador_Solicitante"] != DBNull.Value ? (dr["Tip_Trabajador_Solicitante"].ToString() + dr["Cod_Trabajador_Solicitante"].ToString()) : string.Empty;
+                            //item.Trabajador = dr["TRABAJADOR"] != DBNull.Value ? dr["TRABAJADOR"].ToString() : string.Empty;
+                            item.NomTrabajador = dr["NOM_TRABAJADOR"] != DBNull.Value ? dr["NOM_TRABAJADOR"].ToString() : string.Empty;
+                            item.DesMotivo = dr["DES_MOTIVO"] != DBNull.Value ? dr["DES_MOTIVO"].ToString() : string.Empty;
+                            item.Secuencia = dr["Secuencia"] != DBNull.Value ? Convert.ToInt32(dr["Secuencia"]) : 0;
+                            item.CodItem = dr["Cod_Item"] != DBNull.Value ? dr["Cod_Item"].ToString() : string.Empty;
+                            item.CodRepuesto = dr["Cod_Item"] != DBNull.Value ? dr["Cod_Item"].ToString() : string.Empty;
+                            item.DesItem = dr["DES_ITEM"] != DBNull.Value ? dr["DES_ITEM"].ToString() : string.Empty;
+                            item.CodFabricacion = dr["Cod_Fabricacion"] != DBNull.Value ? dr["Cod_Fabricacion"].ToString() : string.Empty;
+                            item.Cantidad = dr["Cantidad"] != DBNull.Value ? Convert.ToDecimal(dr["Cantidad"]) : 0m;
+                            item.DesUniMed = dr["Des_UniMed"] != DBNull.Value ? dr["Des_UniMed"].ToString() : string.Empty;
+                            item.UltimosPrecios = dr["ULTIMOS_PRECIOS"] != DBNull.Value ? dr["ULTIMOS_PRECIOS"].ToString() : string.Empty;
+
+                            list.Add(item);
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<E_RequerimientoCabecera> ListarRequerimientosCabecera(string filtro, string desde, string hasta)
+        {
+            List<E_RequerimientoCabecera> list = new List<E_RequerimientoCabecera>();
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                string query = @"
+                    SELECT TOP 500 r.Cod_Area, r.Num_Requerimiento, r.Fec_Requerimiento, r.Cod_Motivo, 
+                           m.Des_Motivo, r.Observacion, r.Cod_Trabajador_Solicitante, r.Fec_Creacion
+                    FROM LG_Requerimiento_Items r
+                    LEFT JOIN LG_Motivo_Requerimiento m ON r.Cod_Motivo = m.Cod_Motivo
+                    WHERE r.Cod_Area = 'CN'
+                    AND (CONVERT(VARCHAR, r.Num_Requerimiento) LIKE '%' + @Filtro + '%' OR r.Observacion LIKE '%' + @Filtro + '%')
+                    AND r.Fec_Requerimiento >= @Desde AND r.Fec_Requerimiento <= @Hasta
+                    ORDER BY r.Num_Requerimiento DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@Filtro", filtro ?? "");
+                    
+                    DateTime dDesde, dHasta;
+                    if (!DateTime.TryParseExact(desde, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out dDesde))
+                        dDesde = DateTime.Now.AddMonths(-2); // default
+                    if (!DateTime.TryParseExact(hasta, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out dHasta))
+                        dHasta = DateTime.Now; // default
+                    
+                    cmd.Parameters.AddWithValue("@Desde", dDesde.Date);
+                    cmd.Parameters.AddWithValue("@Hasta", dHasta.Date.AddDays(1).AddSeconds(-1));
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            var item = new E_RequerimientoCabecera();
+                            item.CodArea = dr["Cod_Area"].ToString();
+                            item.NumRequerimiento = dr["Num_Requerimiento"] != DBNull.Value ? Convert.ToInt32(dr["Num_Requerimiento"]) : 0;
+                            item.FecRequerimiento = dr["Fec_Requerimiento"] != DBNull.Value ? Convert.ToDateTime(dr["Fec_Requerimiento"]).ToString("dd/MM/yyyy") : "";
+                            item.CodMotivo = dr["Cod_Motivo"].ToString();
+                            item.MotivoDesc = dr["Des_Motivo"].ToString();
+                            item.Observacion = dr["Observacion"].ToString();
+                            item.TrabajadorSolicitante = dr["Cod_Trabajador_Solicitante"].ToString();
+                            item.FecCreacion = dr["Fec_Creacion"] != DBNull.Value ? Convert.ToDateTime(dr["Fec_Creacion"]).ToString("dd/MM/yyyy HH:mm") : "";
+                            list.Add(item);
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public bool EliminarRequerimientoCabecera(string numReq)
+        {
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("LG_MAN_Requerimiento_Items", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ACCION", "D");
+                    cmd.Parameters.AddWithValue("@Cod_Area", "CN");
+                    cmd.Parameters.AddWithValue("@Num_Requerimiento", numReq);
+                    cmd.Parameters.AddWithValue("@Fec_Requerimiento", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Cod_Motivo", "");
+                    cmd.Parameters.AddWithValue("@Observacion", "");
+                    cmd.Parameters.AddWithValue("@Cod_Fabrica_Solicitante", "");
+                    cmd.Parameters.AddWithValue("@Tip_Trabajador_Solicitante", "");
+                    cmd.Parameters.AddWithValue("@Cod_Trabajador_Solicitante", "");
+                    
+                    int res = cmd.ExecuteNonQuery();
+                    return res > 0;
+                }
+            }
+        }
+
+        public bool MantenimientoRequerimientoDetalle(char accion, int numReq, int secuencia, string codItem, string codFab, decimal cantidad, string um)
+        {
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                using (SqlCommand cmd = new SqlCommand("LG_MAN_Requerimiento_Items_DETALLE", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ACCION", accion);
+                    cmd.Parameters.AddWithValue("@Cod_Area", "CN");
+                    cmd.Parameters.AddWithValue("@Num_Requerimiento", numReq);
+                    cmd.Parameters.AddWithValue("@Secuencia", secuencia);
+                    cmd.Parameters.AddWithValue("@Tip_Requerimiento", "P");
+                    cmd.Parameters.AddWithValue("@Cod_Item", codItem ?? "");
+                    cmd.Parameters.AddWithValue("@Des_Temporal_Item", "");
+                    cmd.Parameters.AddWithValue("@Cod_Fabricacion", codFab ?? "");
+                    cmd.Parameters.AddWithValue("@Cantidad", cantidad); 
+                    cmd.Parameters.AddWithValue("@Cod_UniMed", um ?? "");
+                    cmd.Parameters.AddWithValue("@Cod_Equipo", "");
+
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
             }
         }

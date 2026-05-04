@@ -171,5 +171,25 @@ namespace AppGenReceta.BL
         {
             return da.CargarGestionPedidos(sessionId, observaciones, usuario);
         }
+
+        public List<E_VoucherDetalle> ObtenerVoucherDesdeERP(string area, string numReq)
+        {
+            return da.ObtenerVoucherDesdeERP(area, numReq);
+        }
+
+        public List<E_RequerimientoCabecera> ListarRequerimientosCabecera(string filtro, string desde, string hasta)
+        {
+            return da.ListarRequerimientosCabecera(filtro, desde, hasta);
+        }
+
+        public bool EliminarRequerimientoCabecera(string numReq)
+        {
+            return da.EliminarRequerimientoCabecera(numReq);
+        }
+
+        public bool MantenimientoRequerimientoDetalle(char accion, int numReq, int secuencia, string codItem, string codFab, decimal cantidad, string um)
+        {
+            return da.MantenimientoRequerimientoDetalle(accion, numReq, secuencia, codItem, codFab, cantidad, um);
+        }
     }
 }

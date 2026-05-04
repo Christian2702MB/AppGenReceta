@@ -44,6 +44,8 @@
     <Compile Include="E_InsumoNP.cs" />
     <Compile Include="E_Proveedor.cs" />
     <Compile Include="E_InsumoCalculado.cs" />
+    <Compile Include="E_VoucherDetalle.cs" />
+    <Compile Include="E_RequerimientoCabecera.cs" />
     <Compile Include="E_SolicitudResumen.cs" />
     <Compile Include="E_InsumoNPFiltro.cs" />
     <Compile Include="E_NpAutocomplete.cs" />

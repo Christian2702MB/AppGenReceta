@@ -1,0 +1,717 @@
+@{
+    ViewBag.Title = "Mantenimiento de Solicitudes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string sid = Request.QueryString["sid"] ?? "";
+    string defaultDesde = DateTime.Now.AddMonths(-2).ToString("yyyy-MM-dd");
+    string defaultHasta = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --hialpesa-dark: #002D72;
+        --hialpesa-accent: #f39c12;
+        --hialpesa-light-blue: #e6f0fa;
+        --color-text-primary: #333;
+        --color-text-secondary: #666;
+        --color-background-body: #f8f9fc;
+        --color-background-card: #ffffff;
+        --color-border: #e2e8f0;
+        --border-radius-lg: 12px;
+        --border-radius-md: 8px;
+        --font-family-main: 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    .insumo-module-layout {
+        display: flex;
+        background-color: var(--color-background-body);
+        min-height: calc(100vh - 60px);
+    }
+
+    body .main-container { margin-top: 0 !important; }
+    body .content-body { padding: 0 !important; }
+
+    body .container.main-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .insumo-sidebar {
+        width: 250px;
+        background-color: var(--hialpesa-dark);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        padding-top: 24px;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+        flex-shrink: 0;
+        z-index: 10;
+    }
+
+    .sidebar-header {
+        padding: 0 24px 24px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .sidebar-header span {
+        font-size: 11px;
+        color: #f39c12;
+        font-weight: 600;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-nav li {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 16px 24px;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .sidebar-nav a i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .sidebar-nav a:hover, .sidebar-nav li.active a {
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    .sidebar-nav li.active a {
+        font-weight: 600;
+        border-left: 4px solid var(--hialpesa-accent);
+        padding-left: 20px;
+    }
+
+    .insumo-container {
+        flex: 1;
+        font-family: var(--font-family-main);
+        color: var(--color-text-primary);
+        background-color: var(--color-background-body);
+        padding: 30px 40px;
+        overflow-y: auto;
+    }
+
+    .insumo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .insumo-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--hialpesa-dark);
+        margin: 0;
+    }
+
+    .card-hialpesa {
+        background: var(--color-background-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .card-title-hialpesa {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--hialpesa-dark);
+    }
+
+    .filter-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        flex-wrap: wrap;
+    }
+
+    .filter-row label {
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        margin: 0;
+    }
+
+    .form-control-hialpesa {
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        padding: 8px 12px;
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--color-text-primary);
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .form-control-hialpesa:focus {
+        border-color: var(--hialpesa-dark);
+        box-shadow: 0 0 0 3px var(--hialpesa-light-blue);
+    }
+
+    .btn-hialpesa {
+        font-family: var(--font-family-main);
+        font-weight: 500;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .btn-primary-hialpesa {
+        background-color: var(--hialpesa-dark);
+        color: white;
+    }
+
+    .btn-primary-hialpesa:hover {
+        background-color: #001a41;
+        color: white;
+    }
+
+    .btn-danger-hialpesa { background-color: #ef4444; color: white; }
+    .btn-danger-hialpesa:hover { background-color: #dc2626; color: white; }
+
+    .btn-success-hialpesa { background-color: #10b981; color: white; }
+    .btn-success-hialpesa:hover { background-color: #059669; color: white; }
+
+    .btn-outline-hialpesa {
+        background: transparent;
+        border-color: var(--color-border);
+        color: var(--color-text-secondary);
+    }
+
+    .btn-outline-hialpesa:hover {
+        background: var(--color-background-body);
+        color: var(--hialpesa-dark);
+        border-color: var(--hialpesa-dark);
+    }
+
+    .badge-info {
+        background-color: var(--hialpesa-light-blue);
+        color: var(--hialpesa-dark);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--color-border);
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    table.modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        text-align: left;
+    }
+
+    table.modern-table th {
+        background: var(--color-background-body);
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 2px solid var(--color-border);
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    table.modern-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text-primary);
+        vertical-align: middle;
+    }
+
+    table.modern-table tbody tr:hover { background: #fdfdfd; }
+
+    .footer-action {
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .resumen-text { font-size: 13px; color: var(--color-text-secondary); font-weight: 500; }
+
+    .pagination-controls { display: flex; gap: 5px; align-items: center; }
+    .page-btn { padding: 4px 10px; border: 1px solid var(--color-border); background: white; border-radius: 4px; cursor: pointer; color: var(--color-text-primary); }
+    .page-btn:hover { background: var(--hialpesa-light-blue); }
+    .page-btn.active { background: var(--hialpesa-dark); color: white; border-color: var(--hialpesa-dark); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ui-autocomplete {
+        z-index: 2000 !important;
+        max-height: 250px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        font-family: var(--font-family-main);
+        font-size: 13px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        border: 1px solid var(--color-border);
+    }
+
+    /* Modales */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 45, 114, 0.4); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; border-radius: var(--border-radius-lg); width: 900px; max-width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { margin: 0; font-size: 18px; color: var(--hialpesa-dark); font-weight: 600; }
+    .close-modal { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-secondary); }
+    .modal-body { padding: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 5px; }
+</style>
+
+<div class="insumo-module-layout">
+    <!-- Menú Lateral -->
+    <div class="insumo-sidebar">
+        <div class="sidebar-header">
+            <h3>INSUMOS</h3>
+            <span>Almacén de Estampado</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
+            <li><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
+            <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li><a href="@Url.Action("GenerarSolicitud", "InsumoEstampado", new { sid = sid })"><i class="fas fa-check-square"></i> Generar Solicitud</a></li>
+            <li><a href="@Url.Action("Voucher", "InsumoEstampado")"><i class="fas fa-receipt"></i> Voucher</a></li>
+            <li class="active"><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="insumo-container">
+        <div class="insumo-header">
+            <h2 class="insumo-title">Mantenimiento de Solicitudes</h2>
+            <div style="display:flex;gap:8px">
+                <span class="badge-info">Área: Estampado</span>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card-hialpesa">
+            <div class="card-title-hialpesa">Filtros de Búsqueda</div>
+            <div class="filter-row">
+                <label for="dtInicio">Desde</label>
+                <input type="date" id="dtInicio" class="form-control-hialpesa" value="@defaultDesde" style="width:140px">
+                
+                <label for="dtFin">Hasta</label>
+                <input type="date" id="dtFin" class="form-control-hialpesa" value="@defaultHasta" style="width:140px">
+                
+                <label style="margin-left:10px;">Texto:</label>
+                <input type="text" id="txtFiltro" class="form-control-hialpesa" placeholder="Nro o Observación..." style="width:200px;" autocomplete="off">
+                
+                <button id="btnBuscar" class="btn-hialpesa btn-primary-hialpesa" onclick="listarSolicitudes(1)"><i class="fas fa-search" style="margin-right:6px;"></i>Buscar</button>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-hialpesa">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div class="card-title-hialpesa" style="margin:0">Listado de Requerimientos</div>
+            </div>
+            
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Nro. Req.</th>
+                            <th>Fecha</th>
+                            <th>Motivo</th>
+                            <th>Observación</th>
+                            <th>Solicitante</th>
+                            <th style="text-align:center; width:120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbSolicitudes">
+                        <tr><td colspan="6" style="text-align:center;">Realice una búsqueda para cargar las solicitudes.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer-action">
+                <span id="lblResumen" class="resumen-text">0 resultados mostrados</span>
+                <div id="paginationContainer" class="pagination-controls"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles -->
+<div class="modal-overlay" id="modalDetalle">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Detalles del Requerimiento</h3>
+            <button class="close-modal" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 15px;">
+                <button class="btn-hialpesa btn-success-hialpesa" onclick="abrirFormItem()"><i class="fas fa-plus" style="margin-right:6px;"></i>Agregar Insumo</button>
+            </div>
+            
+            <div id="formItem" style="display:none; background:var(--color-background-body); padding:15px; border:1px solid var(--color-border); border-radius:var(--border-radius-md); margin-bottom:20px;">
+                <h4 style="margin-top:0; margin-bottom:15px; font-size:14px; color:var(--hialpesa-dark);">Agregar/Editar Insumo</h4>
+                <input type="hidden" id="hdnNumReq" />
+                <input type="hidden" id="hdnSecuencia" value="0" />
+                <input type="hidden" id="hdnAccion" value="I" />
+                
+                <div style="display:flex; gap:15px; margin-bottom: 15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Código de Ítem (Buscador)</label>
+                        <input type="text" id="txtCodItem" class="form-control-hialpesa" style="width:100%" placeholder="Escriba para buscar...">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Código de Fabricación</label>
+                        <input type="text" id="txtCodFab" class="form-control-hialpesa" style="width:100%">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:15px;">
+                    <div class="form-group" style="width:120px;">
+                        <label>Cantidad</label>
+                        <input type="number" id="txtCant" class="form-control-hialpesa" style="width:100%" value="1" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Unidad de Medida</label>
+                        <input type="text" id="txtUM" class="form-control-hialpesa" style="width:100%" readonly tabindex="-1">
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <button class="btn-hialpesa btn-outline-hialpesa" onclick="cancelarFormItem()">Cancelar</button>
+                    <button class="btn-hialpesa btn-primary-hialpesa" onclick="guardarInsumo()"><i class="fas fa-save" style="margin-right:6px;"></i>Guardar</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="max-height: 300px;">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">Sec</th>
+                            <th>Cód. Repuesto</th>
+                            <th>Descripción</th>
+                            <th>Fabricación</th>
+                            <th style="text-align:right;">Cant.</th>
+                            <th>UM</th>
+                            <th style="text-align:center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbDetalles">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var todasLasSolicitudes = [];
+        var paginaActual = 1;
+        var filasPorPagina = 15; // paginación
+
+        $(document).ready(function () {
+            listarSolicitudes(1);
+
+            $("#txtFiltro").on("keyup", function (e) {
+                if (e.key === "Enter") listarSolicitudes(1);
+            });
+
+            // Autocomplete para el campo de Item en el Modal
+            $("#txtCodItem").autocomplete({
+                source: function (request, response) {
+                    $.getJSON("@Url.Action("BuscarInsumoExtraReceta", "InsumoEstampado")", { q: request.term }, function (res) {
+                        if (res.ok) {
+                            response($.map(res.data, function (item) {
+                                return { 
+                                    label: item.id + " - " + item.text, 
+                                    value: item.id,
+                                    um: item.um
+                                };
+                            }));
+                        }
+                    });
+                },
+                minLength: 3,
+                select: function (event, ui) {
+                    // Llenar unidad de medida automáticamente
+                    $("#txtUM").val(ui.item.um || "");
+                    setTimeout(function() { $("#txtCant").focus(); }, 100);
+                }
+            });
+        });
+
+        // Formatear la fecha de YYYY-MM-DD a DD/MM/YYYY para enviarlo al Controller
+        function getFechaFromInput(id) {
+            var val = $("#" + id).val();
+            if(!val) return "";
+            var parts = val.split('-');
+            if(parts.length === 3) return parts[2] + "/" + parts[1] + "/" + parts[0];
+            return val;
+        }
+
+        function listarSolicitudes(pagina) {
+            var filtro = $("#txtFiltro").val();
+            var desde = getFechaFromInput("dtInicio");
+            var hasta = getFechaFromInput("dtFin");
+
+            $.post("@Url.Action("ListarSolicitudes", "InsumoEstampado")", { filtro: filtro, desde: desde, hasta: hasta }, function (res) {
+                if (res.success) {
+                    todasLasSolicitudes = res.data;
+                    paginaActual = pagina || 1;
+                    renderizarTabla();
+                } else {
+                    $("#tbSolicitudes").html(`<tr><td colspan="6" style="color:red; text-align:center;">Error: ${res.message}</td></tr>`);
+                }
+            });
+        }
+
+        function renderizarTabla() {
+            var tb = $("#tbSolicitudes");
+            tb.empty();
+
+            if (todasLasSolicitudes.length === 0) {
+                tb.append('<tr><td colspan="6" style="text-align:center;">No se encontraron solicitudes.</td></tr>');
+                $("#lblResumen").text("0 resultados");
+                $("#paginationContainer").empty();
+                return;
+            }
+
+            // Paginación lógica
+            var totalFilas = todasLasSolicitudes.length;
+            var totalPaginas = Math.ceil(totalFilas / filasPorPagina);
+            if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+            if (paginaActual < 1) paginaActual = 1;
+
+            var startIdx = (paginaActual - 1) * filasPorPagina;
+            var endIdx = startIdx + filasPorPagina;
+            var porcion = todasLasSolicitudes.slice(startIdx, endIdx);
+
+            $.each(porcion, function (i, val) {
+                var fila = `<tr>
+                    <td><strong>${val.NumRequerimiento}</strong></td>
+                    <td>${val.FecRequerimiento}</td>
+                    <td>${val.MotivoDesc}</td>
+                    <td>${val.Observacion}</td>
+                    <td>${val.TrabajadorSolicitante}</td>
+                    <td style="text-align:center; white-space:nowrap;">
+                        <button class="btn-hialpesa btn-primary-hialpesa" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:12px;" onclick="verDetalles('${val.NumRequerimiento}')" title="Ver Detalles"><i class="fas fa-eye"></i></button>
+                        <a href="@Url.Action("Voucher", "InsumoEstampado")?num=${val.NumRequerimiento}&obs=${encodeURIComponent(val.Observacion || '')}&print=true" target="_blank" class="btn-hialpesa btn-primary-hialpesa" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:12px; background:#6c757d; border-color:#6c757d;" title="Imprimir Voucher"><i class="fas fa-print"></i></a>
+                        <a href="@Url.Action("ExportarVoucherExcel", "InsumoEstampado")?num=${val.NumRequerimiento}" class="btn-hialpesa btn-success-hialpesa" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:12px;" title="Descargar Excel"><i class="fas fa-file-excel"></i></a>
+                        <button class="btn-hialpesa btn-danger-hialpesa" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:12px;" onclick="eliminarSolicitud('${val.NumRequerimiento}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+                tb.append(fila);
+            });
+
+            $("#lblResumen").text(`Mostrando ${startIdx + 1} a ${Math.min(endIdx, totalFilas)} de ${totalFilas} resultados`);
+            generarPaginacion(totalPaginas);
+        }
+
+        function generarPaginacion(totalPaginas) {
+            var container = $("#paginationContainer");
+            container.empty();
+
+            if (totalPaginas <= 1) return;
+
+            var btnPrev = `<button class="page-btn" onclick="irAPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+            container.append(btnPrev);
+
+            var inicio = Math.max(1, paginaActual - 2);
+            var fin = Math.min(totalPaginas, inicio + 4);
+            if (fin - inicio < 4) { inicio = Math.max(1, fin - 4); }
+
+            for (var i = inicio; i <= fin; i++) {
+                var cls = (i === paginaActual) ? "page-btn active" : "page-btn";
+                container.append(`<button class="${cls}" onclick="irAPagina(${i})">${i}</button>`);
+            }
+
+            var btnNext = `<button class="page-btn" onclick="irAPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`;
+            container.append(btnNext);
+        }
+
+        function irAPagina(pag) {
+            paginaActual = pag;
+            renderizarTabla();
+        }
+
+        function verDetalles(numReq) {
+            $("#hdnNumReq").val(numReq);
+            $("#modalTitle").text("Detalles del Requerimiento #" + numReq);
+            cancelarFormItem();
+            cargarTablaDetalles(numReq);
+            $("#modalDetalle").css("display", "flex");
+        }
+
+        function cargarTablaDetalles(numReq) {
+            $.post("@Url.Action("ListarDetalles", "InsumoEstampado")", { numReq: numReq }, function (res) {
+                var tb = $("#tbDetalles");
+                tb.empty();
+                if (res.success) {
+                    if(res.data.length === 0){
+                        tb.append('<tr><td colspan="7" style="text-align:center;">No hay insumos.</td></tr>');
+                        return;
+                    }
+                    $.each(res.data, function (i, val) {
+                        if (val.Secuencia === 0) return;
+                        
+                        var fila = `<tr>
+                            <td style="text-align:center;">${val.Secuencia}</td>
+                            <td>${val.CodRepuesto}</td>
+                            <td>${val.DesItem}</td>
+                            <td>${val.CodFabricacion}</td>
+                            <td style="text-align:right;">${val.Cantidad.toFixed(2)}</td>
+                            <td>${val.DesUniMed}</td>
+                            <td style="text-align:center;">
+                                <button class="btn-hialpesa btn-danger-hialpesa" onclick="eliminarInsumo('${numReq}', ${val.Secuencia})" style="padding:4px 8px; font-size:12px;" title="Remover Ítem"><i class="fas fa-times"></i></button>
+                            </td>
+                        </tr>`;
+                        tb.append(fila);
+                    });
+                }
+            });
+        }
+
+        function cerrarModal() {
+            $("#modalDetalle").hide();
+        }
+
+        function abrirFormItem() {
+            $("#hdnSecuencia").val("0");
+            $("#hdnAccion").val("I");
+            $("#txtCodItem").val("");
+            $("#txtCodFab").val("");
+            $("#txtCant").val("1");
+            $("#txtUM").val("");
+            $("#formItem").slideDown();
+            setTimeout(function() { $("#txtCodItem").focus(); }, 300);
+        }
+
+        function cancelarFormItem() {
+            $("#formItem").slideUp();
+        }
+
+        function guardarInsumo() {
+            var numReq = $("#hdnNumReq").val();
+            var secuencia = $("#hdnSecuencia").val();
+            var accion = $("#hdnAccion").val();
+            var codItem = $("#txtCodItem").val();
+            var codFab = $("#txtCodFab").val();
+            var cantidad = $("#txtCant").val();
+            var um = $("#txtUM").val();
+
+            if (!codItem) {
+                Swal.fire("Atención", "Ingrese el Código del Ítem", "warning");
+                return;
+            }
+
+            $.post("@Url.Action("MantenimientoDetalle", "InsumoEstampado")", { 
+                accion: accion, numReq: numReq, secuencia: secuencia, codItem: codItem, codFab: codFab, cantidad: cantidad, um: um 
+            }, function (res) {
+                if (res.success) {
+                    Swal.fire("Éxito", "Insumo guardado", "success");
+                    cancelarFormItem();
+                    cargarTablaDetalles(numReq);
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+            });
+        }
+
+        function eliminarInsumo(numReq, secuencia) {
+            Swal.fire({
+                title: '¿Eliminar insumo?',
+                text: "Se quitará este ítem de la solicitud.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, eliminar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("@Url.Action("MantenimientoDetalle", "InsumoEstampado")", { 
+                        accion: 'D', numReq: numReq, secuencia: secuencia, codItem: '', codFab: '', cantidad: 0, um: '' 
+                    }, function (res) {
+                        if (res.success) {
+                            cargarTablaDetalles(numReq);
+                        } else {
+                            Swal.fire("Error", res.message, "error");
+                        }
+                    });
+                }
+            });
+        }
+
+        function eliminarSolicitud(numReq) {
+            Swal.fire({
+                title: '¿Eliminar Solicitud Completa?',
+                text: "Se borrará la cabecera y todos sus ítems asociados de forma irreversible.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, eliminar toda la solicitud'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("@Url.Action("EliminarSolicitud", "InsumoEstampado")", { numReq: numReq }, function (res) {
+                        if (res.success) {
+                            Swal.fire("Eliminado", "La solicitud #" + numReq + " ha sido eliminada.", "success");
+                            listarSolicitudes(1);
+                        } else {
+                            Swal.fire("Error", res.message, "error");
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

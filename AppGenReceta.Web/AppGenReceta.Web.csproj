@@ -47,6 +47,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EPPlus">
+      <HintPath>..\packages\EPPlus.4.5.3.3\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
     <Reference Include="Azure.Core, Version=1.38.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
       <HintPath>..\packages\Azure.Core.1.38.0\lib\net472\Azure.Core.dll</HintPath>
     </Reference>
@@ -715,12 +718,14 @@
     <Content Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\InsumoEstampado\Index.cshtml" />
     <Content Include="Views\Proveedor\Index.cshtml" />
     <Content Include="Views\Proveedor\_ListaProveedoresGrid.cshtml" />
+    <Content Include="Views\InsumoEstampado\Index.cshtml" />
     <Content Include="Views\InsumoEstampado\CalcularInsumos.cshtml" />
     <Content Include="Views\InsumoEstampado\AjustarCantidades.cshtml" />
     <Content Include="Views\InsumoEstampado\GenerarSolicitud.cshtml" />
+    <Content Include="Views\InsumoEstampado\Mantenimiento.cshtml" />
+    <Content Include="Views\InsumoEstampado\Voucher.cshtml" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
