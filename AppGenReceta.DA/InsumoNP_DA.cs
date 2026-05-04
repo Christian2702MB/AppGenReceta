@@ -737,5 +737,101 @@ namespace AppGenReceta.DA
 
             return lista;
         }
+        /// <summary>
+        /// Paso Final: Carga la solicitud en el ERP (Tablas de Requerimientos de Compra).
+        /// Ejecuta Cabecera y Detalle en una sola Transacción.
+        /// </summary>
+        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario)
+        {
+            string numRequerimiento = "";
+            string codArea = "";
+
+            // 1. Obtener los ítems que requieren compra para esta sesión
+            var resumen = ObtenerResumenSolicitud(sessionId);
+            var items = resumen.Items;
+
+            if (items == null || !items.Any())
+                throw new Exception("No hay ítems válidos para cargar en Gestión de Pedidos.");
+
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                using (SqlTransaction tr = con.BeginTransaction())
+                {
+                    try
+                    {
+                        // 2. EJECUCIÓN CABECERA: LG_MAN_Requerimiento_Items
+                        using (SqlCommand cmdCab = new SqlCommand("LG_MAN_Requerimiento_Items", con, tr))
+                        {
+                            cmdCab.CommandType = CommandType.StoredProcedure;
+                            cmdCab.Parameters.AddWithValue("@ACCION", "I");
+                            cmdCab.Parameters.AddWithValue("@Cod_Area", "CN");
+                            cmdCab.Parameters.AddWithValue("@Num_Requerimiento", 0);
+                            cmdCab.Parameters.AddWithValue("@Fec_Requerimiento", DateTime.Now.Date);
+                            cmdCab.Parameters.AddWithValue("@Cod_Motivo", "003");
+                            cmdCab.Parameters.AddWithValue("@Observacion", observaciones ?? "");
+                            cmdCab.Parameters.AddWithValue("@Cod_Fabrica_Solicitante", "002");
+                            cmdCab.Parameters.AddWithValue("@Tip_Trabajador_Solicitante", "E");
+                            cmdCab.Parameters.AddWithValue("@Cod_Trabajador_Solicitante", "2081");
+
+                            using (SqlDataReader dr = cmdCab.ExecuteReader())
+                            {
+                                if (dr.Read())
+                                {
+                                    // El SP devuelve "SELECT @Num_Requerimiento as num" en el primer Result Set
+                                    numRequerimiento = dr["num"].ToString();
+                                    codArea = "CN"; // Sabemos que es CN porque lo enviamos en el parámetro
+                                }
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(numRequerimiento))
+                            throw new Exception("El SP de cabecera no devolvió un Número de Requerimiento.");
+
+                        // 3. EJECUCIÓN DETALLE: LG_MAN_Requerimiento_Items_DETALLE
+                        foreach (var item in items)
+                        {
+                            using (SqlCommand cmdDet = new SqlCommand("LG_MAN_Requerimiento_Items_DETALLE", con, tr))
+                            {
+                                cmdDet.CommandType = CommandType.StoredProcedure;
+                                cmdDet.Parameters.AddWithValue("@ACCION", "I");
+                                cmdDet.Parameters.AddWithValue("@Cod_Area", codArea);
+                                cmdDet.Parameters.AddWithValue("@Num_Requerimiento", numRequerimiento);
+                                cmdDet.Parameters.AddWithValue("@Secuencia", 0);
+                                cmdDet.Parameters.AddWithValue("@Tip_Requerimiento", "P");
+                                cmdDet.Parameters.AddWithValue("@Cod_Item", item.CodigoInsumo);
+                                cmdDet.Parameters.AddWithValue("@Des_Temporal_Item", "");
+                                cmdDet.Parameters.AddWithValue("@Cod_Fabricacion", "");
+                                cmdDet.Parameters.AddWithValue("@Cantidad", item.CantidadAPedir);
+                                
+                                string um = string.IsNullOrEmpty(item.UnidadMedida) ? "UN" : item.UnidadMedida;
+                                if(um.Length > 2) um = um.Substring(0, 2);
+                                
+                                cmdDet.Parameters.AddWithValue("@Cod_UniMed", um);
+                                cmdDet.Parameters.AddWithValue("@Cod_Equipo", "");
+                                cmdDet.ExecuteNonQuery();
+                            }
+                        }
+
+                        // 4. Actualizar estado en nuestra tabla local para saber que ya fue enviado
+                        string sqlUpdate = "UPDATE TBL_ESTAMPADO_INSUMO_CALCULADO SET NUM_REQUERIMIENTO_ERP = @NUM WHERE ID_AGRUPACION IN (SELECT ID_AGRUPACION FROM TBL_ESTAMPADO_AGRUPACION_NP WHERE SESSION_ID = @SID)";
+                        using (SqlCommand cmdUpd = new SqlCommand(sqlUpdate, con, tr))
+                        {
+                            cmdUpd.Parameters.AddWithValue("@NUM", numRequerimiento);
+                            cmdUpd.Parameters.AddWithValue("@SID", sessionId);
+                            cmdUpd.ExecuteNonQuery();
+                        }
+
+                        tr.Commit();
+                        return numRequerimiento;
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        throw new Exception("Error en Cascada ERP: " + ex.Message);
+                    }
+                }
+            }
+        }
     }
 }

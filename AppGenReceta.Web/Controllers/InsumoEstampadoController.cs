@@ -236,5 +236,34 @@ namespace AppGenReceta.Web.Controllers
             ViewBag.SessionID = sid;
             return View(resumen);
         }
+
+        [HttpPost]
+        public JsonResult CargarGestionPedidos(string sid, string observaciones)
+        {
+            try
+            {
+                string usuario = Session["Usuario"] != null ? Session["Usuario"].ToString() : "2081"; // Hardcoded default per request
+                string numReq = bl.CargarGestionPedidos(sid, observaciones, usuario);
+
+                return Json(new { ok = true, mensaje = "Requerimiento " + numReq + " generado exitosamente.", redirect = Url.Action("Voucher", new { sid = sid, num = numReq }) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, mensaje = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public ActionResult Voucher(string sid, string num)
+        {
+            if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
+
+            // Reutilizamos el resumen para mostrar el voucher
+            E_SolicitudResumen resumen = bl.ObtenerResumenSolicitud(sid);
+            ViewBag.SessionID = sid;
+            ViewBag.NumRequerimiento = num;
+
+            return View(resumen);
+        }
     }
 }

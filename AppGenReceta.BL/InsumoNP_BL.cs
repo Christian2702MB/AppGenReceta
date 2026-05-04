@@ -166,5 +166,10 @@ namespace AppGenReceta.BL
             if (string.IsNullOrWhiteSpace(sessionId)) return new E_SolicitudResumen();
             return da.ObtenerResumenSolicitud(sessionId);
         }
+
+        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario)
+        {
+            return da.CargarGestionPedidos(sessionId, observaciones, usuario);
+        }
     }
 }

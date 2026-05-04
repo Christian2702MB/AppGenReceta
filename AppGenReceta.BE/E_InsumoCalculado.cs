@@ -65,6 +65,7 @@ namespace AppGenReceta.BE
 
         // ── Precio unitario (para resumen Paso 4) ────────────
         public decimal PrecioUnitario { get; set; }
+        public string  UnidadMedida   { get; set; }
 
         // ── Marca insumo agregado manualmente ────────────────
         /// <summary>true = agregado con botón "Insumo extra-receta" (no viene del cálculo)</summary>
