@@ -368,10 +368,10 @@
         </div>
         <ul class="sidebar-nav">
             <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
-            <li class="active"><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
+            <li class="active"><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-box"></i> Lista de Insumos</a></li>
             <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
-            <li><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
-            <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
+            <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
+            <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-receipt"></i> Voucher</a></li>
             <li><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
             <li><a href="@Url.Action("Index", "ConsumoAdicional", new { sid = sessionId })"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
         </ul>
@@ -728,12 +728,11 @@
                     // Hay déficit, calcular la diferencia o el total
                     var faltante = cantDefinida - stockActual;
 
-                    // VALIDACIÓN REQUERIMIENTO: Si capacidad es 0 o nula, Cant. a pedir debe ser 0
+                    // VALIDACIÓN REQUERIMIENTO: Si capacidad es 0 o nula (Stock Propio), la cantAPedir es la misma cantDefinida (según solicitud del usuario)
                     if (capacidad <= 0) {
-                        cantAPedir = 0;
+                        cantAPedir = cantDefinida;
                     } else {
                         // REDONDEO SUPERIOR (Ceiling matemático a entero dependiendo de la capacidad del envase)
-                        // Ej. Si falta 35 y cap es 20 = Math.ceil(35/20) = 2 Envases.
                         cantAPedir = Math.ceil(faltante / capacidad);
                     }
 
@@ -743,8 +742,9 @@
                     ReqCompra++;
                 }
 
-                // Asignar al texto de cant-pedir
-                tr.find('.cant-pedir').text(cantAPedir);
+                // Asignar al texto de cant-pedir (formateado: entero si no hay decimales, 1 decimal si los hay)
+                var displayVal = (cantAPedir % 1 === 0) ? cantAPedir : cantAPedir.toFixed(1);
+                tr.find('.cant-pedir').text(displayVal);
             });
 
             $('#lblRequierenCompra').text(ReqCompra);
@@ -775,7 +775,7 @@
                         CodigoInsumo: esExtra ? tr.attr('data-cod') || tr.find('td:first').text().replace('EXTRA', '').trim() : '',
                         Descripcion: esExtra ? tr.attr('data-desc') || tr.find('td:eq(1)').text().trim() : '',
                         GramosUDP: parseFloat(tr.find('.cant-definida').val()) || 0,
-                        CantidadAPedir: parseInt(tr.find('.cant-pedir').text()) || 0,
+                        CantidadAPedir: parseFloat(tr.find('.cant-pedir').text()) || 0,
                         TipoDespacho: tr.find('.drop-despacho').val(),
                         IdProveedorAsignado: parseInt(tr.find('.drop-prov').val()) || 0,
                         StockActual: parseFloat(tr.attr('data-stock')) || 0,

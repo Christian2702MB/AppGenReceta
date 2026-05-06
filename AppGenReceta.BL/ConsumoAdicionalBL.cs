@@ -69,5 +69,20 @@ namespace AppGenReceta.BL
         {
             return da.ListarDetalles(numReq);
         }
+
+        public void EliminarCabecera(int numReq)
+        {
+            da.EliminarCabecera(numReq);
+        }
+
+        public void EliminarDetalle(int numReq, int secu)
+        {
+            da.EliminarDetalle(numReq, secu);
+        }
+
+        public List<E_VoucherQyc> ObtenerVoucherQyc(int numReq)
+        {
+            return da.ObtenerVoucherQyc(numReq);
+        }
     }
 }

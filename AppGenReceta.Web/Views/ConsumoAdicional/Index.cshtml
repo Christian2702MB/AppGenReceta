@@ -40,6 +40,8 @@
     
     .btn-primary-hialpesa { background: var(--hialpesa-dark); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
     .btn-success-hialpesa { background: #10b981; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-danger-hialpesa { background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-info-hialpesa { background: #3b82f6; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
     
     /* TABLA */
     table.dataTable { width: 100% !important; border-collapse: collapse; font-size: 13px; }
@@ -276,6 +278,7 @@
             $('#cboItem').select2({
                 placeholder: 'Seleccione un insumo...',
                 minimumInputLength: 3,
+                width: '100%',
                 dropdownParent: $('#modalDetalle'),
                 ajax: {
                     url: '@Url.Action("BuscarInsumosSelect2", "Home")',
@@ -310,7 +313,12 @@
                 dtConsumos.clear();
                 if(res.success && res.data) {
                     res.data.forEach(function(item) {
-                        var btns = `<button class="btn-primary-hialpesa" style="padding:4px 8px; font-size:11px;" onclick="abrirModalDetalle(${item.NumRequerimiento}, '${item.Partida}')" title="Agregar Insumos"><i class="fas fa-plus"></i> Insumos</button>`;
+                        var btns = `<div style="display:flex; gap:5px; justify-content:center;">
+                            <button class="btn-primary-hialpesa" style="padding:4px 8px; font-size:11px;" onclick="abrirModalDetalle(${item.NumRequerimiento}, '${item.Partida}')" title="Agregar Insumos"><i class="fas fa-plus"></i></button>
+                            <button class="btn-info-hialpesa" style="padding:4px 8px; font-size:11px;" onclick="imprimirVoucher(${item.NumRequerimiento})" title="Imprimir PDF"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn-success-hialpesa" style="padding:4px 8px; font-size:11px; background:#16a34a;" onclick="exportarExcel(${item.NumRequerimiento})" title="Exportar Excel"><i class="fas fa-file-excel"></i></button>
+                            <button class="btn-danger-hialpesa" style="padding:4px 8px; font-size:11px;" onclick="eliminarCabecera(${item.NumRequerimiento})" title="Eliminar Solicitud"><i class="fas fa-trash-alt"></i></button>
+                        </div>`;
                         
                         dtConsumos.row.add([
                             item.NumRequerimiento,
@@ -320,7 +328,7 @@
                             item.Motivo,
                             item.Nombre,
                             item.Unidad,
-                            `<div style="text-align:center;">${btns}</div>`
+                            btns
                         ]);
                     });
                     dtConsumos.draw();
@@ -393,7 +401,7 @@
             $('#txtLote').val('0');
             $('#txtCantidad').val('');
             $('#ulItemsAgregados').empty();
-            $('#modalDetalle').fadeIn();
+            $('#modalDetalle').css('display', 'flex');
             
             // Cargar items ya registrados
             $('#pnlCargandoDetalle').show();
@@ -402,7 +410,10 @@
                 if(res.success && res.data) {
                     res.data.forEach(function(item) {
                         if(item.CodItem) {
-                            $('#ulItemsAgregados').append(`<li><b style="color:var(--hialpesa-dark);">${item.CodItem}</b> - ${item.Nombre} | Cant: <b>${item.ConsumoRequerido}</b> | Lote: ${item.Lote}</li>`);
+                            $('#ulItemsAgregados').append(`<li style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">
+                                <span><b style="color:var(--hialpesa-dark);">[${item.Secuencia}] ${item.CodItem}</b> - ${item.Nombre} | Cant: <b>${item.ConsumoRequerido}</b> | Lote: ${item.Lote}</span>
+                                <button onclick="eliminarDetalle(${item.NumRequerimiento}, ${item.Secuencia})" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Quitar"><i class="fas fa-trash"></i></button>
+                            </li>`);
                         }
                     });
                 }
@@ -434,14 +445,55 @@
             $.post('@Url.Action("GuardarDetalleManual", "ConsumoAdicional")', det, function(res) {
                 Swal.close();
                 if(res.success) {
-                    $('#ulItemsAgregados').append(`<li style="background:#ecfdf5;"><b style="color:#065f46;">${codPuro}</b> - ${nomPuro} | Cant: <b>${cant}</b> | Lote: ${lote} <span class="badge" style="background:#10b981; color:white; font-size:9px; margin-left:5px;">NUEVO</span></li>`);
+                    // Recargar la lista para obtener la Secuencia real asignada por la BD
                     $('#cboItem').val(null).trigger('change');
                     $('#txtCantidad').val('');
-                    cargarGrilla(); // Actualizar grilla de fondo
+                    abrirModalDetalle(numReq, np); // recarga lista con Secuencia correcta
+                    cargarGrilla();
                 } else {
                     Swal.fire('Error', res.message, 'error');
                 }
             });
+        }
+
+        function eliminarCabecera(numReq) {
+            Swal.fire({
+                title: '¿Eliminar Requerimiento?',
+                text: "Esta acción borrará la cabecera y todos sus insumos.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Sí, eliminar todo'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("Eliminar", "ConsumoAdicional")', { numReq: numReq }, function(res) {
+                        if(res.success) {
+                            Swal.fire('Eliminado', res.message, 'success');
+                            cargarGrilla();
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function eliminarDetalle(numReq, secu) {
+            $.post('@Url.Action("EliminarDetalle", "ConsumoAdicional")', { numReq: numReq, secu: secu }, function(res) {
+                if(res.success) {
+                    abrirModalDetalle(numReq, $('#hdnNPDetalle').val()); // Recargar lista
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            });
+        }
+
+        function imprimirVoucher(numReq) {
+            window.open('@Url.Action("Imprimir", "ConsumoAdicional")?numReq=' + numReq, '_blank');
+        }
+
+        function exportarExcel(numReq) {
+            window.location.href = '@Url.Action("ExportarExcel", "ConsumoAdicional")?numReq=' + numReq;
         }
     </script>
 }

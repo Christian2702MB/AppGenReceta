@@ -949,8 +949,8 @@ namespace AppGenReceta.DA
                     cmd.Parameters.AddWithValue("@Tip_Trabajador_Solicitante", "");
                     cmd.Parameters.AddWithValue("@Cod_Trabajador_Solicitante", "");
                     
-                    int res = cmd.ExecuteNonQuery();
-                    return res > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
             }
         }

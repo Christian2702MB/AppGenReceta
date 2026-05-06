@@ -1,0 +1,181 @@
+@using AppGenReceta.BE
+@using System.Collections.Generic
+@{
+    Layout = null;
+    var filas   = ViewBag.Filas as List<E_VoucherQyc> ?? new List<E_VoucherQyc>();
+    int  numReq = ViewBag.NumReq != null ? (int)ViewBag.NumReq : 0;
+
+    // Cabecera (tomamos la primera fila; los datos se repiten en todas las filas)
+    string partida  = "Kg Crudo";                              // Campo fijo solicitado (amarillo)
+    string kgsCrudo = filas.Count > 0 ? filas[0].KgsCrudo      : "";
+    string maquina  = filas.Count > 0 ? filas[0].Maquina       : "";
+    string motivo   = filas.Count > 0 ? filas[0].Motivo        : "";
+    string fecha    = filas.Count > 0 ? filas[0].Fecha         : "";
+    string obs      = filas.Count > 0 ? filas[0].Observaciones : "";
+    string op       = filas.Count > 0 ? filas[0].OP            : "";
+    string cliente  = filas.Count > 0 ? filas[0].Cliente       : "";
+
+    // Campo "Partida" visual = Partida + Kgs (ej: "Kg Crudo  45.00 kgs")
+    string partidaDisplay = string.IsNullOrEmpty(kgsCrudo) ? partida : partida + "   " + kgsCrudo + " kgs";
+    // Campo "Maquina" visual (igual que en Excel)
+    string maquinaDisplay = maquina;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Voucher QYC @numReq</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #222; background: #fff; padding: 20px; }
+
+        /* ── Título ── */
+        .titulo {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #00008B;
+            margin-bottom: 18px;
+            padding: 6px 0;
+        }
+
+        /* ── Cabecera de datos ── */
+        .cabecera { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        .cabecera td { padding: 4px 8px; vertical-align: middle; }
+        .lbl {
+            font-weight: bold;
+            background-color: #E0FFFF;
+            border: 1px solid #888;
+            white-space: nowrap;
+            width: 110px;
+        }
+        .val {
+            border: 1px solid #ccc;
+            min-width: 120px;
+            padding: 3px 8px;
+        }
+        .spacer { width: 20px; }
+
+        /* ── Tabla de detalle ── */
+        .detalle { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .detalle th {
+            background-color: #E0FFFF;
+            border: 1px solid #888;
+            padding: 5px 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .detalle td {
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            vertical-align: middle;
+        }
+        .num    { text-align: right; font-weight: bold; }
+        .center { text-align: center; }
+        .cod    { font-weight: bold; }
+
+        /* ── Firmas ── */
+        .firmas { width: 100%; margin-top: 55px; }
+        .firmas td { text-align: center; padding-top: 6px; }
+        .firma-linea {
+            border-top: 1px solid #333;
+            width: 180px;
+            margin: 0 auto;
+            padding-top: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* ── Botón no-print ── */
+        .no-print { text-align: right; margin-bottom: 14px; }
+        .no-print button {
+            padding: 8px 20px;
+            background: #002D72;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        @@media print {
+            .no-print { display: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="no-print">
+        <button onclick="window.print()">&#128438; Imprimir</button>
+    </div>
+
+    <div class="titulo">REQUERIMIENTO DE QYC : @numReq</div>
+
+    <!-- ── Cabecera (diseño idéntico al Excel) ── -->
+    <table class="cabecera">
+        <tr>
+            <td class="lbl">PARTIDA</td>
+            <td class="val">@partidaDisplay</td>
+            <td class="spacer"></td>
+            <td class="lbl">MAQUINA</td>
+            <td class="val">@maquinaDisplay</td>
+        </tr>
+        <tr>
+            <td class="lbl">MOTIVO</td>
+            <td class="val">@motivo</td>
+            <td class="spacer"></td>
+            <td class="lbl">FECHA</td>
+            <td class="val">@fecha</td>
+        </tr>
+        <tr>
+            <td class="lbl">OBSERVACIONES</td>
+            <td class="val" colspan="2">@obs</td>
+            <td class="lbl">OP</td>
+            <td class="val">@op</td>
+        </tr>
+        <tr>
+            <td colspan="3"></td>
+            <td class="lbl">CLIENTE / OP</td>
+            <td class="val">@cliente</td>
+        </tr>
+    </table>
+
+    <!-- ── Detalle ── -->
+    <table class="detalle">
+        <thead>
+            <tr>
+                <th>Partida</th>
+                <th>CODIGO</th>
+                <th>DESCRIPCION</th>
+                <th>UN</th>
+                <th>CANTIDAD</th>
+                <th>LOTE</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in filas)
+            {
+                <tr>
+                    <td class="center">@d.Partida</td>
+                    <td class="cod">@d.CodItem</td>
+                    <td>@d.DesItem</td>
+                    <td class="center">@d.UnidadMedida</td>
+                    <td class="num">@d.Cantidad.ToString("N4")</td>
+                    <td class="center">@(d.Lote > 0 ? d.Lote.ToString() : "")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- ── Firmas ── -->
+    <table class="firmas">
+        <tr>
+            <td width="35%"><div class="firma-linea">VBO</div></td>
+            <td width="30%"></td>
+            <td width="35%"><div class="firma-linea">SUPERVISOR</div></td>
+        </tr>
+    </table>
+
+</body>
+</html>

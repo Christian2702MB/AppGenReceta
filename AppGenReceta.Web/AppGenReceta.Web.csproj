@@ -728,6 +728,7 @@
     <Content Include="Views\InsumoEstampado\Mantenimiento.cshtml" />
     <Content Include="Views\InsumoEstampado\Voucher.cshtml" />
     <Content Include="Views\ConsumoAdicional\Index.cshtml" />
+    <Content Include="Views\ConsumoAdicional\VoucherPDF.cshtml" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />

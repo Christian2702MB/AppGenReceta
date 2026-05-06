@@ -74,6 +74,10 @@ namespace AppGenReceta.DA
                             req.Motivo = GetStringSafe(dr, "Motivo");
                             req.Nombre = GetStringSafe(dr, "Nombre");
                             req.Unidad = GetStringSafe(dr, "UN");
+                            req.Maquina = GetStringSafe(dr, "Cod_Maquina_Tinto");
+                            req.OP = GetStringSafe(dr, "OP");
+                            req.Cliente = GetStringSafe(dr, "Cliente");
+                            req.Observaciones = GetStringSafe(dr, "Observaciones");
                             lista.Add(req);
                         }
                     }
@@ -194,6 +198,110 @@ namespace AppGenReceta.DA
                             item.Lote = GetIntSafe(dr, "Lote");
                             item.Unidad = GetStringSafe(dr, "UN");
                             if (!string.IsNullOrEmpty(item.CodItem)) lista.Add(item);
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
+        public void EliminarCabecera(int numReq)
+        {
+            using (SqlConnection cn = new SqlConnection(GetConnectionString()))
+            {
+                using (SqlCommand cmd = new SqlCommand("ti_up_man_Ti_Ordtra_Tintoreria_Req_Adic", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ACCION", "D");
+                    cmd.Parameters.AddWithValue("@NUM_REQUERIMIENTO", numReq);
+                    cmd.Parameters.AddWithValue("@COD_ORDTRA", "");
+                    cmd.Parameters.AddWithValue("@COD_MOTIVO_REQUER", "");
+                    cmd.Parameters.AddWithValue("@COD_MAQUINA_TINTO", "");
+                    cmd.Parameters.AddWithValue("@OBSERVACIONES", "");
+                    cmd.Parameters.AddWithValue("@COD_USUARIO", "");
+                    cmd.Parameters.AddWithValue("@PC", "");
+                    cmd.Parameters.AddWithValue("@COD_ORDPRO", "");
+                    cmd.Parameters.AddWithValue("@COD_CLIENTE", "");
+                    cmd.Parameters.AddWithValue("@COD_ORDPRO_TEX", "");
+
+                    cn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void EliminarDetalle(int numReq, int secu)
+        {
+            using (SqlConnection cn = new SqlConnection(GetConnectionString()))
+            {
+                using (SqlCommand cmd = new SqlCommand("ti_up_man_Ti_Ordtra_Tintoreria_Req_Adic_Items", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@accion", "D");
+                    cmd.Parameters.AddWithValue("@num_requerimiento", numReq);
+                    cmd.Parameters.AddWithValue("@secu", secu);
+                    cmd.Parameters.AddWithValue("@cod_item", "");
+                    cmd.Parameters.AddWithValue("@cons_requerido", 0);
+                    cmd.Parameters.AddWithValue("@cod_ordtra", "");
+                    cmd.Parameters.AddWithValue("@Lote", 0);
+
+                    cn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Llama a Ti_sm_muestra_Voucher para obtener la cabecera + detalle del requerimiento QYC.
+        /// El SP devuelve una fila por cada ítem; los campos de cabecera se repiten en cada fila.
+        /// Columnas reales del SP (acción 'S'):
+        ///   Cabecera : Num_Requerimiento, Fec_Creacion, Cod_Ordtra, Cod_Motivo_Requer,
+        ///              Observaciones, COD_ORDPRO, Cod_Cliente_Tex, COD_ORDPRO_TEX,
+        ///              Kgs_Crudo, Color, Nom_Cliente, Cod_Maquina_Tinto
+        ///   Detalle  : Cod_Item, Cons_Requerido, Descripcion, Motivo,
+        ///              Des_Maquina_Tinto, Partida, LoteProv, Lote
+        /// </summary>
+        public List<E_VoucherQyc> ObtenerVoucherQyc(int numReq)
+        {
+            var lista = new List<E_VoucherQyc>();
+            int secu = 0;
+
+            using (SqlConnection cn = new SqlConnection(GetConnectionString()))
+            {
+                cn.Open();
+                using (SqlCommand cmd = new SqlCommand("Ti_sm_muestra_Voucher", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@num_requerimiento", numReq);
+                    cmd.Parameters.AddWithValue("@Orden", "S");
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            secu++;
+                            var row = new E_VoucherQyc();
+
+                            // ── Cabecera (se repite en cada fila) ──
+                            row.NumRequerimiento = numReq;
+                            row.Partida       = GetStringSafe(dr, "Partida");           // Partida real para el detalle
+                            row.Maquina       = GetStringSafe(dr, "Des_Maquina_Tinto"); // isnull(E.Des_Maquina_Tinto,'')
+                            row.Motivo        = GetStringSafe(dr, "Motivo");            // D.Descripcion AS Motivo
+                            row.Fecha         = GetStringSafe(dr, "Fec_Creacion");      // fecha de creación de la cabecera
+                            row.Observaciones = GetStringSafe(dr, "Observaciones");
+                            row.OP            = GetStringSafe(dr, "COD_ORDPRO");        // OP real del SP (en rojo en imagen)
+                            row.Cliente       = GetStringSafe(dr, "Nom_Cliente");       // C.Nom_Cliente
+                            row.KgsCrudo      = GetStringSafe(dr, "Kgs_Crudo");         // peso del lote
+
+                            // ── Detalle ──
+                            row.Secuencia    = secu;
+                            row.CodItem      = GetStringSafe(dr, "Cod_Item");
+                            row.DesItem      = GetStringSafe(dr, "Descripcion");        // C.Des_Item AS Descripcion
+                            row.UnidadMedida = "Kg";                                    // UN fijo solicitado (en amarillo en imagen)
+                            row.Cantidad     = GetDecimalSafe(dr, "Cons_Requerido");
+                            row.Lote         = GetIntSafe(dr, "Lote");
+
+                            lista.Add(row);
                         }
                     }
                 }

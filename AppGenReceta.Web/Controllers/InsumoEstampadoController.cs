@@ -260,6 +260,12 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Voucher(string sid, string num, string obs, bool print = false)
         {
+            if (string.IsNullOrWhiteSpace(num)) return RedirectToAction("Index");
+
+            // Datos dinámicos desde BD (Previsualización)
+            var detalleERP = bl.ObtenerVoucherDesdeERP("CN", num);
+            if (detalleERP == null || detalleERP.Count == 0) return RedirectToAction("Index");
+
             // Ya no redireccionamos si sid es nulo, para permitir ver históricos desde Mantenimiento
             E_SolicitudResumen resumen = bl.ObtenerResumenSolicitud(sid);
             if (resumen == null) resumen = new E_SolicitudResumen();
@@ -267,9 +273,6 @@ namespace AppGenReceta.Web.Controllers
             
             ViewBag.SessionID = sid;
             ViewBag.NumRequerimiento = num;
-
-            // Datos dinámicos desde BD (Previsualización)
-            var detalleERP = bl.ObtenerVoucherDesdeERP("CN", num);
             ViewBag.DetalleERP = detalleERP;
 
             // Firmas
@@ -378,83 +381,76 @@ namespace AppGenReceta.Web.Controllers
                 foreach (var item in detalleERP)
                 {
                     ws.Cells[row, 2].Value = item.Secuencia;
-                    ws.Cells[row, 2].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
-                    
                     ws.Cells[row, 3].Value = string.IsNullOrEmpty(item.CodRepuesto) ? item.CodItem : item.CodRepuesto;
                     
-                    ws.Cells[row, 4].Value = item.DesItem;
+                    // --- Celda de Descripción con RichText (Compacto) ---
+                    var cellDesc = ws.Cells[row, 4];
+                    cellDesc.Style.WrapText = true;
+                    var rt1 = cellDesc.RichText.Add(item.DesItem);
+                    rt1.Bold = true;
                     
-                    ws.Cells[row, 5].Value = item.CodFabricacion;
-                    
-                    ws.Cells[row, 6].Value = item.Cantidad;
-                    ws.Cells[row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
-                    
-                    ws.Cells[row, 7].Value = item.DesUniMed;
-
-                    row++;
                     if (!string.IsNullOrEmpty(item.UltimosPrecios))
                     {
-                        ws.Cells[row, 4].Value = "Ultimos Precios : " + item.UltimosPrecios;
-                        ws.Cells[row, 4].Style.Font.Size = 8;
-                        ws.Cells[row, 4].Style.Font.Italic = true;
-                        ws.Cells[row, 4].Style.WrapText = true;
-                        ws.Row(row).Height = 30; // Dar más espacio para precios largos
-                        row++;
+                        var rt2 = cellDesc.RichText.Add("\nUltimos Precios : " + item.UltimosPrecios);
+                        rt2.Bold = false;
+                        rt2.Italic = true;
+                        rt2.Size = 8;
                     }
+                    
+                    ws.Cells[row, 5].Value = item.CodFabricacion;
+                    ws.Cells[row, 6].Value = item.Cantidad;
+                    ws.Cells[row, 7].Value = item.DesUniMed;
+
+                    // Alineación superior para toda la fila
+                    ws.Cells[row, 2, row, 7].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Top;
+                    ws.Cells[row, 2, row, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells[row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
+
+                    row++;
                 }
 
-                // Aplicar bordes a toda la tabla de datos
+                // Aplicar bordes a la tabla (Contorno y verticales)
                 var tableRange = ws.Cells[9, 2, row - 1, 7];
-                tableRange.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                tableRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                tableRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                tableRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-
-                row += 4; // Espacio para firmas
-
-                // Filas para las cajas de firma (Gris)
-                int sigBoxRowStart = row;
-                int sigBoxRowEnd = row + 3;
-
-                // Configurar cajas grises en C, E, F
-                int[] sigCols = { 3, 5, 6 }; // Columnas donde van las cajas
-                foreach (int col in sigCols)
+                tableRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                
+                // Líneas verticales internas
+                for (int c = 2; c <= 7; c++)
                 {
-                    var box = ws.Cells[sigBoxRowStart, col, sigBoxRowEnd, col];
-                    box.Merge = true; // Para evitar líneas horizontales internas
-                    box.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    box.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(242, 242, 242));
-                    box.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                    box.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                    box.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                    box.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    var colRange = ws.Cells[9, c, row - 1, c];
+                    colRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    colRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                 }
 
-                row = sigBoxRowEnd + 1;
-
-                // Nombres debajo de las cajas
+                // --- Elaborado por (Inmediatamente después de la tabla) ---
                 string trabajador = detalleERP.Count > 0 ? (detalleERP[0].Trabajador + " " + detalleERP[0].NomTrabajador).Trim() : "";
+                ws.Cells[row, 2, row, 4].Merge = true;
                 ws.Cells[row, 2].Value = "Elaborado por " + trabajador;
-                ws.Cells[row, 2].Style.Font.Size = 9;
-                ws.Cells[row, 2].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                ws.Cells[row, 2].Style.Font.Bold = true;
+                ws.Cells[row, 2].Style.Font.Size = 10;
+                
+                row += 5; // Espacio para las otras firmas
 
-                // Nombres de firmantes con línea debajo
-                ws.Cells[row, 3].Value = "Sr. " + firma1;
-                ws.Cells[row, 3].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                ws.Cells[row, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                // --- SECCIÓN DE FIRMAS (Líneas inferiores) ---
+                int sigRow = row;
+                
+                // Firma 1 (C)
+                ws.Cells[sigRow, 3].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[sigRow + 1, 3].Value = "Sr. " + firma1;
+                ws.Cells[sigRow + 1, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-                ws.Cells[row, 5].Value = "Ing. " + firma2;
-                ws.Cells[row, 5].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                ws.Cells[row, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                // Firma 2 (E)
+                ws.Cells[sigRow, 5].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[sigRow + 1, 5].Value = "Ing. " + firma2;
+                ws.Cells[sigRow + 1, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-                ws.Cells[row, 6, row, 7].Merge = true;
-                ws.Cells[row, 6].Value = "Ing. " + firma3;
-                ws.Cells[row, 6].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                ws.Cells[row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                // Firma 3 (G)
+                ws.Cells[sigRow, 7].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[sigRow + 1, 7].Value = "Ing. " + firma3;
+                ws.Cells[sigRow + 1, 7].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-                // Autoajustar columnas al final para que los precios se vean bien
-                ws.Column(4).Style.WrapText = true;
-                ws.Column(4).Width = 70; // Descripción ancha para evitar solapamiento
+                // Autoajustar y fijar anchos finales
+                ws.Column(4).Width = 75; 
+                ws.Column(5).Width = 25; // Codigo Fabricacion mas ancho
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
