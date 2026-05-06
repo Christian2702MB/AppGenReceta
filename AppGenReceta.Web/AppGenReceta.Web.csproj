@@ -704,6 +704,7 @@
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\ConsumoAdicionalController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InsumoEstampadoController.cs" />
     <Compile Include="Controllers\ProveedorController.cs" />
@@ -726,6 +727,7 @@
     <Content Include="Views\InsumoEstampado\GenerarSolicitud.cshtml" />
     <Content Include="Views\InsumoEstampado\Mantenimiento.cshtml" />
     <Content Include="Views\InsumoEstampado\Voucher.cshtml" />
+    <Content Include="Views\ConsumoAdicional\Index.cshtml" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />

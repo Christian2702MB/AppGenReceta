@@ -1,6 +1,7 @@
 @{
     ViewBag.Title = "Gestión de Insumos - Agrupación de NPs";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string sid = Request.QueryString["sid"] ?? "";
 }
 
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
@@ -352,6 +353,7 @@
             <li><a href="#"><i class="fas fa-check-square"></i> Generar Solicitud</a></li>
             <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
             <li><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+            <li><a href="@Url.Action("Index", "ConsumoAdicional", new { sid = sid })"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
         </ul>
     </div>
 

@@ -193,9 +193,10 @@
 
     .btn-print:hover { background: #1e293b; transform: translateY(-1px); }
 
-    /* SIDEBAR STYLES (Standard) */
+    /* SIDEBAR STYLES (Standardized Gold) */
+    .insumo-sidebar { width: 260px; background-color: var(--hialpesa-dark); color: white; flex-shrink: 0; display: flex; flex-direction: column; padding-top: 35px; min-height: 100vh; box-shadow: 4px 0 10px rgba(0,0,0,0.1); }
     .sidebar-header { padding: 0 24px 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; text-align: center; }
-    .sidebar-header h3 { margin: 0; font-size: 18px; font-weight: 700; color: white; letter-spacing: 1px; text-transform: uppercase; }
+    .sidebar-header h3 { margin: 0; font-size: 18px; font-weight: 700; color: white; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2; }
     .sidebar-header span { font-size: 11px; color: #f39c12; font-weight: 600; display: block; margin-top: 4px; }
     .sidebar-nav { list-style: none; padding: 0; margin: 0; }
     .sidebar-nav li { margin: 4px 12px; }
@@ -250,6 +251,7 @@
             <li><a href="@Url.Action("GenerarSolicitud", "InsumoEstampado", new { sid = sid })"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
             <li class="active"><a href="#"><i class="fas fa-file-invoice"></i> Voucher</a></li>
             <li><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
+            <li><a href="@Url.Action("Index", "ConsumoAdicional")"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
         </ul>
     </div>
 
@@ -345,7 +347,7 @@
         </div>
 
         <!-- SECCION PREVIEW EXCEL -->
-        <div class="preview-section">
+        <div class="preview-section no-print">
             <div class="preview-title">
                 <span><i class="fas fa-file-excel" style="color:#16a34a; margin-right:8px;"></i> Reporte Detallado de Compra</span>
                 <a href="@Url.Action("ExportarVoucherExcel", "InsumoEstampado", new { num = numReq })" class="btn-excel" target="_blank">

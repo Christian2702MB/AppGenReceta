@@ -296,8 +296,7 @@ namespace AppGenReceta.Web.Controllers
             using (var package = new ExcelPackage())
             {
                 var ws = package.Workbook.Worksheets.Add("Voucher");
-
-                // Ajustes de Impresión para forzar a 1 sola página de ancho
+                ws.View.ShowGridLines = false; // Ocultar líneas de cuadrícula para un reporte más limpio
                 ws.PrinterSettings.FitToPage = true;
                 ws.PrinterSettings.FitToWidth = 1;
                 ws.PrinterSettings.FitToHeight = 0;
@@ -434,19 +433,28 @@ namespace AppGenReceta.Web.Controllers
                 row = sigBoxRowEnd + 1;
 
                 // Nombres debajo de las cajas
-                string trabajador = detalleERP.Count > 0 ? detalleERP[0].Trabajador : "";
+                string trabajador = detalleERP.Count > 0 ? (detalleERP[0].Trabajador + " " + detalleERP[0].NomTrabajador).Trim() : "";
                 ws.Cells[row, 2].Value = "Elaborado por " + trabajador;
-                ws.Cells[row, 2].Style.Font.Size = 10;
+                ws.Cells[row, 2].Style.Font.Size = 9;
                 ws.Cells[row, 2].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
 
-                ws.Cells[row, 3].Value = "Sr. " + firma1 + " _________________";
-                ws.Cells[row, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                // Nombres de firmantes con línea debajo
+                ws.Cells[row, 3].Value = "Sr. " + firma1;
+                ws.Cells[row, 3].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[row, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-                ws.Cells[row, 5].Value = "Ing. " + firma2 + " _________________";
-                ws.Cells[row, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                ws.Cells[row, 5].Value = "Ing. " + firma2;
+                ws.Cells[row, 5].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[row, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-                ws.Cells[row, 6].Value = "Ing. " + firma3 + " _________________";
-                ws.Cells[row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                ws.Cells[row, 6, row, 7].Merge = true;
+                ws.Cells[row, 6].Value = "Ing. " + firma3;
+                ws.Cells[row, 6].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                ws.Cells[row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                // Autoajustar columnas al final para que los precios se vean bien
+                ws.Column(4).Style.WrapText = true;
+                ws.Column(4).Width = 70; // Descripción ancha para evitar solapamiento
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
