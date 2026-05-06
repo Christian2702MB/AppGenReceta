@@ -61,12 +61,12 @@
     <!-- SIDEBAR -->
     <div class="insumo-sidebar">
         <div class="sidebar-header">
-            <h3>Insumos</h3>
+            <h3>INSUMOS</h3>
             <span>Almacén de Estampado</span>
         </div>
         <ul class="sidebar-nav">
-            <li><a href="@Url.Action("Index", "InsumoEstampado", new { sid = sid })"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
-            <li><a href="@Url.Action("AjustarCantidades", "InsumoEstampado", new { sid = sid })"><i class="fas fa-box"></i> Lista de Insumos</a></li>
+            <li><a href="@Url.Action("Index", "InsumoEstampado")"><i class="fas fa-layer-group"></i> Agrupación de NPs</a></li>
+            <li><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
             <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
             <li><a href="@Url.Action("GenerarSolicitud", "InsumoEstampado", new { sid = sid })"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
             <li><a href="@Url.Action("Voucher", "InsumoEstampado")"><i class="fas fa-receipt"></i> Voucher</a></li>
@@ -78,7 +78,7 @@
     <!-- MAIN AREA -->
     <div class="insumo-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 style="font-size: 22px; font-weight: 700; color: var(--hialpesa-dark); margin: 0;">Consumo Adicionales Manuales</h2>
+            <h1 style="font-size: 20px; font-weight: 600; color: var(--hialpesa-dark); margin: 0;">Gestión de Consumos Adicionales</h1>
             <button class="btn-success-hialpesa" onclick="abrirModalCabecera()"><i class="fas fa-plus"></i> Nuevo Requerimiento</button>
         </div>
 

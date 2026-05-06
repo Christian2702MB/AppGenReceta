@@ -363,7 +363,7 @@
     <!-- SIDEBAR -->
     <div class="insumo-sidebar">
         <div class="sidebar-header">
-            <h3>Insumos</h3>
+            <h3>INSUMOS</h3>
             <span>Almacén de Estampado</span>
         </div>
         <ul class="sidebar-nav">
@@ -371,9 +371,9 @@
             <li class="active"><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
             <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
             <li><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
-            <li><a href="#"><i class="fas fa-file-invoice"></i> Voucher</a></li>
+            <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
             <li><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
-            <li><a href="@Url.Action("Index", "ConsumoAdicional")"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
+            <li><a href="@Url.Action("Index", "ConsumoAdicional", new { sid = sessionId })"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
         </ul>
     </div>
 

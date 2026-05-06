@@ -44,23 +44,22 @@
     body .main-container { margin-top: 0 !important; }
     body .content-body { padding: 0 !important; }
 
-    /* SIDEBAR */
+    /* SIDEBAR (Standardized Gold) */
     .insumo-sidebar {
         width: 260px;
         background-color: var(--hialpesa-dark);
         color: white;
         display: flex;
         flex-direction: column;
-        padding-top: 20px;
-        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        padding-top: 35px;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
         z-index: 10;
-        border-right: 1px solid rgba(255,255,255,0.05);
     }
 
     .sidebar-header {
         padding: 0 24px 24px 24px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         margin-bottom: 20px;
         text-align: center;
     }
@@ -72,15 +71,15 @@
         color: white;
         letter-spacing: 1px;
         text-transform: uppercase;
+        line-height: 1.2;
     }
 
     .sidebar-header span {
         font-size: 11px;
-        color: #f39c12; /* Orange sub-text */
+        color: var(--hialpesa-accent);
         font-weight: 600;
         display: block;
         margin-top: 4px;
-        text-transform: none;
     }
 
     .sidebar-nav {
@@ -91,6 +90,7 @@
 
     .sidebar-nav li {
         margin: 4px 12px;
+        border-bottom: none !important;
     }
 
     .sidebar-nav a {
@@ -113,8 +113,7 @@
         opacity: 0.8;
     }
 
-    .sidebar-nav a:hover,
-    .sidebar-nav li.active a {
+    .sidebar-nav a:hover, .sidebar-nav li.active a {
         background-color: rgba(255, 255, 255, 0.1);
         color: white;
     }
@@ -268,7 +267,7 @@
     <!-- SIDEBAR -->
     <div class="insumo-sidebar">
         <div class="sidebar-header">
-            <h3>Insumos</h3>
+            <h3>INSUMOS</h3>
             <span>Almacén de Estampado</span>
         </div>
         <ul class="sidebar-nav">
@@ -276,9 +275,9 @@
             <li><a href="#"><i class="fas fa-box"></i> Lista de Insumos</a></li>
             <li><a href="@Url.Action("Index", "Proveedor")"><i class="fas fa-truck"></i> Proveedores</a></li>
             <li class="active"><a href="#"><i class="fas fa-check-double"></i> Generar Solicitud</a></li>
-            <li><a href="#"><i class="fas fa-file-invoice"></i> Voucher</a></li>
+            <li><a href="#"><i class="fas fa-receipt"></i> Voucher</a></li>
             <li><a href="@Url.Action("Mantenimiento", "InsumoEstampado")"><i class="fas fa-bars"></i> Mant. Solicitudes</a></li>
-            <li><a href="@Url.Action("Index", "ConsumoAdicional")"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
+            <li><a href="@Url.Action("Index", "ConsumoAdicional", new { sid = sid })"><i class="fas fa-plus-circle"></i> Consumos Adicionales</a></li>
         </ul>
     </div>
 
