@@ -980,5 +980,25 @@ namespace AppGenReceta.DA
                 }
             }
         }
+
+        public string ObtenerSidDesdeNumReq(string numReq)
+        {
+            using (SqlConnection con = new SqlConnection(GetConnectionString()))
+            {
+                con.Open();
+                string sql = @"
+                    SELECT TOP 1 A.SESSION_ID 
+                    FROM TBL_ESTAMPADO_AGRUPACION_NP A
+                    INNER JOIN TBL_ESTAMPADO_INSUMO_CALCULADO IC ON A.ID_AGRUPACION = IC.ID_AGRUPACION
+                    WHERE IC.NUM_REQUERIMIENTO_ERP = @NUM";
+                
+                using (SqlCommand cmd = new SqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@NUM", numReq);
+                    object result = cmd.ExecuteScalar();
+                    return result != null ? result.ToString() : null;
+                }
+            }
+        }
     }
 }

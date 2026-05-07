@@ -262,24 +262,44 @@ namespace AppGenReceta.Web.Controllers
         {
             if (string.IsNullOrWhiteSpace(num)) return RedirectToAction("Index");
 
-            // Datos dinámicos desde BD (Previsualización)
+            // Si no hay SID (vinimos desde Mantenimiento), intentamos recuperarlo para traer los precios guardados
+            if (string.IsNullOrWhiteSpace(sid)) sid = bl.ObtenerSidDesdeNumReq(num);
+
+            // Datos dinámicos desde BD (ERP)
             var detalleERP = bl.ObtenerVoucherDesdeERP("CN", num);
             if (detalleERP == null || detalleERP.Count == 0) return RedirectToAction("Index");
 
-            // Ya no redireccionamos si sid es nulo, para permitir ver históricos desde Mantenimiento
+            // Intentamos obtener el resumen con precios desde las tablas de sesión (usando el sid recuperado o el original)
             E_SolicitudResumen resumen = bl.ObtenerResumenSolicitud(sid);
-            if (resumen == null) resumen = new E_SolicitudResumen();
-            resumen.Observacion = obs; // Seteamos la observación que viene del paso anterior
+            
+            // Si el resumen sigue sin ítems (ej: sesión muy antigua purgada), poblamos con datos del ERP
+            if (resumen == null || resumen.Items == null || resumen.Items.Count == 0)
+            {
+                resumen = new E_SolicitudResumen
+                {
+                    Motivo = detalleERP.Count > 0 ? detalleERP[0].DesMotivo : "COMPRA",
+                    Observacion = obs,
+                    Items = detalleERP.Select(x => new E_InsumoCalculado
+                    {
+                        CodigoInsumo = string.IsNullOrEmpty(x.CodRepuesto) ? x.CodItem : x.CodRepuesto,
+                        Descripcion = x.DesItem,
+                        CantidadAPedir = x.Cantidad,
+                        Presentacion = x.DesUniMed,
+                        PrecioUnitario = 0 // Fallback si no hay rastro en sesión
+                    }).ToList()
+                };
+            }
             
             ViewBag.SessionID = sid;
             ViewBag.NumRequerimiento = num;
+            ViewBag.Observacion = obs;
             ViewBag.DetalleERP = detalleERP;
-
-            // Firmas
-            ViewBag.Firma1 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable1"] ?? "Responsable 1";
-            ViewBag.Firma2 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable2"] ?? "Responsable 2";
-            ViewBag.Firma3 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable3"] ?? "Responsable 3";
             ViewBag.AutoPrint = print;
+
+            // Firmas para la vista
+            ViewBag.Firma1 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable1"] ?? "Pablo Rivera";
+            ViewBag.Firma2 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable2"] ?? "Máximo Ramos";
+            ViewBag.Firma3 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable3"] ?? "Ana Hurtado";
 
             return View(resumen);
         }

@@ -191,5 +191,10 @@ namespace AppGenReceta.BL
         {
             return da.MantenimientoRequerimientoDetalle(accion, numReq, secuencia, codItem, codFab, cantidad, um);
         }
+        public string ObtenerSidDesdeNumReq(string numReq)
+        {
+            if (string.IsNullOrWhiteSpace(numReq)) return null;
+            return da.ObtenerSidDesdeNumReq(numReq);
+        }
     }
 }
