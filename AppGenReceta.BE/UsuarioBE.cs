@@ -20,5 +20,12 @@ namespace AppGenReceta.BE
 
         public int IdRol { get; set; } // 1: Visualizador, 2: Editor, 3: Administrador
         public string NombreRol { get; set; } = String.Empty;
+
+        //Agregado
+        public String Cod_Usuario { get; set; }
+        public String Cod_Fabrica { get; set; }
+        public String Tip_Trabajador { get; set; }
+        public String Cod_Trabajador { get; set; }
+
     }
 }

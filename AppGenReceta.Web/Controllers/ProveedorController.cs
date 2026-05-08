@@ -11,6 +11,8 @@ namespace AppGenReceta.Web.Controllers
 
         public ActionResult Index()
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             // Carga inicial (todo)
             List<E_InsumoProveedor> modelo = bl.ListarRelacionesProveedorInsumo("");
             return View(modelo);

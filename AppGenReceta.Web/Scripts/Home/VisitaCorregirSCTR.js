@@ -659,7 +659,9 @@ function agregarInsumoAColor() {
     const cantidad = parseFloat($("#txtCantInsumo").val());
 
     // 4. Validamos que no falte nada
-    if (indexColor === "" || !codigoReal || !descripcionReal || isNaN(cantidad)) {
+    //Aceptamos el valor cero || isNaN(cantidad)
+    //Por si desea agregar un nuevo insumo, que no se agrego en el primer registro.
+    if (indexColor === "" || !codigoReal || !descripcionReal ) {
         Swal.fire("Atención", "Seleccione el color a asignar y la cantidad", "warning");
         return;
     }

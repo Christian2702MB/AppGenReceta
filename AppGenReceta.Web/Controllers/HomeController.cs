@@ -83,7 +83,11 @@ namespace AppGenReceta.Web.Controllers
                         Session["NombreUsuario"] = usuarioLogueado.Nombres + " " + usuarioLogueado.ApellidoPaterno + " " + usuarioLogueado.ApellidoMaterno;
                         Session["CorreoUsuario"] = usuarioLogueado.Correo;
                         Session["Documento"] = usuarioLogueado.Documento;
-                        //Session["Cliente"] = usuarioLogueado.Cliente;
+
+                        Session["Cod_Usuario"] = usuarioLogueado.Cod_Usuario;
+                        Session["Cod_Fabrica"] = usuarioLogueado.Cod_Fabrica;
+                        Session["Tip_Trabajador"] = usuarioLogueado.Tip_Trabajador;
+                        Session["Cod_Trabajador"] = usuarioLogueado.Cod_Trabajador;
 
                         //Session["UsuariosComercial"] = usuarioBL.ConcatenarCorreos("Comercial");
                         //Session["UsuariosUDP"] = usuarioBL.ConcatenarCorreos("UDP");
@@ -91,8 +95,14 @@ namespace AppGenReceta.Web.Controllers
 
                         //17/03/2026 roles
                         Session["RolUsuario"] = usuarioLogueado.NombreRol;
-
-                        result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("MenuProveedor", "Home") };
+                        if (usuarioLogueado.NombreRol == "Estampado")
+                        {
+                            result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("Index", "InsumoEstampado") };
+                        }
+                        else
+                        {
+                            result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("MenuProveedor", "Home") };
+                        }
                         return Json(result, JsonRequestBehavior.AllowGet);
                     }
                     else

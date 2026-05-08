@@ -753,11 +753,7 @@
     <Folder Include="Models\Home\" />
     <Folder Include="Models\Libro\" />
     <Folder Include="Scripts\Libro\" />
-    <Folder Include="Views\Account\" />
-    <Folder Include="Views\Base\" />
-    <Folder Include="Views\Libro\" />
     <Folder Include="Views\Partial\" />
-    <Folder Include="Views\Plantilla\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AppGenReceta.BE\AppGenReceta.BE.csproj">

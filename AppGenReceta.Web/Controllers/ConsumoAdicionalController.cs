@@ -19,6 +19,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Index(string sid)
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             ViewBag.SessionID = sid;
             return View();
         }

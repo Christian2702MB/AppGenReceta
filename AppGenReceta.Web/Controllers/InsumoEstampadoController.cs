@@ -18,6 +18,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Index()
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             // Set default dates for ViewBag (used in View on load)
             E_InsumoNPFiltro defecto = bl.ConstruirFiltroDefecto();
             ViewBag.FechaInicio = defecto.FechaInicio.ToString("yyyy-MM-dd");
@@ -130,6 +132,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult CalcularInsumos(string sid)
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
 
             List<E_InsumoNP> listaIzquierda = bl.ObtenerAgrupacionNP(sid);
@@ -180,6 +184,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult AjustarCantidades(string sid)
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
 
             List<E_InsumoCalculado> calculados = bl.ObtenerInsumosCalculados(sid);
@@ -233,6 +239,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult GenerarSolicitud(string sid)
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
 
             E_SolicitudResumen resumen = bl.ObtenerResumenSolicitud(sid);
@@ -260,6 +268,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Voucher(string sid, string num, string obs, bool print = false)
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(num)) return RedirectToAction("Index");
 
             // Si no hay SID (vinimos desde Mantenimiento), intentamos recuperarlo para traer los precios guardados
@@ -485,6 +495,8 @@ namespace AppGenReceta.Web.Controllers
         // --- MANTENIMIENTO DE SOLICITUDES ---
         public ActionResult Mantenimiento()
         {
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
             return View();
         }
 
