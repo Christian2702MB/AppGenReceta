@@ -423,12 +423,17 @@
     @Scripts.Render("~/bundles/mantenimiento")
 
     <script>
+        let loaderInterval;
+
         function irAEditarConLoader(id) {
             // 1. Mostrar el temporizador (Break Time)
             $("#loader-container").css("display", "flex");
 
             let segundos = 0;
-            const interval = setInterval(function () {
+            $("#break-timer").text(segundos);
+            
+            if (loaderInterval) clearInterval(loaderInterval);
+            loaderInterval = setInterval(function () {
                 segundos++;
                 $("#break-timer").text(segundos);
             }, 1000);
@@ -439,6 +444,12 @@
                 window.location.href = "/Home/VisitaCorregirSCTR/" + id;
             }, 300);
         }
+
+        // Asegurar que el loader se oculte si el usuario regresa con el botón "Atrás" del navegador
+        $(window).on('pageshow', function (event) {
+            $("#loader-container").hide();
+            if (loaderInterval) clearInterval(loaderInterval);
+        });
 
         function btnAuditoria(id, cerrar) {
             const accion = cerrar ? 'Cerrar Registro' : 'Abrir Registro';
