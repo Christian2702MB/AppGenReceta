@@ -21,6 +21,12 @@ $(document).ready(function () {
         $("#rdoModoNormal").prop("checked", true);
         $("#lblInfoModoRegistro").html('(Seleccione Cliente &rarr; Temporada &rarr; Estilo)');
         $("#txtCliente, #txtTemporada").prop("disabled", false);
+    } else if (modoQuery === 'ITEM') {
+        // Lógica para modo Búsqueda por Item
+        $("#rdoModoItem").prop("checked", true);
+        $("#lblInfoModoRegistro").html('(Busque directamente un <strong>Item</strong> [mín. 3 car.], los datos de cabecera se auto-rellenarán)');
+        // Bloquear campos superiores; el punto de entrada es txtItem con Select2 AJAX
+        $("#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo").prop("disabled", true);
     } else {
         // Por defecto (incluyendo modoQuery === 'INVERSO' o vacío), modo INVERSO
         $("#rdoModoInverso").prop("checked", true);
@@ -151,8 +157,7 @@ $(document).ready(function () {
             width: '100%'
         });
 
-    }
-    else {
+    } else if (modoQuery !== 'ITEM') {
         // 1. Hacer los campos desplegables editables (permiten texto libre)
         $('#txtCliente, #txtTemporada, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').select2({
             //tags: true, // Esto es la magia: permite crear nuevos valores escribiendo cuando esta en true, por defecto viene en false.
@@ -241,9 +246,64 @@ $(document).ready(function () {
             autocompletarCabeceraDesdeEstilo(data.id, true);
         });
 
-    }
+    } else {  // modoQuery === 'ITEM'
+        // ── MODO BÚSQUEDA POR ITEM ────────────────────────────────────────────
+        // Inicializar campos no-pivot como Select2 básico (sin AJAX, bloqueados)
+        $('#txtCliente, #txtTemporada, #txtCombo, #txtUbicacion, #txtTecnica').select2({
+            placeholder: "Seleccione o escriba...",
+            allowClear: true,
+            width: '100%'
+        });
 
-    // Inicializar Select2 para habilitar la caja de búsqueda en el desplegable
+        // Estilo Cliente y Propio también como Select2 básico
+        // (se habilitarán y rellenarán tras la selección del Item)
+        $('#txtEstilo, #txtEstiloPropio').select2({
+            placeholder: "Seleccione o escriba...",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // ── CAMPO PIVOT: Item con búsqueda AJAX dinámica ──────────────────────
+        $('#txtItem').select2({
+            placeholder: "Escriba un código de Item [mín. 3 caracteres]...",
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: "/Home/BuscarDatosPorItem",
+                dataType: 'json',
+                delay: 350,
+                data: function (params) {
+                    return { item: params.term || '' };
+                },
+                processResults: function (data) {
+                    // El SP devuelve filas con COD_ITEM duplicado por combinaciones
+                    // Agrupamos para mostrar sólo Items únicos en el dropdown
+                    var seen = {};
+                    var resultados = [];
+                    $.each(data, function (i, row) {
+                        if (!seen[row.CodItem]) {
+                            seen[row.CodItem] = true;
+                            resultados.push({ id: row.CodItem, text: row.CodItem, _data: row });
+                        }
+                    });
+                    return { results: resultados };
+                },
+                cache: false
+            },
+            minimumInputLength: 3,
+            language: {
+                inputTooShort: function () { return "Por favor ingrese 3 o más caracteres..."; },
+                noResults: function () { return "No se encontraron ítems"; },
+                searching: function () { return "Buscando..."; }
+            }
+        }).on('select2:select', function (e) {
+            // Al seleccionar el Item, lanzamos el autocompletado
+            autocompletarCabeceraDesdeItem(e.params.data.id);
+        });
+
+    } // fin else (modoQuery === 'ITEM')
+
+    // Inicializar Select2 para habilitar la caja de búsqueda en el desplegable (todos los modos)
     $('#txtDescInsumo').select2({
         placeholder: "Escriba para buscar o filtrar un insumo...",
         allowClear: true,
@@ -258,8 +318,10 @@ $(document).ready(function () {
 
 // --- NUEVA FUNCIONALIDAD: MODO DE REGISTRO INVERSO ---
 function cambiarModoRegistro() {
-    var isNormal = $("#rdoModoNormal").is(":checked");
-    var modo = isNormal ? "NORMAL" : "INVERSO";
+    var modo;
+    if ($("#rdoModoNormal").is(":checked")) modo = "NORMAL";
+    else if ($("#rdoModoItem").is(":checked")) modo = "ITEM";
+    else modo = "INVERSO";
 
     // Obtener URL base sin parámetros de modo antiguos
     var url = new URL(window.location.href);
@@ -358,6 +420,70 @@ function autocompletarCabeceraDesdeEstilo(estiloBuscado, esPropio) {
     });
 }
 // -----------------------------------------------------
+
+// ── MODO BÚSQUEDA POR ITEM: AutoRelleno de Cabecera ──────────────────────────
+function autocompletarCabeceraDesdeItem(itemSeleccionado) {
+    if (!itemSeleccionado) return;
+
+    $.ajax({
+        url: '/Home/BuscarDatosPorItem',
+        type: 'GET',
+        data: { item: itemSeleccionado },
+        dataType: 'json',
+        success: function (data) {
+            if (!data || data.length === 0) {
+                Swal.fire('Sin resultados', 'No se encontraron datos para el ítem seleccionado.', 'warning');
+                return;
+            }
+
+            // Tomamos la primera fila (el SP puede retornar varias por combinaciones)
+            var row = data[0];
+
+            // ── 1. Rellenar campos auto-rellenados (bloqueados) ───────────
+            // Cliente
+            if ($('#txtCliente').find("option[value='" + row.CodCliente + "']").length === 0) {
+                $('#txtCliente').append(new Option(row.CodCliente, row.CodCliente, true, true));
+            } else {
+                $('#txtCliente').val(row.CodCliente).trigger('change.select2');
+            }
+
+            // Temporada
+            if ($('#txtTemporada').find("option[value='" + row.CodTemcli + "']").length === 0) {
+                $('#txtTemporada').append(new Option(row.CodTemcli, row.CodTemcli, true, true));
+            } else {
+                $('#txtTemporada').val(row.CodTemcli).trigger('change.select2');
+            }
+
+            // Ubicación (rellenar y auto-seleccionar si viene del SP)
+            if (row.Ubicacion && row.Ubicacion.trim() !== '') {
+                $('#txtUbicacion').empty()
+                    .append(new Option(row.Ubicacion, row.Ubicacion, true, true))
+                    .trigger('change.select2');
+            }
+
+            // Técnica (DESCRIPCION_TECNICA del SP)
+            if (row.DescripcionTecnica && row.DescripcionTecnica.trim() !== '') {
+                $('#txtTecnica').empty()
+                    .append(new Option(row.DescripcionTecnica, row.DescripcionTecnica, true, true))
+                    .trigger('change.select2');
+            }
+
+            // Los campos Estilo Cliente, Estilo Propio y Combo permanecen bloqueados
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Item encontrado',
+                text: 'Se han auto-rellenado los datos de la cabecera.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        },
+        error: function () {
+            Swal.fire('Error', 'No se pudo comunicar con el servidor. Intente nuevamente.', 'error');
+        }
+    });
+}
+// ──────────────────────────────────────────────────────────────────────────────
 
 function rellenarCombos() {
     //Se llena el campo de combo que depende del Estilo Propio
@@ -674,15 +800,12 @@ function guardarRecetaCompleta() {
     recetaMaster.Cliente = $("#txtCliente").val();
     recetaMaster.Temporada = $("#txtTemporada").val();
     recetaMaster.Estilo = $("#txtEstilo").val();
-
     recetaMaster.EstiloPropio = $("#txtEstiloPropio").val();
-
     recetaMaster.Item = $("#txtItem").val();
     recetaMaster.ComboCabecera = $("#txtCombo").val();
     recetaMaster.PrendasReq = $("#txtPrendasReq").val();
     // Concepto ya no va en cabecera
     recetaMaster.Ubicacion = $("#txtUbicacion").val();
-
     recetaMaster.Arte = $("#txtArte").val();
 
     //recetaMaster.Ubicacion = $("input[name='ubicacion']:checked").val();
@@ -713,14 +836,26 @@ function guardarRecetaCompleta() {
         Swal.fire("Aviso", "Agregue la temporada", "warning");
         return;
     }
-    if (recetaMaster.Estilo.length === 0) {
-        Swal.fire("Aviso", "Agregue estilo", "warning");
-        return;
+
+    //Aqui que lee dependiendo de que esta seleccionado
+    const modoQuery = new URLSearchParams(window.location.search).get('modo');
+
+    // Si no hay parámetro en la URL, forzamos que se comporte como INVERSO
+    if (modoQuery != 'ITEM') {
+        if (recetaMaster.Estilo.length === 0) {
+            Swal.fire("Aviso", "Agregue estilo", "warning");
+            return;
+        }
+        if (recetaMaster.EstiloPropio.length === 0) {
+            Swal.fire("Aviso", "Agregue estilo propio", "warning");
+            return;
+        }
+        if (recetaMaster.ComboCabecera.length === 0) {
+            Swal.fire("Aviso", "Agregue estilo propio", "warning");
+            return;
+        }
     }
-    if (recetaMaster.EstiloPropio.length === 0) {
-        Swal.fire("Aviso", "Agregue estilo propio", "warning");
-        return;
-    }
+
     if (recetaMaster.Item.length === 0) {
         Swal.fire("Aviso", "Agregue el item", "warning");
         return;

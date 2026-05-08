@@ -262,6 +262,18 @@ namespace AppGenReceta.BL
                 throw ex;
             }
         }
+        // 08/05/2026 - CMendez: Búsqueda por Item
+        public List<ItemDatoBE> BuscarDatosPorItem(string item)
+        {
+            try
+            {
+                return new VisitaDA().BuscarDatosPorItem(item);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
         #endregion
 
     }

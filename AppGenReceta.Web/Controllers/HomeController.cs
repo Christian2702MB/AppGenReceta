@@ -381,6 +381,39 @@ namespace AppGenReceta.Web.Controllers
             return View(lstVisitas);
         }
 
+        // ── BÚSQUEDA POR ITEM: Endpoint para el modo "Búsqueda por Item" ──────
+        // Creado 08/05/2026 - CMendez
+        [HttpGet]
+        public JsonResult BuscarDatosPorItem(string item)
+        {
+            if (string.IsNullOrWhiteSpace(item) || item.Trim().Length < 3)
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                VisitaBL visitaBL = new VisitaBL();
+                var lista = visitaBL.BuscarDatosPorItem(item.Trim());
+
+                // Mapeamos a un objeto anónimo con propiedades en camelCase para el JS
+                var resultado = lista.Select(x => new
+                {
+                    CodItem       = x.CodItem,
+                    CodCliente    = x.CodCliente,
+                    CodTemcli     = x.CodTemcli,
+                    Ubicacion     = x.Ubicacion,
+                    CodTecnica    = x.CodTecnica,
+                    DescripcionTecnica = x.DescripcionTecnica
+                }).ToList();
+
+                return Json(resultado, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = true, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         #region Corregir SCTR
 
         // HomeController.cs 17/03/2026

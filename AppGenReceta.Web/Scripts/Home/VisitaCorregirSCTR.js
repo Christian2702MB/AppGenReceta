@@ -730,10 +730,7 @@ function guardarRecetaCompleta() {
         Swal.fire("Aviso", "Agregue la temporada", "warning");
         return;
     }
-    if (recetaMaster.Estilo.length === 0) {
-        Swal.fire("Aviso", "Agregue es estilo", "warning");
-        return;
-    }
+
     if (recetaMaster.Item.length === 0) {
         Swal.fire("Aviso", "Agregue el item", "warning");
         return;

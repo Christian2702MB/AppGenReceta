@@ -1095,5 +1095,42 @@ namespace AppGenReceta.DA
             return lstEstilos;
         }
 
+        // 08/05/2026 - CMendez: Búsqueda por Item - ADO.NET puro, .NET Framework 4.8 compatible
+        public List<ItemDatoBE> BuscarDatosPorItem(string itemBusqueda)
+        {
+            List<ItemDatoBE> lista = new List<ItemDatoBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    // Llamamos al SP existente: SP_ListarDatosPorItem
+                    SqlCommand cmd = new SqlCommand("dbo.SP_ListarDatosPorItem", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    // El parámetro del SP es @Item (VARCHAR 200)
+                    cmd.Parameters.AddWithValue("@Item", itemBusqueda ?? "");
+
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new ItemDatoBE
+                            {
+                                // Columnas tal como las devuelve el SP
+                                CodCliente         = dr["Cliente"]              != DBNull.Value ? dr["Cliente"].ToString().Trim()          : "",
+                                CodTemcli          = dr["Temporada"]            != DBNull.Value ? dr["Temporada"].ToString().Trim()           : "",
+                                CodItem            = dr["Item"]                 != DBNull.Value ? dr["Item"].ToString().Trim()             : "",
+                                Ubicacion          = dr["Ubicacion"]            != DBNull.Value ? dr["Ubicacion"].ToString().Trim()            : "",
+                                CodTecnica         = dr["Cod_Tecnica"]          != DBNull.Value ? dr["Cod_Tecnica"].ToString().Trim()          : "",
+                                DescripcionTecnica = dr["Tecnica"]              != DBNull.Value ? dr["Tecnica"].ToString().Trim()  : ""
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
+
     }
 }

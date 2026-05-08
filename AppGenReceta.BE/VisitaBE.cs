@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
@@ -175,5 +175,17 @@ namespace AppGenReceta.BE
         public string NombreEstiloCliente { get; set; }
         public string CodEstiloPropio { get; set; }
         public string NombreEstiloPropio { get; set; }
+    }
+
+    // 08/05/2026 - CMendez: Entidad para SP_ListarDatosPorItem
+    [Serializable]
+    public class ItemDatoBE
+    {
+        public string CodCliente         { get; set; }
+        public string CodTemcli          { get; set; }
+        public string CodItem            { get; set; }
+        public string Ubicacion          { get; set; }
+        public string CodTecnica         { get; set; }
+        public string DescripcionTecnica { get; set; }
     }
 }
