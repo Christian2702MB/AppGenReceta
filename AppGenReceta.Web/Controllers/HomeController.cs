@@ -308,13 +308,15 @@ namespace AppGenReceta.Web.Controllers
         {
             try
             {
+                string usuarioAuditoria = Session["NombreUsuario"] != null ? Session["NombreUsuario"].ToString() : "ADMIN_SISTEMA";
+
                 // 1. Validaciones de servidor
                 if (entidad == null || entidad.Colores == null || entidad.Colores.Count == 0)
                     return Json(new { result = "error", message = "Datos incompletos" });
 
                 // 2. Llamada a la Capa de Negocio (BL)
                 VisitaBL bl = new VisitaBL();
-                bool rpta = bl.RegistrarRecetaAnidada(entidad);
+                bool rpta = bl.RegistrarRecetaAnidada(entidad, usuarioAuditoria);
 
                 if (rpta)
                     return Json(new { result = "success", message = "La receta y sus insumos se generaron correctamente." });

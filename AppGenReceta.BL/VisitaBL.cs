@@ -65,12 +65,12 @@ namespace AppGenReceta.BL
             }
         }
         
-        public bool RegistrarRecetaAnidada(VisitaBE entidad)
+        public bool RegistrarRecetaAnidada(VisitaBE entidad, string usuario)
         {
             VisitaDA visitaDA = new VisitaDA();
             try
             {
-                return visitaDA.RegistrarRecetaAnidada(entidad);
+                return visitaDA.RegistrarRecetaAnidada(entidad, usuario);
             }
             catch (Exception ex)
             {

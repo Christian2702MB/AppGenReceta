@@ -354,7 +354,7 @@ namespace AppGenReceta.DA
             return lista;
         }
 
-        public bool RegistrarRecetaAnidada(VisitaBE entidad)
+        public bool RegistrarRecetaAnidada(VisitaBE entidad, string usuario)
         {
             // Convertimos la lista de colores/insumos a un String XML para el SP
             string xmlData = SerializarRecetaAXml(entidad);
@@ -363,7 +363,7 @@ namespace AppGenReceta.DA
             {
                 SqlCommand cmd = new SqlCommand("SP_GUARDAR_RECETA_COMPLETA", cnx);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NP", entidad.NP);
+                cmd.Parameters.AddWithValue("@usuario", usuario);
                 cmd.Parameters.AddWithValue("@XmlData", xmlData);
                 cnx.Open();
                 using (SqlCommand cmdSet = new SqlCommand("SET ARITHABORT ON;", cnx)) { cmdSet.ExecuteNonQuery(); }
