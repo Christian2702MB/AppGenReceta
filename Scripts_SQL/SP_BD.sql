@@ -415,16 +415,57 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE PROCEDURE [dbo].[SP_LISTAR_TECNICAS]
+(@Cliente   VARCHAR(200) = '',
+@Temporada  VARCHAR(50) = '',
+@Estilo     VARCHAR(50) = '',
+@Item       VARCHAR(50) = ''
+)
 AS  
 SET NOCOUNT ON  
 BEGIN  
 
- select 
- cod_tecnica AS Codigo , 
- LTRIM(descripcion) AS NombreTecnica , 
- Merma 
- from Es_Tecnica_Aplicaciones   
- ORDER BY LTRIM(descripcion) ASC
+	 --select 
+	 --cod_tecnica AS Codigo , 
+	 --LTRIM(descripcion) AS NombreTecnica , 
+	 --Merma 
+	 --from Es_Tecnica_Aplicaciones   
+	 --ORDER BY LTRIM(descripcion) ASC
+
+ 	--Actualizar
+	SELECT distinct 
+	--A.COD_ITEM AS 'CodItem', 
+	--CASE   
+	--WHEN A.UBICACION_ARTE <> ''  
+	--THEN A.UBICACION_ARTE 
+	--ELSE C.UBICACION  
+	--END AS 'Ubicacion' 
+	DBO.LG_MUESTRA_TECNICA_ITEM(A.COD_ITEM) AS 'NombreTecnica'  
+	FROM ES_ESTPROCOMP A  
+	inner JOIN ES_COMPEST B  
+	ON A.COD_COMPEST = B.COD_COMPEST  
+	inner JOIN LG_ITEM C  
+	ON A.COD_ITEM = C.COD_ITEM
+	----------------------------
+	INNER JOIN ES_ORDPRO O 
+	ON A.COD_ESTPRO = O.COD_ESTPRO
+	AND A.COD_VERSION = O.COD_VERSION   
+	----------------------------
+	WHERE 
+	O.COD_FABRICA =  '001'    
+	AND O.COD_ORDPRO IN (
+	 SELECT x.cod_ordpro
+	 FROM es_ordpro x  
+	 LEFT OUTER JOIN es_estprover d ON x.cod_estpro = d.cod_estpro  
+	  AND x.cod_version = d.cod_version  
+	 WHERE x.cod_estpro = @Estilo 
+	  AND x.cod_fabrica = '001'  
+	)
+	AND (  
+	B.FLG_SERVICIO_MANUFACTURA = 'S'  
+	OR DBO.ES_REVISA_SI_ITEM_ES_PROCESO_CONFECC(A.COD_ITEM) = 'S'  
+	)  
+	AND B.COD_TIPCOMPEST = 'I'
+	and A.COD_ITEM like 'ES%'
 
 END
 GO
