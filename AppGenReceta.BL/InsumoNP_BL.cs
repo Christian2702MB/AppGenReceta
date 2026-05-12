@@ -167,9 +167,9 @@ namespace AppGenReceta.BL
             return da.ObtenerResumenSolicitud(sessionId);
         }
 
-        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario)
+        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario, string Cod_Fabrica_Solicitante, string Tip_Trabajador_Solicitante, string Cod_Trabajador_Solicitante)
         {
-            return da.CargarGestionPedidos(sessionId, observaciones, usuario);
+            return da.CargarGestionPedidos(sessionId, observaciones, usuario, Cod_Fabrica_Solicitante, Tip_Trabajador_Solicitante, Cod_Trabajador_Solicitante);
         }
 
         public List<E_VoucherDetalle> ObtenerVoucherDesdeERP(string area, string numReq)

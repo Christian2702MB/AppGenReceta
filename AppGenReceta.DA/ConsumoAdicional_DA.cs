@@ -75,7 +75,7 @@ namespace AppGenReceta.DA
                             req.Nombre = GetStringSafe(dr, "Nombre");
                             req.Unidad = GetStringSafe(dr, "UN");
                             req.Maquina = GetStringSafe(dr, "Cod_Maquina_Tinto");
-                            req.OP = GetStringSafe(dr, "OP");
+                            req.OP = GetStringSafe(dr, "cod_ordpro");
                             req.Cliente = GetStringSafe(dr, "Cliente");
                             req.Observaciones = GetStringSafe(dr, "Observaciones");
                             lista.Add(req);
@@ -107,7 +107,7 @@ namespace AppGenReceta.DA
             return npResult;
         }
 
-        public int InsertarCabecera(string np, string observaciones)
+        public int InsertarCabecera(string np, string observaciones, string CodUsuario, string hostName)
         {
             using (SqlConnection cn = new SqlConnection(GetConnectionString()))
             {
@@ -117,12 +117,12 @@ namespace AppGenReceta.DA
                     cmd.Parameters.AddWithValue("@ACCION", "I");
                     cmd.Parameters.AddWithValue("@NUM_REQUERIMIENTO", "0");
                     cmd.Parameters.AddWithValue("@COD_ORDTRA", "");
-                    cmd.Parameters.AddWithValue("@COD_MOTIVO_REQUER", "30 ");
+                    cmd.Parameters.AddWithValue("@COD_MOTIVO_REQUER", "30");
                     cmd.Parameters.AddWithValue("@COD_MAQUINA_TINTO", "");
                     cmd.Parameters.AddWithValue("@OBSERVACIONES", observaciones ?? "");
-                    cmd.Parameters.AddWithValue("@COD_USUARIO", "MILLANES");
-                    cmd.Parameters.AddWithValue("@PC", "PC011520");
-                    cmd.Parameters.AddWithValue("@COD_ORDPRO", np);
+                    cmd.Parameters.AddWithValue("@COD_USUARIO", CodUsuario ?? "");
+                    cmd.Parameters.AddWithValue("@PC", hostName ?? "");
+                    cmd.Parameters.AddWithValue("@COD_ORDPRO", np ?? "");
                     cmd.Parameters.AddWithValue("@COD_CLIENTE", "");
                     cmd.Parameters.AddWithValue("@COD_ORDPRO_TEX", "");
 

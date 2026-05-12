@@ -13,5 +13,6 @@ namespace AppGenReceta.BE
         public double GramosProd { get; set; }
         public double ConsumoProd { get; set; }
         public string Stock { get; set; }
+        public string Unid_Med { get; set; }
     }
 }

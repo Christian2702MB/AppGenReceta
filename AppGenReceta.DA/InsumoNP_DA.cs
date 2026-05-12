@@ -269,8 +269,8 @@ namespace AppGenReceta.DA
                     cmd.CommandType = CommandType.StoredProcedure;
                     
                     // Pasamos la agrupación de estilos propios
+                    cmd.Parameters.AddWithValue("@sessionId", sessionId);
                     cmd.Parameters.AddWithValue("@ESTILOS_PROPIOS", estilosCsv);
-                    
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
@@ -742,7 +742,7 @@ namespace AppGenReceta.DA
         /// Paso Final: Carga la solicitud en el ERP (Tablas de Requerimientos de Compra).
         /// Ejecuta Cabecera y Detalle en una sola Transacción.
         /// </summary>
-        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario)
+        public string CargarGestionPedidos(string sessionId, string observaciones, string usuario, string Cod_Fabrica_Solicitante, string Tip_Trabajador_Solicitante, string Cod_Trabajador_Solicitante)
         {
             string numRequerimiento = "";
             string codArea = "";
@@ -771,9 +771,9 @@ namespace AppGenReceta.DA
                             cmdCab.Parameters.AddWithValue("@Fec_Requerimiento", DateTime.Now.Date);
                             cmdCab.Parameters.AddWithValue("@Cod_Motivo", "003");
                             cmdCab.Parameters.AddWithValue("@Observacion", observaciones ?? "");
-                            cmdCab.Parameters.AddWithValue("@Cod_Fabrica_Solicitante", "002");
-                            cmdCab.Parameters.AddWithValue("@Tip_Trabajador_Solicitante", "E");
-                            cmdCab.Parameters.AddWithValue("@Cod_Trabajador_Solicitante", "2081");
+                            cmdCab.Parameters.AddWithValue("@Cod_Fabrica_Solicitante", Cod_Fabrica_Solicitante); // "002"
+                            cmdCab.Parameters.AddWithValue("@Tip_Trabajador_Solicitante", Tip_Trabajador_Solicitante); // "E"
+                            cmdCab.Parameters.AddWithValue("@Cod_Trabajador_Solicitante", Cod_Trabajador_Solicitante); // "2081"
 
                             using (SqlDataReader dr = cmdCab.ExecuteReader())
                             {
@@ -890,7 +890,7 @@ namespace AppGenReceta.DA
                 con.Open();
                 string query = @"
                     SELECT TOP 500 r.Cod_Area, r.Num_Requerimiento, r.Fec_Requerimiento, r.Cod_Motivo, 
-                           m.Des_Motivo, r.Observacion, r.Cod_Trabajador_Solicitante, r.Fec_Creacion
+                           m.Des_Motivo, r.Observacion, (r.Tip_Trabajador_Solicitante + r.Cod_Trabajador_Solicitante) as Cod_Trabajador_Solicitante, r.Fec_Creacion
                     FROM LG_Requerimiento_Items r
                     LEFT JOIN LG_Motivo_Requerimiento m ON r.Cod_Motivo = m.Cod_Motivo
                     WHERE r.Cod_Area = 'CN'

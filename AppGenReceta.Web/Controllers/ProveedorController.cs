@@ -11,6 +11,8 @@ namespace AppGenReceta.Web.Controllers
 
         public ActionResult Index()
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             // Carga inicial (todo)

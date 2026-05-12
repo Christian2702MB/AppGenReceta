@@ -20,7 +20,7 @@ namespace AppGenReceta.BL
             return da.ValidarYObtenerNP(npBuscado);
         }
 
-        public string GenerarRequerimientoCompleto(string np, string observaciones)
+        public string GenerarRequerimientoCompleto(string np, string observaciones, string CodUsuario, string hostName)
         {
             // 1. Obtener estilo de la NP
             string estilo = da.ObtenerEstiloPorNP(np);
@@ -34,7 +34,7 @@ namespace AppGenReceta.BL
                 throw new Exception("La NP " + np + " no tiene insumos configurados en su receta.");
 
             // 3. Insertar Cabecera y capturar ID (Paso 1)
-            int numReq = da.InsertarCabecera(np, observaciones);
+            int numReq = da.InsertarCabecera(np, observaciones, CodUsuario, hostName);
             if (numReq <= 0) 
                 throw new Exception("No se pudo generar el número de requerimiento.");
 
@@ -55,9 +55,9 @@ namespace AppGenReceta.BL
             return numReq.ToString();
         }
 
-        public int InsertarCabecera(string np, string observaciones)
+        public int InsertarCabecera(string np, string observaciones, string CodUsuario, string hostName)
         {
-            return da.InsertarCabecera(np, observaciones);
+            return da.InsertarCabecera(np, observaciones, CodUsuario, hostName);
         }
 
         public void InsertarDetalleSimple(int numReq, string codItem, decimal consumo, int lote = 0)

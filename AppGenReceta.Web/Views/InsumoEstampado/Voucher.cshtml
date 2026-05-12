@@ -3,6 +3,9 @@
     ViewBag.Title = "Voucher de Requerimiento de Compra";
     Layout = "~/Views/Shared/_Layout.cshtml";
     string numReq = ViewBag.NumRequerimiento as string ?? "---";
+
+    string datoResponsable = (ViewBag.NomTrabajador + " (" + ViewBag.Trabajador + ")") as string ?? "Sin Responsable";
+
     var sid = ViewBag.SessionID as string ?? "";
     var detalleERP = ViewBag.DetalleERP as List<AppGenReceta.BE.E_VoucherDetalle> ?? new List<AppGenReceta.BE.E_VoucherDetalle>();
     string firma1 = ViewBag.Firma1 as string ?? "";
@@ -294,7 +297,9 @@
                 </div>
                 <div class="info-item">
                     <label>Responsable</label>
-                    <p>ILLANES MENDOZA MANUEL (E2081)</p>
+                    @*<p>ILLANES MENDOZA MANUEL (E2081)</p>*@
+                    @*<p>@(string.IsNullOrWhiteSpace(Model.NomTrabajador) ? "Sin Responsable" : (Model.NomTrabajador + " (" + Model.Trabajador + ")"))</p>*@
+                    <p>@datoResponsable</p>
                 </div>
                 <div class="info-item">
                     <label>NPs Incluidas</label>

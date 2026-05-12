@@ -190,6 +190,7 @@ namespace AppGenReceta.Web.Controllers
             {
                 CodigoInsumo = insumo?.CodigoInsumo ?? "",
                 Descripcion = insumo?.Descripcion ?? "",
+                Unid_Med = insumo?.Unid_Med ?? "",
                 Stock = insumo?.Stock ?? ""
             }, JsonRequestBehavior.AllowGet);
         }

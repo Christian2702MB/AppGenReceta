@@ -590,7 +590,7 @@ function actualizarVistaColores() {
             htmlColor += window.g_isReadOnly ? `
                 <tr data-idinsumo="${insumo.IDInsumo || insumo.IdInsumo || ''}">
                     <td><strong>${insumo.CodigoInsumo}</strong></td>
-                    <td><strong>${insumo.Descripcion}</strong></td>
+                    <td><strong>${insumo.Descripcion} (gr)</strong></td>
                     <td class="text-right"><strong>${insumo.Cantidad.toFixed(2)}</strong></td>
                 </tr>`
                 : `
@@ -599,7 +599,7 @@ function actualizarVistaColores() {
                         <input type="hidden" class="hidden-id-insumo" value="${insumo.IDInsumo || insumo.IdInsumo || ''}" />
                         <strong>${insumo.CodigoInsumo}</strong>
                     </td>
-                    <td><strong>${insumo.Descripcion}</strong></td>
+                    <td><strong>${insumo.Descripcion} (gr)</strong></td>
                     <td class="text-right"><strong>${insumo.Cantidad.toFixed(2)}</strong></td>
                     <td class="text-center">
                         <button type="button" class="btn btn-link btn-xs text-danger" 

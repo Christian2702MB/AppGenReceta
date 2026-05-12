@@ -321,6 +321,7 @@ namespace AppGenReceta.DA
                         {
                             CodigoInsumo = dr["Codigo"].ToString(),
                             Descripcion = dr["Descripcion"].ToString(),
+                            Unid_Med = dr["Unid_Med"].ToString(),
                             Stock = dr["Stock"].ToString()
                         });
                     }

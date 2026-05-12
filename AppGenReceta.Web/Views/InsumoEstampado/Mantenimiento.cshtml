@@ -2,7 +2,7 @@
     ViewBag.Title = "Mantenimiento de Solicitudes";
     Layout = "~/Views/Shared/_Layout.cshtml";
     string sid = Request.QueryString["sid"] ?? "";
-    string defaultDesde = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
+    string defaultDesde = DateTime.Now.AddMonths(-0).ToString("yyyy-MM-dd");
     string defaultHasta = DateTime.Now.ToString("yyyy-MM-dd");
 }
 

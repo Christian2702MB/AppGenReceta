@@ -34,10 +34,6 @@ namespace AppGenReceta.DA
                     while (dr.Read())
                     {
                         item = new UsuarioBE();
-                        //if (!dr.IsDBNull(dr.GetOrdinal("IDUsuario")))
-                        //{
-                        //    item.IDProveedor = dr.GetInt32(dr.GetOrdinal("IDUsuario"));
-                        //}
                         if (!dr.IsDBNull(dr.GetOrdinal("Nombres")))
                         {
                             item.Nombres = dr.GetString(dr.GetOrdinal("Nombres"));
@@ -58,16 +54,29 @@ namespace AppGenReceta.DA
                         {
                             item.Correo = dr.GetString(dr.GetOrdinal("Correo"));
                         }
-                        //if (!dr.IsDBNull(dr.GetOrdinal("Cliente")))
-                        //{
-                        //    item.Cliente = dr.GetString(dr.GetOrdinal("Cliente"));
-                        //}
                         if (!dr.IsDBNull(dr.GetOrdinal("NombreRol")))
                         {
                             item.NombreRol = dr.GetString(dr.GetOrdinal("NombreRol"));
                         }
-                    }
-                    cnx.Close();
+                        //Agregado cmendez 11/05/26
+                        if (!dr.IsDBNull(dr.GetOrdinal("Cod_Usuario")))
+                        {
+                            item.Cod_Usuario = dr.GetString(dr.GetOrdinal("Cod_Usuario"));
+                        }
+                        if (!dr.IsDBNull(dr.GetOrdinal("Cod_Fabrica")))
+                        {
+                            item.Cod_Fabrica = dr.GetString(dr.GetOrdinal("Cod_Fabrica"));
+                        }
+                        if (!dr.IsDBNull(dr.GetOrdinal("Tip_Trabajador")))
+                        {
+                            item.Tip_Trabajador = dr.GetString(dr.GetOrdinal("Tip_Trabajador"));
+                        }
+                        if (!dr.IsDBNull(dr.GetOrdinal("Cod_Trabajador")))
+                        {
+                            item.Cod_Trabajador = dr.GetString(dr.GetOrdinal("Cod_Trabajador"));
+                        }
+    }
+    cnx.Close();
                 }
             }
             catch (Exception ex)

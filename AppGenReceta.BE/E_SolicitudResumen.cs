@@ -34,5 +34,8 @@ namespace AppGenReceta.BE
         // ── Ítems para la tabla inferior ─────────────────────
         /// <summary>Solo insumos con CANTIDAD_A_PEDIR > 0 (requieren compra)</summary>
         public List<E_InsumoCalculado> Items { get; set; } = new List<E_InsumoCalculado>();
+
+        public string NomTrabajador { get; set; } = ""; // Nombre del trabajador
+        public string Trabajador { get; set; } = ""; // Codigo del trabajador
     }
 }

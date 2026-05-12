@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 using AppGenReceta.BE;
 using AppGenReceta.BL;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Web;
+using System.Web.Mvc;
 
 namespace AppGenReceta.Web.Controllers
 {
@@ -19,6 +20,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Index(string sid)
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             ViewBag.SessionID = sid;
@@ -91,10 +94,18 @@ namespace AppGenReceta.Web.Controllers
         {
             try
             {
+                // Opción A: Nombre de la máquina (Recomendado para auditoría interna)
+                string pcName = Environment.MachineName;
+
+                // Opción B: Nombre del Host a través de DNS
+                string hostName = Dns.GetHostName();
+
+                string CodUsuario = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "GUEST";
+
                 if (string.IsNullOrEmpty(np))
                     return Json(new { success = false, message = "La NP es obligatoria." });
 
-                string numReq = bl.GenerarRequerimientoCompleto(np, observaciones);
+                string numReq = bl.GenerarRequerimientoCompleto(np, observaciones, CodUsuario, hostName);
                 return Json(new { success = true, message = "Requerimiento N° " + numReq + " generado exitosamente con los insumos de su receta.", data = numReq });
             }
             catch (Exception ex)

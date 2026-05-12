@@ -18,6 +18,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Index()
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             // Set default dates for ViewBag (used in View on load)
@@ -116,7 +118,7 @@ namespace AppGenReceta.Web.Controllers
                 List<E_InsumoNP> lista = serializer.Deserialize<List<E_InsumoNP>>(jsonData);
 
                 // Asumimos un usuario de sesión (mock por ahora)
-                string usuarioCrea = Session["Usuario"] != null ? Session["Usuario"].ToString() : "GUEST";
+                string usuarioCrea = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "GUEST";
                 
                 string sid = bl.GuardarAgrupacionNP(lista, usuarioCrea);
                 Session["CurrentAgrupacion"] = sid; // Guardamos en sesión web por seguridad si se prefiere no enviar por url
@@ -132,6 +134,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult CalcularInsumos(string sid)
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
@@ -166,7 +170,7 @@ namespace AppGenReceta.Web.Controllers
                 serializer.MaxJsonLength = int.MaxValue;
                 List<E_InsumoCalculado> lista = serializer.Deserialize<List<E_InsumoCalculado>>(jsonData);
 
-                string usuarioProcesa = Session["Usuario"] != null ? Session["Usuario"].ToString() : "GUEST";
+                string usuarioProcesa = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "GUEST";
 
                 bl.GuardarInsumosCalculados(lista, sid, usuarioProcesa);
 
@@ -184,6 +188,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult AjustarCantidades(string sid)
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
@@ -239,6 +245,8 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult GenerarSolicitud(string sid)
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             if (string.IsNullOrWhiteSpace(sid)) return RedirectToAction("Index");
@@ -253,8 +261,12 @@ namespace AppGenReceta.Web.Controllers
         {
             try
             {
-                string usuario = Session["Usuario"] != null ? Session["Usuario"].ToString() : "2081"; // Hardcoded default per request
-                string numReq = bl.CargarGestionPedidos(sid, observaciones, usuario);
+                string usuario = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "MILLANES"; // Hardcoded default per request
+                string Cod_Fabrica_Solicitante = Session["Cod_Fabrica"] != null ? Session["Cod_Fabrica"].ToString() : "002"; // Hardcoded default per request
+                string Tip_Trabajador_Solicitante = Session["Tip_Trabajador"] != null ? Session["Tip_Trabajador"].ToString() : "E"; // Hardcoded default per request
+                string Cod_Trabajador_Solicitante = Session["Cod_Trabajador"] != null ? Session["Cod_Trabajador"].ToString() : "2081"; // Hardcoded default per request
+
+                string numReq = bl.CargarGestionPedidos(sid, observaciones, usuario, Cod_Fabrica_Solicitante, Tip_Trabajador_Solicitante, Cod_Trabajador_Solicitante);
 
                 // Pasamos la observación por URL para que el Voucher la muestre de inmediato
                 return Json(new { ok = true, mensaje = "Requerimiento " + numReq + " generado exitosamente.", redirect = Url.Action("Voucher", new { sid = sid, num = numReq, obs = observaciones }) });
@@ -268,8 +280,14 @@ namespace AppGenReceta.Web.Controllers
         [HttpGet]
         public ActionResult Voucher(string sid, string num, string obs, bool print = false)
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
+            ViewBag.Cod_Usuario = Session["Cod_Usuario"];
+            ViewBag.Tip_Trabajador = Session["Tip_Trabajador"];
+            ViewBag.Cod_Trabajador = Session["Cod_Trabajador"];
+
             if (string.IsNullOrWhiteSpace(num)) return RedirectToAction("Index");
 
             // Si no hay SID (vinimos desde Mantenimiento), intentamos recuperarlo para traer los precios guardados
@@ -305,6 +323,9 @@ namespace AppGenReceta.Web.Controllers
             ViewBag.Observacion = obs;
             ViewBag.DetalleERP = detalleERP;
             ViewBag.AutoPrint = print;
+
+            ViewBag.NomTrabajador = detalleERP[0].NomTrabajador;
+            ViewBag.Trabajador = detalleERP[0].Trabajador;
 
             // Firmas para la vista
             ViewBag.Firma1 = WebConfigurationManager.AppSettings["Firma_Voucher_Responsable1"] ?? "Pablo Rivera";
@@ -495,6 +516,8 @@ namespace AppGenReceta.Web.Controllers
         // --- MANTENIMIENTO DE SOLICITUDES ---
         public ActionResult Mantenimiento()
         {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             return View();

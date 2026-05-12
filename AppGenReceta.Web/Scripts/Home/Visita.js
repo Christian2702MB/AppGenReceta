@@ -573,43 +573,6 @@ $(document).on("change", "#txtDescInsumo", function () { //txtDescInsumo
     }
 });
 
-//Inicio 17/03/2026
-//function cargarEstilosDesdeBD(cliente, temporada) {
-//    $.ajax({
-//        url: "/Home/ListarEstilosPorCliente", // Ruta a tu controlador
-//        type: "GET",
-//        data: { cliente: cliente, temporada: temporada },
-//        success: function (data) {
-//            // 1. Limpiamos ambos combos
-//            $("#txtEstilo").empty().append('<option value="">Seleccione un Estilo</option>');
-//            $("#txtEstiloPropio").empty().append('<option value="">Seleccione Estilo Propio</option>');
-
-//            // 2. Llenamos ambos combos dinámicamente
-//            if (data && data.length > 0) {
-//                $.each(data, function (i, item) {
-//                    // Nota: Asegúrate de que las propiedades coincidan con las de tu Backend (ej. item.CodEstiloCliente)
-
-//                    // Armar opción para txtEstilo (Estilo Cliente)
-//                    var optionEstilo = $('<option></option>')
-//                        .val(item.CodEstiloCliente)
-//                        .text(item.NombreEstiloCliente)
-//                        .attr('data-propio', item.CodEstiloPropio); // Guardamos su par equivalente
-
-//                    $("#txtEstilo").append(optionEstilo);
-
-//                    // Armar opción para txtEstiloPropio
-//                    var optionPropio = $('<option></option>')
-//                        .val(item.CodEstiloPropio)
-//                        .text(item.NombreEstiloPropio)
-//                        .attr('data-cliente', item.CodEstiloCliente); // Guardamos su par equivalente
-
-//                    $("#txtEstiloPropio").append(optionPropio);
-//                });
-//            }
-//        }
-//    });
-//}
-
 // CUANDO CAMBIA EL ITEM (Gatilla la carga de conceptos)
 $("#txtItem").on("change", function () {
     var cliente = $("#txtCliente").val();
@@ -647,26 +610,6 @@ function cargarCombos(cliente, temporada, estilo) {
     });
 }
 
-//function cargarConceptos(cliente, temporada, estilo, item) {
-//    $.ajax({
-//        url: "/Home/ListarConceptosPendientes", // Asegúrate que la ruta coincida con tu RouteConfig
-//        type: "GET",
-//        data: { cliente: cliente, temporada: temporada, estilo: estilo, item: item },
-//        success: function (data) {
-//            if (data && data.length > 0) {
-//                $.each(data, function (i, concepto) {
-//                    $("#txtConcepto").append($('<option>', {
-//                        value: concepto,
-//                        text: concepto
-//                    }));
-//                });
-//            }
-//        }
-//    });
-//}
-//Fin 17/03/2026
-
-//Inicio 30/03/2026
 function cargarTecnica(cliente, temporada, estilo, item) {
     $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
     $.ajax({
@@ -730,64 +673,6 @@ function cargarTemporadas(cliente) {
     });
 }
 
-//function cargarFiltrosEstiloItem(cliente, temporada) {
-//    $.ajax({
-//        url: '/Home/ListarFiltrosPorClienteTemporada', // El método que creamos en la solución anterior
-//        type: 'POST',
-//        data: { cliente: cliente, temporada: temporada },
-//        success: function (response) {
-//            if (response.success) {
-//                var ddlEstilo = $("#txtEstilo");
-//                var ddlItem = $("#txtItem");
-
-//                $.each(response.estilos, function (i, estiloPropio) {
-//                    ddlEstilo.append($('<option></option>').val(estiloPropio).html(estiloPropio));
-//                });
-
-//                $.each(response.estilos, function (i, estilo) {
-//                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
-//                });
-
-//                $.each(response.items, function (i, item) {
-//                    ddlItem.append($('<option></option>').val(item).html(item));
-//                });
-//            } else {
-//                console.error("Error al cargar Estilos/Items: " + response.message);
-//            }
-//        },
-//        error: function (error) {
-//            console.log("Error en AJAX (Estilos/Items)", error);
-//        }
-//    });
-//}
-
-//function cargarFiltros(cliente, temporada) {
-//    $.ajax({
-//        url: '/Home/ListarFiltrosPorClienteTemporada',
-//        type: 'POST',
-//        data: { cliente: cliente, temporada: temporada },
-//        success: function (response) {
-//            if (response.success) {
-//                // Llenar Estilos
-//                var ddlEstilo = $("#txtEstilo");
-//                ddlEstilo.empty().append('<option value="">Seleccione un estilo</option>');
-//                $.each(response.estilos, function (i, estilo) {
-//                    ddlEstilo.append($('<option></option>').val(estilo).html(estilo));
-//                });
-
-//                // Llenar Items
-//                var ddlItem = $("#txtItem");
-//                ddlItem.empty().append('<option value="">Seleccione un Item</option>');
-//                $.each(response.items, function (i, item) {
-//                    ddlItem.append($('<option></option>').val(item).html(item));
-//                });
-//            } else {
-//                console.error("Error: " + response.message);
-//            }
-//        }
-//    });
-//}
-
 function guardarRecetaCompleta() {
     // Llenamos la cabecera del objeto recetaMaster
 
@@ -807,8 +692,6 @@ function guardarRecetaCompleta() {
     // Concepto ya no va en cabecera
     recetaMaster.Ubicacion = $("#txtUbicacion").val();
     recetaMaster.Arte = $("#txtArte").val();
-
-    //recetaMaster.Ubicacion = $("input[name='ubicacion']:checked").val();
 
     // VALIDACIÓN: Si el valor es una cadena vacía, nulo o indefinido
     if (!fechaSeleccionada || fechaSeleccionada.trim() === "") {
@@ -898,21 +781,6 @@ function guardarRecetaCompleta() {
     });
 }
 
-//********************************************* 
-
-
-//// Evento para autocompletar la descripción
-//$(document).on("change", "#cboInsumo", function () {
-//    var codigo = $(this).val();
-//    if (codigo) {
-//        $.get("/Home/ObtenerDescripcionInsumo", { codigo: codigo }, function (res) {
-//            $("#txtDescInsumo").val(res.descripcion);
-//        });
-//    } else {
-//        $("#txtDescInsumo").val("");
-//    }
-//});
-
 // Al inicio de tus archivos .js
 var recetaMaster = {
     Dato: "0",
@@ -962,34 +830,6 @@ function agregarColor() {
     $("#txtNuevoColor").val("");
 }
 
-//function agregarInsumo() {
-//    //var cod = $("#cboInsumo").val();
-//    var desc = $("#txtDescInsumo").val();
-//    var cant = $("#txtCantInsumo").val();
-
-//    if (indexColorSeleccionado === -1) return;
-
-//    if (!cod || !cant) {
-//        Swal.fire("Aviso", "Seleccione insumo y peso", "info");
-//        return;
-//    }
-
-//    // Insertar en la estructura con descripción
-//    recetaMaster.Colores[indexColorSeleccionado].Insumos.push({
-//        codigo: cod,
-//        descripcion: desc,
-//        cantidad: cant
-//    });
-
-//    renderizarTabla();
-
-//    // Limpiar campos
-//    //$("#cboInsumo").val("");
-//    $("#txtDescInsumo").val("").trigger('change');
-//    $("#txtStock").val("");
-//    $("#txtCantInsumo").val("");
-//}
-
 function agregarInsumo() {
     // 1. Validar que haya un color seleccionado antes de hacer cualquier cosa
     if (indexColorSeleccionado === -1) {
@@ -1021,6 +861,17 @@ function agregarInsumo() {
         return;
     }
 
+    // 5.5 Capturamos Unidades
+    const valorStock = $("#txtStock").val() || "";
+    let unid = "";
+
+    if (valorStock.length >= 4) {
+        unid = valorStock.substring(valorStock.length - 2, valorStock.length).trim();
+    }
+    if (unid == "KG") {
+        unid = "gr";
+    }
+
     // 6. Insertar en la estructura global
     // 🟢 NOTA: Se usan mayúsculas iniciales (CodigoInsumo) para mantener 
     // la compatibilidad con el modelo de C# y la función sincronizarPruebasExistentes
@@ -1030,6 +881,7 @@ function agregarInsumo() {
         //Cantidad: cant
         codigo: codigoReal,
         descripcion: descripcionReal,
+        unidades: unid,
         cantidad: cant
     });
 
@@ -1053,7 +905,7 @@ function renderizarTabla() {
         color.Insumos.forEach(function (ins, idxIns) {
             htmlInsumos += `
                             <div class="alert alert-warning" style="padding:5px; margin-bottom:2px;">
-                            <small><b>${ins.codigo}</b> - ${ins.descripcion} | <b>Cant:</b> ${ins.cantidad}</small>
+                            <small><b>${ins.codigo}</b> - ${ins.descripcion} | <b>Cant:</b> ${ins.cantidad} </b> ${ins.unidades}</small>
                             <button type="button" class="close" onclick="eliminarInsumo(${idx}, ${idxIns})">&times;</button>
                         </div>`;
         });
@@ -1319,59 +1171,11 @@ $('#btnGrabarVisita').on('click', function (e) {
                     icon: 'warning',
                     title: json.title,
                     text: json.message
-                });
-                //$('#btnGrabarVisita').removeAttr('disabled');
-                //$('#btnCancelarVisita').removeAttr('disabled');
-                //$('#btnElegirCita').removeAttr('disabled');
-                //$('#btnNuevoModal').removeAttr('disabled');
-                //$('#btnEliminarVisitante').removeAttr('disabled');
-                //$('#btnNuevoModalOC').removeAttr('disabled');
-                //$('#btnEliminarVisitaOrden').removeAttr('disabled');
-
-                //$('#PlacaVehiculo').show();
-                //document.getElementById("PlacaVehiculoVer").style.visibility = "hidden";
-                //$('#PlacaVehiculoVer').removeAttr('disabled');
-
-                //$('#radioP').show();
-                //$('#radioT').show();
-                //document.getElementById("radioVerP").style.visibility = "hidden";
-                //document.getElementById("radioVerT").style.visibility = "hidden";
-                //document.getElementById('PropioVer').disabled = false;
-                //document.getElementById('TerceroVer').disabled = false;
-
-                //$('#Hub').show();
-                //document.getElementById("HubVer").style.visibility = "hidden";
-                //document.getElementById('HubVer').disabled = false;
-
-                //$('#OperadorLog').show();
-                //document.getElementById("OperadorLogVer").style.visibility = "hidden";
-                //document.getElementById('OperadorLogVer').disabled = false;
-
-                //$('#mySCTR').show();
-                //document.getElementById("mySCTRVer").style.visibility = "hidden";
-                //document.getElementById('mySCTRVer').disabled = false;
-
+                });    
             } else if (json.result == 'success') {
                 e.preventDefault();
                 setTimeout(() => {
-                    console.log("ingrese5");
-                    //$('#btnGrabarVisita').attr('disabled', 'disabled');
-                    //$('#btnCancelarVisita').attr('disabled', 'disabled');
-                    //$('#btnElegirCita').attr('disabled', 'disabled');
-                    //$('#btnNuevoModal').attr('disabled', 'disabled');
-                    //$('#btnEliminarVisitante').attr('disabled', 'disabled');
-                    //$('#btnNuevoModalOC').attr('disabled', 'disabled');
-                    //$('#btnEliminarVisitaOrden').attr('disabled', 'disabled');
-                    //$('#Hub').attr('disabled', 'disabled');
-                    //$('#OperadorLog').attr('disabled', 'disabled');
-                    //$('#PlacaVehiculo').attr('disabled', 'disabled');
-                    //$('#radioP').attr('disabled', 'disabled');
-                    //$('#radioT').attr('disabled', 'disabled');
-                    //$('#mySCTR').attr('disabled', 'disabled');
-                    //document.getElementById('PropioVer').disabled = true;
-                    //document.getElementById('TerceroVer').disabled = true;
-                    //$('#radioVerP').attr('disabled', 'disabled');
-                    //$('#radioVerT').attr('disabled', 'disabled');
+                    console.log("ingrese5");                    
                 }, 200)
                 Swal.fire({
                     icon: 'success',
@@ -1404,11 +1208,9 @@ $('#btnGrabarVisita').on('click', function (e) {
             $('#btnCancelarVisita').removeAttr('disabled');
         }
     });
-
 });
 
 $('#btnElegirCita').on('click', function (e) {
-
     e.preventDefault();
     const pExisteHub = "1"//document.getElementById('Hub').value;
     const pExistenOrdenes = "1"//document.getElementById('SumaTotalCodigos').value;
@@ -1451,13 +1253,7 @@ $('#btnElegirCita').on('click', function (e) {
                 console.log("ingrese5");
                 $('#btnElegirCita').val('Enviando....');
                 $('#btnElegirCita').attr('disabled', 'disabled');
-            }, 200)
-            //const pid = document.getElementById('IDVisita').value;
-            //const pHub = document.getElementById('Hub').value;
-            //const pOperLog = document.getElementById('OperadorLog').value;
-            //const pPlaca = document.getElementById('PlacaVehiculo').value;            
-            //let elementoActivo = document.querySelector('input[name="TipoEntrega"]:checked');
-            //const pTipoEntrega = elementoActivo.value;            
+            }, 200)          
             window.location.href = '/Home/Citas/' + 'pCantPeriodos=' + pCantPeriodos;
         }
     }
@@ -1826,132 +1622,6 @@ $('#btnGrabarVisitaCorregirSCTR').on('click', function (e) {
 
 });
 
-$('#btnElegirCitaReprogFecha').on('click', function (e) {
-    e.preventDefault();
-    setTimeout(() => {
-        console.log("ingrese5");
-        $('#btnElegirCitaReprogFecha').val('Enviando....');
-        $('#btnElegirCitaReprogFecha').attr('disabled', 'disabled');
-    }, 200)
-    const pCantPeriodos = document.getElementById('CantidadPeriodos').value;
-    const pid = document.getElementById('IDVisita').value;
-    const pHub = document.getElementById('Hub').value;
-    const pOperLog = document.getElementById('OperadorLog').value;
-    const pPlaca = document.getElementById('PlacaVehiculo').value;
-    let elementoActivo = document.querySelector('input[name="TipoEntrega"]:checked');
-    const pTipoEntrega = elementoActivo.value;
-    window.location.href = '/Home/CitasReprogramarFecha/' + '?id=' + pid + '&pHub=' + pHub + '&pOperadorLog=' + pOperLog + '&pPlacaVeh=' + pPlaca + '&pTipoEntrega=' + pTipoEntrega + '&pCantPeriodos=' + pCantPeriodos;
-});
-
-
-//Cmendez
-//18/09/25
-
-$('#chkInf').on('change', function (e) {
-    if (this.checked) {
-        $('#ObsInfoTela').removeAttr('disabled');
-        $('#LinkInfoTela').removeAttr('disabled');
-        $('#mySCTRTela').removeAttr('disabled');
-        if (document.getElementById('chkHMa').checked == true && document.getElementById('chkHMe').checked == true && document.getElementById('chkHCo').checked == true) {
-            $('#btnGrabarVisita').removeAttr('disabled');
-        } else {
-            $('#btnGrabarVisita').attr('disabled', 'disabled');
-        }
-    }
-    else {
-        $('#btnGrabarVisita').attr('disabled', 'disabled');
-        $('#ObsInfoTela').attr('disabled', 'disabled');
-        $('#LinkInfoTela').attr('disabled', 'disabled');
-        $('#mySCTRTela').attr('disabled', 'disabled');
-        document.getElementById('ObsInfoTela').value = "";
-        document.getElementById('LinkInfoTela').value = "";
-    }
-});
-
-$('#chkHCo').on('change', function (e) {
-    if (this.checked) {
-        $('#ObsHojaCon').removeAttr('disabled');
-        $('#LinkHojaCon').removeAttr('disabled');
-        $('#mySCTRHojaCon').removeAttr('disabled');
-        if (document.getElementById('chkHMa').checked == true && document.getElementById('chkHMe').checked == true && document.getElementById('chkInf').checked == true) {
-            $('#btnGrabarVisita').removeAttr('disabled');
-        } else {
-            $('#btnGrabarVisita').attr('disabled', 'disabled');
-        }
-    }
-    else {
-        $('#btnGrabarVisita').attr('disabled', 'disabled');
-        $('#ObsHojaCon').attr('disabled', 'disabled');
-        $('#LinkHojaCon').attr('disabled', 'disabled');
-        $('#mySCTRHojaCon').attr('disabled', 'disabled');
-        document.getElementById('ObsHojaCon').value = "";
-        document.getElementById('LinkHojaCon').value = "";
-    }
-});
-
-
-$('#chkHMa').on('change', function (e) {
-    if (this.checked) {
-        $('#ObsHojaMat').removeAttr('disabled');
-        $('#LinkHojaMat').removeAttr('disabled');
-        $('#mySCTRHojaMat').removeAttr('disabled');
-        if (document.getElementById('chkHCo').checked == true && document.getElementById('chkHMe').checked == true && document.getElementById('chkInf').checked == true) {
-            $('#btnGrabarVisita').removeAttr('disabled');
-        } else {
-            $('#btnGrabarVisita').attr('disabled', 'disabled');
-        }
-    }
-    else {
-        $('#LinkHojaMat').attr('disabled', 'disabled');
-        $('#ObsHojaMat').attr('disabled', 'disabled');
-        $('#btnGrabarVisita').attr('disabled', 'disabled');
-        $('#mySCTRHojaMat').attr('disabled', 'disabled');
-        document.getElementById('ObsHojaMat').value = "";
-        document.getElementById('LinkHojaMat').value = "";
-    }
-});
-
-$('#chkHMe').on('change', function (e) {
-    if (this.checked) {
-        $('#ObsHojaMed').removeAttr('disabled');
-        $('#LinkHojaMed').removeAttr('disabled');
-        $('#mySCTRHojaMed').removeAttr('disabled');
-        if (document.getElementById('chkHMa').checked == true && document.getElementById('chkHCo').checked == true && document.getElementById('chkInf').checked == true) {
-            $('#btnGrabarVisita').removeAttr('disabled');
-        } else {
-            $('#btnGrabarVisita').attr('disabled', 'disabled');
-        }
-    }
-    else {
-        $('#LinkHojaMed').attr('disabled', 'disabled');
-        $('#ObsHojaMed').attr('disabled', 'disabled');
-        $('#btnGrabarVisita').attr('disabled', 'disabled');
-        $('#mySCTRHojaMed').attr('disabled', 'disabled');
-        document.getElementById('ObsHojaMed').value = "";
-        document.getElementById('LinkHojaMed').value = "";
-    }
-});
-
-//function validar() {
-//    const input = document.getElementById('Documento');
-//    if (!input.checkValidity()) {
-//        alert('El Documento no es válido.');
-//    }
-//    const input2 = document.getElementById('Nombres');
-//    if (!input2.checkValidity()) {
-//        alert('El Nombre es un campo requerido.');
-//    }
-//}
-
-//$('#TotalBultos').on('change', function () {
-//    var pTotalBultos = $(this).val();
-//    if (pTotalBultos == "0") {
-//        $('#btnGrabarVisitaOrden').attr('disabled', 'disabled');
-//    } else {
-//        $('#btnGrabarVisitaOrden').removeAttr('disabled');
-//    }
-//});
-
 function valideKey(evt) {
     // code is the decimal ASCII representation of the pressed key.
     var code = (evt.which) ? evt.which : evt.keyCode;
@@ -1964,124 +1634,7 @@ function valideKey(evt) {
     }
 }
 
-//Valida peso del archivo
-function validarPeso() {
-    var archivo = document.getElementById('mySCTR');
-    var archivoRuta = archivo.value;
-    var tamTe = 0;
-    var tamCo = 0;
-    var tamMa = 0;
-    var tamMe = 0;
-    var tam = document.getElementById("mySCTR").files[0].size;
-    //Agregar todos los pesos
-    if (document.getElementById("mySCTRTela") != null && document.getElementById("mySCTRTela").value != "") {
-        tamTe = document.getElementById("mySCTRTela").files[0].size;
-    }
-    if (document.getElementById("mySCTRHojaCon") != null && document.getElementById("mySCTRHojaCon").value != "") {
-        tamCo = document.getElementById("mySCTRHojaCon").files[0].size;
-    }
-    if (document.getElementById("mySCTRHojaMat") != null && document.getElementById("mySCTRHojaMat").value != "") {
-        tamMa = document.getElementById("mySCTRHojaMat").files[0].size;
-    }
-    if (document.getElementById("mySCTRHojaMed") != null && document.getElementById("mySCTRHojaMed").value != "") {
-        tamMe = document.getElementById("mySCTRHojaMed").files[0].size;
-    }
-    var tamTot = tam + tamTe + tamCo + tamMa + tamMe;
-    //Fin
-    if (tam >= 100000 * 1024 * 1) {
-        /*alert('El archivo no puede pesar más de 5 MB');*/
-        Swal.fire({
-            icon: 'error',
-            title: 'Limite de Carga',
-            text: 'El archivo no puede pesar más de 100 MB, para poder ser enviado vía correo electrónico.'
-        });
-        document.getElementById("mySCTR").value = "";
-    }
-}
-
-function validarPesoTela() {
-    var archivo = document.getElementById('mySCTRTela');
-    var archivoRuta = archivo.value;
-    var tam = document.getElementById("mySCTRTela").files[0].size;
-    if (tam >= 100000 * 1024 * 1) {
-        /*alert('El archivo no puede pesar más de 5 MB');*/
-        Swal.fire({
-            icon: 'error',
-            title: 'Limite de Carga',
-            text: 'El archivo no puede pesar más de 100 MB, para poder ser enviado vía correo electrónico.'
-        });
-        document.getElementById("mySCTRTela").value = "";
-    }
-}
-
-function validarPesoHojaCon() {
-    var archivo = document.getElementById('mySCTRHojaCon');
-    var archivoRuta = archivo.value;
-    var tam = document.getElementById("mySCTRHojaCon").files[0].size;
-    if (tam >= 100000 * 1024 * 1) {
-        /*alert('El archivo no puede pesar más de 5 MB');*/
-        Swal.fire({
-            icon: 'error',
-            title: 'Limite de Carga',
-            text: 'El archivo no puede pesar más de 100 MB, para poder ser enviado vía correo electrónico.'
-        });
-        document.getElementById("mySCTRHojaCon").value = "";
-    }
-}
-
-function validarPesoHojaMat() {
-    var archivo = document.getElementById('mySCTRHojaMat');
-    var archivoRuta = archivo.value;
-    var tam = document.getElementById("mySCTRHojaMat").files[0].size;
-    if (tam >= 100000 * 1024 * 1) {
-        /*alert('El archivo no puede pesar más de 5 MB');*/
-        Swal.fire({
-            icon: 'error',
-            title: 'Limite de Carga',
-            text: 'El archivo no puede pesar más de 100 MB, para poder ser enviado vía correo electrónico.'
-        });
-        document.getElementById("mySCTRHojaMat").value = "";
-    }
-}
-
-function validarPesoHojaMed() {
-    var archivo = document.getElementById('mySCTRHojaMed');
-    var archivoRuta = archivo.value;
-    var tam = document.getElementById("mySCTRHojaMed").files[0].size;
-    if (tam >= 100000 * 1024 * 1) {
-        /*alert('El archivo no puede pesar más de 5 MB');*/
-        Swal.fire({
-            icon: 'error',
-            title: 'Limite de Carga',
-            text: 'El archivo no puede pesar más de 100 MB, para poder ser enviado vía correo electrónico.'
-        });
-        document.getElementById("mySCTRHojaMed").value = "";
-    }
-}
-
 //Archivo por descargar
-
-function descargarArchivo(id) {
-    $.ajax({
-        type: "POST",
-        url: "/Home/Archivo",
-        data: { id },
-        success: function (response) {
-            var respuesta = response;
-            const nombreArchivo = document.getElementById('CodigoVisita').value;
-            const formato = document.getElementById('Formato').value;
-            const blob = base64ToBlob(respuesta.Mensaje_Respuesta, formato);
-            guardarArchivo(blob, nombreArchivo);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
-            alert("Ocurrió un error al verificar los CFDI(s): " + jqXHR);
-        }
-    });
-}
-
 function base64ToBlob(base64, type = "application/octet-stream") {
     const binStr = atob(base64);
     const len = binStr.length;
@@ -2108,18 +1661,6 @@ function guardarArchivo(blob, filename) {
         }, 0)
     }
 }
-
-
-//$('#OrdenCompra').on('change', function () {
-//    var IDCompra = $(this).val();
-//    $.ajax({
-//        url: $('#URL_ListarDatosPorIDCompra').val(),
-//        type: 'POST',
-//        data: 'IDCompra=' + IDCompra,
-//        dataType: 'JSON',
-
-
-
 
 
 
