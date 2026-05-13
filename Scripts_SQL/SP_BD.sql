@@ -396,17 +396,44 @@ BEGIN
 	--	AND D.FLG_PROCESO_CONFEC = 'S'
 	--	--agregado
 	--	and A.COD_ITEM like 'ES%'
+	--
+	--Actualizar 13/05/26
+	SELECT distinct
+	A.COD_ITEM AS 'CodItem' 
+	,CASE   
+	WHEN A.UBICACION_ARTE <> ''  
+	THEN A.UBICACION_ARTE 
+	ELSE C.UBICACION  
+	END AS 'Ubicacion' 
+	,DBO.LG_MUESTRA_TECNICA_ITEM(A.COD_ITEM) AS 'NombreTecnica'    
 
-	--sintaxis mejorada
-	SELECT DISTINCT A.COD_ITEM AS 'CodItem'
-		FROM LG_ITEMTEMCLI A
-		INNER JOIN LG_ITEM B ON A.COD_ITEM = B.COD_ITEM
-		INNER JOIN LG_FAMITE D ON B.COD_FAMITEM = D.COD_FAMITEM
-		INNER JOIN tg_cliente C ON A.COD_CLIENTE = C.cod_cliente
-		WHERE C.nom_cliente = @Cliente
-		  AND A.COD_TEMCLI = @Temporada
-		  AND D.FLG_PROCESO_CONFEC = 'S'
-		  AND A.COD_ITEM LIKE 'ES%'
+	FROM ES_ESTPROCOMP A  
+	inner JOIN ES_COMPEST B  
+	ON A.COD_COMPEST = B.COD_COMPEST  
+	inner JOIN LG_ITEM C  
+	ON A.COD_ITEM = C.COD_ITEM
+	----------------------------
+	INNER JOIN ES_ORDPRO O 
+	ON A.COD_ESTPRO = O.COD_ESTPRO
+	AND A.COD_VERSION = O.COD_VERSION   
+	----------------------------
+	WHERE 
+	O.COD_FABRICA =  '001'    
+	AND O.COD_ORDPRO IN (
+	 SELECT x.cod_ordpro
+	 FROM es_ordpro x  
+	 LEFT OUTER JOIN es_estprover d ON x.cod_estpro = d.cod_estpro  
+	  AND x.cod_version = d.cod_version  
+	 WHERE x.cod_estpro = @EstiloPropio --'99307'  
+	  AND x.cod_fabrica = '001'  
+	)
+	AND (  
+	B.FLG_SERVICIO_MANUFACTURA = 'S'  
+	OR DBO.ES_REVISA_SI_ITEM_ES_PROCESO_CONFECC(A.COD_ITEM) = 'S'  
+	)  
+	AND B.COD_TIPCOMPEST = 'I'
+	and A.COD_ITEM like 'ES%'
+
 END
 GO
 /****** Object:  StoredProcedure [dbo].[SP_LISTAR_TECNICAS]    Script Date: 7/04/2026 15:13:21 ******/
