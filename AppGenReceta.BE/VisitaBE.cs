@@ -165,6 +165,8 @@ namespace AppGenReceta.BE
     {
         public string CodItem { get; set; }
         public string NombreItem { get; set; }
+        public string Ubicacion { get; set; }
+        public string NombreTecnica { get; set; }
     }
 
     [Serializable]

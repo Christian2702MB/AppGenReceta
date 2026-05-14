@@ -32,6 +32,8 @@ $(document).ready(function () {
         $("#rdoModoInverso").prop("checked", true);
         $("#lblInfoModoRegistro").html('(Busque directamente un Estilo [mín. 4 letras], todo se auto-rellenará)');
         $("#txtCliente, #txtTemporada").prop("disabled", true);
+        // 13/05/2026: Deshabilitar Ubicación y Técnica en modo INVERSO (se auto-rellenan al seleccionar Item)
+        $("#txtUbicacion, #txtTecnica").prop("disabled", true);
     }
 
     // 1. CUANDO CAMBIA EL CLIENTE
@@ -576,16 +578,57 @@ $(document).on("change", "#txtDescInsumo", function () { //txtDescInsumo
 // CUANDO CAMBIA EL ITEM (Gatilla la carga de conceptos)
 $("#txtItem").on("change", function () {
     var cliente = $("#txtCliente").val();
-    var temporada = $("#txtTemporada").val().substring(0, 3);
+    var temporadaRaw = $("#txtTemporada").val() || "";
+    var temporada = temporadaRaw.substring(0, 3);
     var estilo = $("#txtEstilo").val();
     var estiloPropio = $("#txtEstiloPropio").val();
     var item = $(this).val();
+
+    // Limpiar campos dependientes
     $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicacion</option>');
     $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
-    if (cliente && temporada && estiloPropio && item) {
-        //cargarConceptos(cliente, temporada, estilo, item);
-        cargarTecnica(cliente, temporada, estiloPropio, item);
-        cargarUbicacion(cliente, temporada, estiloPropio, item);
+
+    var modoActual = new URLSearchParams(window.location.search).get('modo');
+
+    if (modoActual !== 'NORMAL' && modoActual !== 'ITEM') {
+        // ── MODO INVERSO: Autocompletar Ubicación y Técnica vía AJAX ──
+        if (cliente && temporada && estiloPropio && item) {
+            $.ajax({
+                url: "/Home/ObtenerUbicacionTecnicaPorItem",
+                type: "GET",
+                data: {
+                    cliente: cliente,
+                    temporada: temporada,
+                    estiloPropio: estiloPropio,
+                    codItem: item
+                },
+                success: function (resp) {
+                    if (resp.success) {
+                        // Autocompletar Ubicación (deshabilitado)
+                        if (resp.ubicacion && resp.ubicacion.trim() !== '') {
+                            $("#txtUbicacion").empty()
+                                .append(new Option(resp.ubicacion, resp.ubicacion, true, true))
+                                .trigger('change.select2');
+                        }
+                        // Autocompletar Técnica (deshabilitado)
+                        if (resp.tecnica && resp.tecnica.trim() !== '') {
+                            $("#txtTecnica").empty()
+                                .append(new Option(resp.tecnica, resp.tecnica, true, true))
+                                .trigger('change.select2');
+                        }
+                    }
+                },
+                error: function () {
+                    console.error("Error al obtener Ubicación/Técnica para el Item seleccionado.");
+                }
+            });
+        }
+    } else {
+        // ── MODO CLÁSICO (NORMAL): Carga estándar con desplegables editables ──
+        if (cliente && temporada && estiloPropio && item) {
+            cargarTecnica(cliente, temporada, estiloPropio, item);
+            cargarUbicacion(cliente, temporada, estiloPropio, item);
+        }
     }
 });
 

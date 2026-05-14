@@ -484,6 +484,37 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        // 13/05/2026 - CMendez: Obtener Ubicación y Técnica filtrando por Item
+        // Reutiliza el SP SP_LISTAR_ITEMS (ya mapeado con Ubicacion y NombreTecnica)
+        [HttpGet]
+        public JsonResult ObtenerUbicacionTecnicaPorItem(string cliente, string temporada, string estiloPropio, string codItem)
+        {
+            try
+            {
+                VisitaBL visitaBL = new VisitaBL();
+                List<ItemBE> lstItems = visitaBL.ListarItems(cliente, temporada, estiloPropio);
+
+                // Filtrar por el CodItem seleccionado en la vista
+                var itemEncontrado = lstItems.FirstOrDefault(x => x.CodItem.Trim().Equals((codItem ?? "").Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (itemEncontrado != null)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        ubicacion = itemEncontrado.Ubicacion ?? "",
+                        tecnica = itemEncontrado.NombreTecnica ?? ""
+                    }, JsonRequestBehavior.AllowGet);
+                }
+
+                return Json(new { success = false, message = "Item no encontrado en la lista" }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         [HttpGet]
         public JsonResult ListarEstilos(string cliente, string temporada)
         {

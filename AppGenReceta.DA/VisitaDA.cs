@@ -830,6 +830,11 @@ namespace AppGenReceta.DA
                             ItemBE obj = new ItemBE();
                             obj.CodItem = dr.IsDBNull(dr.GetOrdinal("CodItem")) ? "" : dr.GetString(dr.GetOrdinal("CodItem"));
                             //obj.NombreItem = dr.IsDBNull(dr.GetOrdinal("NombreItem")) ? "" : dr.GetString(dr.GetOrdinal("NombreItem"));
+
+                            // 13/05/2026 - CMendez: Mapear Ubicacion y NombreTecnica para autocompletado en modo INVERSO
+                            try { obj.Ubicacion = dr.IsDBNull(dr.GetOrdinal("Ubicacion")) ? "" : dr.GetString(dr.GetOrdinal("Ubicacion")).Trim(); } catch { obj.Ubicacion = ""; }
+                            try { obj.NombreTecnica = dr.IsDBNull(dr.GetOrdinal("NombreTecnica")) ? "" : dr.GetString(dr.GetOrdinal("NombreTecnica")).Trim(); } catch { obj.NombreTecnica = ""; }
+
                             lstItems.Add(obj);
                         }
                     }
