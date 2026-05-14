@@ -27,6 +27,8 @@ $(document).ready(function () {
         $("#lblInfoModoRegistro").html('(Busque directamente un <strong>Item</strong> [mín. 3 car.], los datos de cabecera se auto-rellenarán)');
         // Bloquear campos superiores; el punto de entrada es txtItem con Select2 AJAX
         $("#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo").prop("disabled", true);
+        // Deshabilitar Ubicación y Técnica en modo ITEM (se auto-rellenan al seleccionar Item)
+        $("#txtUbicacion, #txtTecnica").prop("disabled", true);
     } else {
         // Por defecto (incluyendo modoQuery === 'INVERSO' o vacío), modo INVERSO
         $("#rdoModoInverso").prop("checked", true);
@@ -1214,11 +1216,11 @@ $('#btnGrabarVisita').on('click', function (e) {
                     icon: 'warning',
                     title: json.title,
                     text: json.message
-                });    
+                });
             } else if (json.result == 'success') {
                 e.preventDefault();
                 setTimeout(() => {
-                    console.log("ingrese5");                    
+                    console.log("ingrese5");
                 }, 200)
                 Swal.fire({
                     icon: 'success',
@@ -1296,7 +1298,7 @@ $('#btnElegirCita').on('click', function (e) {
                 console.log("ingrese5");
                 $('#btnElegirCita').val('Enviando....');
                 $('#btnElegirCita').attr('disabled', 'disabled');
-            }, 200)          
+            }, 200)
             window.location.href = '/Home/Citas/' + 'pCantPeriodos=' + pCantPeriodos;
         }
     }
