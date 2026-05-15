@@ -232,6 +232,17 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        // Liquidación de Insumos - Estampado (Mockup)
+        public ActionResult Liquidacion_Insumos()
+        {
+            if (Session["Usuario"] != null)
+            {
+                ViewBag.Usuario = Session["NombreUsuario"];
+                ViewBag.Correo = Session["CorreoUsuario"];
+            }
+            return View();
+        }
+
         [NoCache]
         public ActionResult Visita() //String id, String pCod_OrdPro, String pSecuencia
         {
@@ -254,7 +265,19 @@ namespace AppGenReceta.Web.Controllers
                     //Session["DatosNPS"] = lstDatosNPS;
 
                     //ViewBag.Tecnicas = visitaBL.ListarTecnicas();
-                    ViewBag.Cliente = visitaBL.ListarCliente();
+                    // Implementación de caché para Clientes (expira en 1 hora) para optimizar carga
+                    var cacheClientes = System.Web.HttpContext.Current.Cache["ListaClientes"];
+                    if (cacheClientes == null)
+                    {
+                        cacheClientes = visitaBL.ListarCliente();
+                        if (cacheClientes != null)
+                        {
+                            System.Web.HttpContext.Current.Cache.Insert("ListaClientes", cacheClientes, null, 
+                                DateTime.Now.AddHours(1), System.Web.Caching.Cache.NoSlidingExpiration);
+                        }
+                    }
+                    ViewBag.Cliente = cacheClientes;
+
                     //ViewBag.Conceptos = visitaBL.ListarConceptos();
 
                     ////Datos

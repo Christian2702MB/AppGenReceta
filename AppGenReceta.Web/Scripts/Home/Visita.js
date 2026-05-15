@@ -1,9 +1,22 @@
 
+// Función compatible para obtener parámetros de la URL (Global)
+function getQueryParam(param) {
+    var search = window.location.search.substring(1);
+    var params = search.split('&');
+    for (var i = 0; i < params.length; i++) {
+        var pair = params[i].split('=');
+        if (decodeURIComponent(pair[0]) === param) {
+            return decodeURIComponent(pair[1] || '');
+        }
+    }
+    return null;
+}
+
 $(document).ready(function () {
+
     // Verificar si hay un ID en la URL para editar
-    const urlParams = new URLSearchParams(window.location.search);
-    const idEditar = urlParams.get('id');
-    let ignorarEventosEstilo = false;
+    var idEditar = getQueryParam('id');
+    var ignorarEventosEstilo = false;
 
     $("#txtPrendasReq").on("keypress", function (e) {
         // Si la tecla presionada es un punto (.) o una coma (,) o la letra 'e', bloqueamos la acción
@@ -13,7 +26,7 @@ $(document).ready(function () {
     });
 
     // --- PERSISTENCIA DEL MODO DE REGISTRO ---
-    const modoQuery = urlParams.get('modo');
+    var modoQuery = getQueryParam('modo');
 
     // Si no hay parámetro en la URL, forzamos que se comporte como INVERSO
     if (modoQuery === 'NORMAL') {
@@ -154,21 +167,27 @@ $(document).ready(function () {
     var isNormal = $("#rdoModoNormal").is(":checked");
     if (isNormal) {
         // 1. Hacer los campos desplegables editables (permiten texto libre)
-        $('#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').select2({
-            //tags: true, // Esto es la magia: permite crear nuevos valores escribiendo cuando esta en true, por defecto viene en false.
-            placeholder: "Seleccione o escriba...",
-            allowClear: true,
-            width: '100%'
-        });
+        // Optimización: Diferir ligeramente la inicialización de Select2 para no bloquear el renderizado inicial
+        setTimeout(function() {
+            $('#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').select2({
+                placeholder: "Seleccione o escriba...",
+                allowClear: true,
+                width: '100%'
+            });
+        }, 100);
+
 
     } else if (modoQuery !== 'ITEM') {
         // 1. Hacer los campos desplegables editables (permiten texto libre)
-        $('#txtCliente, #txtTemporada, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').select2({
-            //tags: true, // Esto es la magia: permite crear nuevos valores escribiendo cuando esta en true, por defecto viene en false.
-            placeholder: "Seleccione o escriba...",
-            allowClear: true,
-            width: '100%'
-        });
+        // Optimización: Diferir inicialización de Select2 básicos
+        setTimeout(function() {
+            $('#txtCliente, #txtTemporada, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').select2({
+                placeholder: "Seleccione o escriba...",
+                allowClear: true,
+                width: '100%'
+            });
+        }, 100);
+
 
         // Optimización: Búsqueda dinámica para Estilo Cliente
         $('#txtEstilo').select2({
@@ -253,11 +272,15 @@ $(document).ready(function () {
     } else {  // modoQuery === 'ITEM'
         // ── MODO BÚSQUEDA POR ITEM ────────────────────────────────────────────
         // Inicializar campos no-pivot como Select2 básico (sin AJAX, bloqueados)
-        $('#txtCliente, #txtTemporada, #txtCombo, #txtUbicacion, #txtTecnica').select2({
-            placeholder: "Seleccione o escriba...",
-            allowClear: true,
-            width: '100%'
-        });
+        // Optimización: Diferir inicialización de Select2 básicos en modo ITEM
+        setTimeout(function() {
+            $('#txtCliente, #txtTemporada, #txtCombo, #txtUbicacion, #txtTecnica').select2({
+                placeholder: "Seleccione o escriba...",
+                allowClear: true,
+                width: '100%'
+            });
+        }, 100);
+
 
         // Estilo Cliente y Propio también como Select2 básico
         // (se habilitarán y rellenarán tras la selección del Item)
@@ -308,11 +331,9 @@ $(document).ready(function () {
     } // fin else (modoQuery === 'ITEM')
 
     // Inicializar Select2 para habilitar la caja de búsqueda en el desplegable (todos los modos)
-    $('#txtDescInsumo').select2({
-        placeholder: "Escriba para buscar o filtrar un insumo...",
-        allowClear: true,
-        width: '100%' // Es importante para que se adapte correctamente al div/columna de Bootstrap
-    });
+    // La inicialización de Select2 para #txtDescInsumo se maneja en la vista (Visita.cshtml) 
+    // debido a su configuración AJAX específica.
+
 
 });
 
@@ -327,12 +348,29 @@ function cambiarModoRegistro() {
     else if ($("#rdoModoItem").is(":checked")) modo = "ITEM";
     else modo = "INVERSO";
 
-    // Obtener URL base sin parámetros de modo antiguos
-    var url = new URL(window.location.href);
-    url.searchParams.set('modo', modo);
+    // Obtener parámetros actuales
+    var search = window.location.search.substring(1);
+    var params = search.split('&');
+    var newParams = [];
+    var foundModo = false;
 
-    // Navegar a la nueva URL (esto recargará la página limpiamente con el modo seleccionado)
-    window.location.href = url.toString();
+    for (var i = 0; i < params.length; i++) {
+        if (!params[i]) continue;
+        var pair = params[i].split('=');
+        if (pair[0] === 'modo') {
+            newParams.push('modo=' + modo);
+            foundModo = true;
+        } else {
+            newParams.push(params[i]);
+        }
+    }
+
+    if (!foundModo) {
+        newParams.push('modo=' + modo);
+    }
+
+    // Redirigir con los nuevos parámetros
+    window.location.href = window.location.pathname + '?' + newParams.join('&');
 }
 
 function cargarTodosLosEstilosInverso() {
@@ -445,24 +483,18 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
 
             // ── 1. Rellenar campos auto-rellenados (bloqueados) ───────────
             // Cliente
-            if ($('#txtCliente').find("option[value='" + row.CodCliente + "']").length === 0) {
-                $('#txtCliente').append(new Option(row.CodCliente, row.CodCliente, true, true));
-            } else {
-                $('#txtCliente').val(row.CodCliente).trigger('change.select2');
-            }
+            $('#txtCliente').empty().append(new Option(row.CodCliente, row.CodCliente, true, true)).trigger('change.select2');
 
             // Temporada
-            if ($('#txtTemporada').find("option[value='" + row.CodTemcli + "']").length === 0) {
-                $('#txtTemporada').append(new Option(row.CodTemcli, row.CodTemcli, true, true));
-            } else {
-                $('#txtTemporada').val(row.CodTemcli).trigger('change.select2');
-            }
+            $('#txtTemporada').empty().append(new Option(row.CodTemcli, row.CodTemcli, true, true)).trigger('change.select2');
 
             // Ubicación (rellenar y auto-seleccionar si viene del SP)
             if (row.Ubicacion && row.Ubicacion.trim() !== '') {
                 $('#txtUbicacion').empty()
                     .append(new Option(row.Ubicacion, row.Ubicacion, true, true))
                     .trigger('change.select2');
+            } else {
+                $('#txtUbicacion').empty().append('<option value="">Seleccione una Ubicación</option>').trigger('change.select2');
             }
 
             // Técnica (DESCRIPCION_TECNICA del SP)
@@ -470,6 +502,8 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
                 $('#txtTecnica').empty()
                     .append(new Option(row.DescripcionTecnica, row.DescripcionTecnica, true, true))
                     .trigger('change.select2');
+            } else {
+                $('#txtTecnica').empty().append('<option value="">Seleccione una Técnica</option>').trigger('change.select2');
             }
 
             // Los campos Estilo Cliente, Estilo Propio y Combo permanecen bloqueados
@@ -590,7 +624,7 @@ $("#txtItem").on("change", function () {
     $("#txtUbicacion").empty().append('<option value="">Seleccione una Ubicacion</option>');
     $("#txtTecnica").empty().append('<option value="">Seleccione una Técnica</option>');
 
-    var modoActual = new URLSearchParams(window.location.search).get('modo');
+    var modoActual = getQueryParam('modo');
 
     if (modoActual !== 'NORMAL' && modoActual !== 'ITEM') {
         // ── MODO INVERSO: Autocompletar Ubicación y Técnica vía AJAX ──
@@ -765,8 +799,8 @@ function guardarRecetaCompleta() {
         return;
     }
 
-    //Aqui que lee dependiendo de que esta seleccionado
-    const modoQuery = new URLSearchParams(window.location.search).get('modo');
+    // Aqui que lee dependiendo de que esta seleccionado
+    var modoQuery = getQueryParam('modo');
 
     // Si no hay parámetro en la URL, forzamos que se comporte como INVERSO
     if (modoQuery != 'ITEM') {
@@ -811,7 +845,7 @@ function guardarRecetaCompleta() {
         },
         success: function (res) {
             if (res.result === "success") {
-                Swal.fire("¡Logrado!", res.message, "success").then(() => {
+                Swal.fire("¡Logrado!", res.message, "success").then(function () {
                     location.reload(); // Recargar para nueva entrada
                 });
             } else {
@@ -883,10 +917,10 @@ function agregarInsumo() {
     }
 
     // 2. Capturamos el valor completo (Ej: "12345678 TELA ALGODON ROJO")
-    const valorCompleto = $("#txtDescInsumo").val() || "";
+    var valorCompleto = $("#txtDescInsumo").val() || "";
 
-    let codigoReal = "";
-    let descripcionReal = "";
+    var codigoReal = "";
+    var descripcionReal = "";
 
     // 3. Separamos el texto asegurándonos de que tenga la longitud mínima
     if (valorCompleto.length >= 8) {
@@ -898,7 +932,7 @@ function agregarInsumo() {
     }
 
     // 4. Capturamos la cantidad
-    const cant = parseFloat($("#txtCantInsumo").val());
+    var cant = parseFloat($("#txtCantInsumo").val());
 
     // 5. Validamos que no falte la cantidad
     if (!codigoReal || isNaN(cant) || cant <= 0) {
@@ -907,8 +941,8 @@ function agregarInsumo() {
     }
 
     // 5.5 Capturamos Unidades
-    const valorStock = $("#txtStock").val() || "";
-    let unid = "";
+    var valorStock = $("#txtStock").val() || "";
+    var unid = "";
 
     if (valorStock.length >= 4) {
         unid = valorStock.substring(valorStock.length - 2, valorStock.length).trim();
@@ -1013,19 +1047,19 @@ function llenarComboItems(lista) {
 
 $('#btnCancelarVisita').on('click', function (e) {
     e.preventDefault();
-    setTimeout(() => {
+    setTimeout(function () {
         $('#btnRegistrarTodo').attr('disabled', 'disabled');
         $('#btnLimpiar').attr('disabled', 'disabled');
         $('#btnCancelarVisita').attr('disabled', 'disabled');
     }, 200)
-    /*const tempIDCliHijo = document.getElementById('Cliente').value;*/
+    /*var tempIDCliHijo = document.getElementById('Cliente').value;*/
     window.location.href = '/Home/MenuProveedor/';
 });
 
 
 $('#btnImprimirRFID').on('click', function (e) {
     e.preventDefault();
-    setTimeout(() => {
+    setTimeout(function () {
         $('#btnGrabarVisita').attr('disabled', 'disabled');
         $('#btnCancelarVisita').attr('disabled', 'disabled');
     }, 200)
@@ -1040,7 +1074,7 @@ $('#btnImprimirRFID').on('click', function (e) {
         success: function (json) {
             //alert('Despues de imprimir');
             if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnImprimir').val('Enviando....');
                     $('#btnImprimir').attr('disabled', 'disabled');
@@ -1084,13 +1118,14 @@ $('#btnCancelarVisitaVigilante').on('click', function (e) {
     window.location.href = '/Home/MantenimientoVisitasVigilante';
 });
 
-const spanishDateFormatter = new Intl.DateTimeFormat('es-PE', {
-    year: 'numeric',
-    month: '2-digit',
+// Formatear fecha para el NP
+var spanishDateFormatter = new Intl.DateTimeFormat('es-PE', {
     day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
 });
-const now = new Date();
-const formattedDate = spanishDateFormatter.format(now);
+var now = new Date();
+var formattedDate = spanishDateFormatter.format(now);
 
 
 
@@ -1104,7 +1139,7 @@ $('#btnAprobar').on('click', function (e) {
         dataType: 'JSON',
         success: function (json) {
             if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnAprobar').val('Enviando....');
                     $('#btnAprobar').attr('disabled', 'disabled');
@@ -1134,7 +1169,7 @@ $('#btnAnularAprobaciones').on('click', function (e) {
         dataType: 'JSON',
         success: function (json) {
             if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnAnularAprobaciones').val('Enviando....');
                     $('#btnAnularAprobaciones').attr('disabled', 'disabled');
@@ -1162,22 +1197,22 @@ $('#btnCancelar').on('click', function (e) {
 
 $('#btnBuscarVisualizar').on('click', function (e) {
     e.preventDefault();
-    const tempNP = document.getElementById('txtBuscarNP').value;
-    const tempSecuencia = document.getElementById('txtBuscarSec').value;
+    var tempNP = document.getElementById('txtBuscarNP').value;
+    var tempSecuencia = document.getElementById('txtBuscarSec').value;
     window.location.href = '/Home/VisitaVisualizar/' + '?id=' + '0' + '&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;
 });
 
 $('#btnBuscarObservaciones').on('click', function (e) {
     e.preventDefault();
-    const tempNP = document.getElementById('txtBuscarNP').value;
-    const tempSecuencia = document.getElementById('txtBuscarSec').value;
+    var tempNP = document.getElementById('txtBuscarNP').value;
+    var tempSecuencia = document.getElementById('txtBuscarSec').value;
     window.location.href = '/Home/VisualizarObservaciones/' + '?id=' + '0' + '&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;
 });
 
 $('#btnBuscar').on('click', function (e) {
     e.preventDefault();
-    const tempNP = document.getElementById('txtBuscarNP').value;
-    const tempSecuencia = document.getElementById('txtBuscarSec').value;
+    var tempNP = document.getElementById('txtBuscarNP').value;
+    var tempSecuencia = document.getElementById('txtBuscarSec').value;
     /*window.location.href = '/Home/Visita/' + '?id=1&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;*/
     window.location.href = '/Home/Visita/' + '?id=' + '0' + '&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;
 });
@@ -1219,7 +1254,7 @@ $('#btnGrabarVisita').on('click', function (e) {
                 });
             } else if (json.result == 'success') {
                 e.preventDefault();
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                 }, 200)
                 Swal.fire({
@@ -1229,22 +1264,20 @@ $('#btnGrabarVisita').on('click', function (e) {
                     footer: 'Se generó correctamente.'
                 }).then(function (result) {
                     if (result.value) {
-                        const tempNP = document.getElementById('txtBuscarNP').value;
-                        const tempSecuencia = document.getElementById('txtBuscarSec').value;
+                        var tempNP = document.getElementById('txtBuscarNP').value;
+                        var tempSecuencia = document.getElementById('txtBuscarSec').value;
                         window.location.href = '/Home/Visita/' + '?id=' + '0' + '&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;
                     } else {
-                        const tempNP = document.getElementById('txtBuscarNP').value;
-                        const tempSecuencia = document.getElementById('txtBuscarSec').value;
+                        var tempNP = document.getElementById('txtBuscarNP').value;
+                        var tempSecuencia = document.getElementById('txtBuscarSec').value;
                         window.location.href = '/Home/Visita/' + '?id=' + '0' + '&pCod_OrdPro=' + tempNP + '&pSecuencia=' + tempSecuencia;
                     }
                 }
                 );
             } else if (json.result == 'error') {
-                Swal.fire({
-                    icon: 'error',
-                    title: json.title,
-                    text: json.message
-                });
+                   $('#btnGrabarVisita').val('<i class="fa fa-check"></i>&nbsp;Grabar');
+                   $('#btnGrabarVisita').removeAttr('disabled');
+                   $('#btnCancelarVisita').removeAttr('disabled');
             }
         },
         error: function () {
@@ -1257,11 +1290,11 @@ $('#btnGrabarVisita').on('click', function (e) {
 
 $('#btnElegirCita').on('click', function (e) {
     e.preventDefault();
-    const pExisteHub = "1"//document.getElementById('Hub').value;
-    const pExistenOrdenes = "1"//document.getElementById('SumaTotalCodigos').value;
-    const pExistenVisitantes = "1"//document.getElementById('SumaTotalVisitantes').value;
+    var pExisteHub = "1"//document.getElementById('Hub').value;
+    var pExistenOrdenes = "1"//document.getElementById('SumaTotalCodigos').value;
+    var pExistenVisitantes = "1"//document.getElementById('SumaTotalVisitantes').value;
     //Envia los periodos, pero antes verifica que no sea mas del maximo de periodos por dia
-    const pCantPeriodos = "1"//document.getElementById('CantidadPeriodos').value;
+    var pCantPeriodos = "1"//document.getElementById('CantidadPeriodos').value;
     var numPer = Number.parseInt(pCantPeriodos, 10)
 
     if (pExisteHub == 0) {
@@ -1294,7 +1327,7 @@ $('#btnElegirCita').on('click', function (e) {
             });
         }
         else {
-            setTimeout(() => {
+            setTimeout(function () {
                 console.log("ingrese5");
                 $('#btnElegirCita').val('Enviando....');
                 $('#btnElegirCita').attr('disabled', 'disabled');
@@ -1344,7 +1377,7 @@ $('#btnAnular').on('click', function (e) {
                     text: json.message
                 });
             } else if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnAnular').val('Enviando....');
                     $('#btnAnular').attr('disabled', 'disabled');
@@ -1415,7 +1448,7 @@ $('#btnAnularAprobaciones').on('click', function (e) {
                     text: json.message
                 });
             } else if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnAnularAprobaciones').val('Enviando....');
                     $('#btnAnularAprobaciones').attr('disabled', 'disabled');
@@ -1486,7 +1519,7 @@ $('#btnAprobar').on('click', function (e) {
                     text: json.message
                 });
             } else if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnAprobar').val('Enviando....');
                     $('#btnAprobar').attr('disabled', 'disabled');
@@ -1563,7 +1596,7 @@ $('#btnGrabarVisitaLogiReprogFecha').on('click', function (e) {
                     text: json.message
                 });
             } else if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnGrabarVisitaLogiReprogFecha').attr('disabled', 'disabled');
                     $('#btnCancelarVisitaLogistica').attr('disabled', 'disabled');
@@ -1635,7 +1668,7 @@ $('#btnGrabarVisitaCorregirSCTR').on('click', function (e) {
                     text: json.message
                 });
             } else if (json.result == 'success') {
-                setTimeout(() => {
+                setTimeout(function () {
                     console.log("ingrese5");
                     $('#btnGrabarVisitaCorregirSCTR').val('Enviando....');
                     $('#btnGrabarVisitaCorregirSCTR').attr('disabled', 'disabled');
@@ -1680,11 +1713,12 @@ function valideKey(evt) {
 }
 
 //Archivo por descargar
-function base64ToBlob(base64, type = "application/octet-stream") {
-    const binStr = atob(base64);
-    const len = binStr.length;
-    const arr = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
+function base64ToBlob(base64, type) {
+    if (!type) type = "application/octet-stream";
+    var binStr = atob(base64);
+    var len = binStr.length;
+    var arr = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
         arr[i] = binStr.charCodeAt(i);
     }
     return new Blob([arr], { type: type });
@@ -1694,13 +1728,13 @@ function guardarArchivo(blob, filename) {
     if (window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(blob, filename);
     } else {
-        const a = document.createElement('a');
+        var a = document.createElement('a');
         document.body.appendChild(a);
-        const url = window.URL.createObjectURL(blob);
+        var url = window.URL.createObjectURL(blob);
         a.href = url;
         a.download = filename;
         a.click();
-        setTimeout(() => {
+        setTimeout(function () {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         }, 0)

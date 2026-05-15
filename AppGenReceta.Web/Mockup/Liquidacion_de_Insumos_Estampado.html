@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hialpesa ERP - Liquidación Estampado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --hialpesa-blue: #002D72;
+            --hialpesa-orange: #f39c12;
+            --border-color: #e2e8f0;
+            --bg-body: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fff;
+            color: #333;
+            margin: 0;
+        }
+
+        /* ── Navbar ── */
+        .erp-navbar {
+            background-color: var(--hialpesa-blue);
+            color: white;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .navbar-brand { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .navbar-brand span { color: var(--hialpesa-orange); }
+        .nav-items { display: flex; gap: 20px; margin-left: 30px; }
+        .nav-items a { color: #fff; text-decoration: none; opacity: 0.8; font-weight: 500; }
+        .nav-items a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+
+        /* ── Page Header ── */
+        .page-header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title-section h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--hialpesa-blue);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .title-section h1::before { content: "|"; color: var(--hialpesa-blue); font-weight: 900; font-size: 24px; margin-right: 5px; }
+        .title-section p { font-size: 12px; color: #888; margin: 4px 0 0 15px; }
+
+        .btn-nueva {
+            background-color: var(--hialpesa-blue);
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* ── KPI Cards (Idénticas a la imagen) ── */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            padding: 0 30px 25px;
+        }
+
+        .kpi-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-left-width: 5px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .kpi-val { font-size: 22px; font-weight: 700; color: #333; display: block; }
+        .kpi-label { font-size: 11px; font-weight: 600; color: #666; margin-top: 5px; display: block; }
+        .kpi-sub { font-size: 10px; color: #aaa; margin-top: 2px; display: block; }
+        .kpi-icon { position: absolute; top: 15px; right: 15px; font-size: 18px; opacity: 0.4; }
+
+        /* ── Content Tabs ── */
+        .content-area { padding: 0 30px; }
+        .nav-tabs-custom {
+            display: flex;
+            gap: 30px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 15px;
+        }
+        .tab-item {
+            padding: 10px 5px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            text-decoration: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-item.active {
+            color: var(--hialpesa-blue);
+            border-bottom: 3px solid var(--hialpesa-blue);
+        }
+
+        /* ── Table Styling ── */
+        .panel-table {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .table-title {
+            padding: 12px 20px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-title h2 { font-size: 13px; font-weight: 700; color: var(--hialpesa-blue); margin: 0; display: flex; align-items: center; gap: 8px; }
+        .table-title h2::before { content: "|"; color: #0ea5e9; font-weight: 900; }
+
+        .erp-table thead th {
+            background-color: var(--hialpesa-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 12px 15px;
+            border: none;
+        }
+
+        .erp-table tbody td {
+            font-size: 12px;
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eee;
+        }
+
+        .badge-status {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 15px;
+            background: #f1c40f;
+            color: #000;
+        }
+
+        /* ── Action Buttons (Pill Style) ── */
+        .btn-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+            color: #555;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        .btn-pill:hover { background: #f8f9fa; border-color: var(--hialpesa-blue); color: var(--hialpesa-blue); }
+        .btn-pill.btn-ingreso {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+        .btn-pill.btn-ingreso:hover { background: #bae6fd; }
+
+        /* ── Detail Sub-table ── */
+        .detail-area { background: #f8fafc; padding: 15px 25px; }
+        .inner-table { background: #fff; border: 1px solid #e2e8f0; }
+        .inner-table thead th {
+            background: #fff;
+            color: #64748b;
+            font-size: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px;
+        }
+        .inner-table tbody td { font-size: 11px; padding: 8px; border-bottom: 1px solid #f1f5f9; }
+
+        /* ── Modals Comunes (Imagen Adjunta) ── */
+        .modal-custom .modal-header {
+            background-color: var(--hialpesa-blue);
+            color: white;
+            padding: 1rem 1.5rem;
+        }
+        .modal-custom .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        .modal-custom .modal-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .modal-custom label { font-size: 0.9rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem; display: block; }
+        .modal-custom .form-control, .modal-custom .form-select {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.95rem;
+            color: #475569;
+        }
+        .help-text { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+
+        /* ── Modal Design (Nueva Liquidación) ── */
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="erp-navbar">
+        <div class="d-flex align-items-center">
+            <div class="navbar-brand">Hialpesa</div>
+            <div class="nav-items">
+                <a href="#">Gestión Recetas</a>
+                <a href="#">Solicitud Insumos</a>
+                <a href="#" class="active"><i class="bi bi-flask"></i> Liquidación Insumos</a>
+            </div>
+        </div>
+        <div>
+            <i class="bi bi-person-circle"></i> Usuario: Liquidador | <strong>Encargado de Liquidación</strong>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="title-section">
+            <h1>Liquidación de Insumos de Estampado</h1>
+            <p>Control operativo de consumos, mermas y reutilización</p>
+        </div>
+        <button class="btn-nueva" data-bs-toggle="modal" data-bs-target="#nuevaModal">
+            <i class="bi bi-plus-lg"></i> Nueva Liquidación
+        </button>
+    </header>
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+        <div class="kpi-card" style="border-left-color: #0ea5e9;">
+            <span class="kpi-val">8.5%</span>
+            <span class="kpi-label">% Merma Global</span>
+            <span class="kpi-sub">Últimos 30 días</span>
+            <i class="bi bi-graph-up kpi-icon text-primary"></i>
+        </div>
+        <div class="kpi-card" style="border-left-color: #22c55e;">
+            <span class="kpi-val">$0.00</span>
+            <span class="kpi-label">Costo Liquidados</span>
+            <span class="kpi-sub">Precio unitario no disponible</span>
+            <i class="bi bi-currency-dollar kpi-icon text-success"></i>
+        </div>
+        <div class="kpi-card" style="border-left-color: #06b6d4;">
+            <span class="kpi-val">92%</span>
+            <span class="kpi-label">Eficiencia Consumo</span>
+            <span class="kpi-sub">(Real vs Teórico)</span>
+            <i class="bi bi-lightning-fill kpi-icon text-info"></i>
+        </div>
+        <div class="kpi-card" style="border-left-color: #f59e0b;">
+            <span class="kpi-val">1,280 g</span>
+            <span class="kpi-label">Saldo Pte. Liquidar</span>
+            <span class="kpi-sub">Insumos no devueltos</span>
+            <i class="bi bi-box-seam kpi-icon text-warning"></i>
+        </div>
+        <div class="kpi-card" style="border-left-color: #ef4444;">
+            <span class="kpi-val">2</span>
+            <span class="kpi-label">Mermas x Vencer</span>
+            <span class="kpi-sub">< 15 días</span>
+            <i class="bi bi-exclamation-triangle kpi-icon text-danger"></i>
+        </div>
+        <div class="kpi-card" style="border-left-color: #94a3b8;">
+            <span class="kpi-val">8 / 12</span>
+            <span class="kpi-label">Liquidaciones Cerradas</span>
+            <span class="kpi-sub">4 abiertas</span>
+            <i class="bi bi-check-circle kpi-icon text-secondary"></i>
+        </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content-area">
+        <div class="nav-tabs-custom">
+            <a href="#" class="tab-item active"><i class="bi bi-journal-text"></i> Liquidaciones (NP/Combo)</a>
+            <a href="#" class="tab-item"><i class="bi bi-recycle"></i> Mermas Reutilizables</a>
+        </div>
+        <div class="panel-table">
+            <div class="table-title">
+                <h2>Liquidaciones Activas</h2>
+                <button class="btn btn-sm btn-outline-secondary" style="font-size: 11px;"><i class="bi bi-arrow-repeat"></i> Actualizar</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table erp-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>NP</th>
+                            <th>COMBO</th>
+                            <th>CLIENTE</th>
+                            <th>ESTILO</th>
+                            <th>ESTADO</th>
+                            <th>FECHA CREACIÓN</th>
+                            <th>FECHA CIERRE</th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>H5668</strong></td>
+                            <td>Rojo</td>
+                            <td>Vince</td>
+                            <td>S58458</td>
+                            <td><span class="badge-status">En proceso</span></td>
+                            <td>01/05/2026</td>
+                            <td>--</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-pill" data-bs-toggle="modal" data-bs-target="#consumoModal"><i class="bi bi-droplet"></i> Consumo</button>
+                                    <button class="btn-pill" data-bs-toggle="modal" data-bs-target="#mermaModal" style="border-color: #f39c12; color: #d35400;"><i class="bi bi-recycle"></i> Merma</button>
+                                    <button class="btn-pill" data-bs-toggle="modal" data-bs-target="#devolucionModal"><i class="bi bi-arrow-left-right"></i> Dev.</button>
+                                    <button class="btn-pill btn-ingreso" data-bs-toggle="modal" data-bs-target="#ingresoModal"><i class="bi bi-plus-circle"></i> +Ingreso</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Detail Row -->
+                        <tr>
+                            <td colspan="8" class="p-0">
+                                <div class="detail-area">
+                                    <table class="table inner-table mb-2">
+                                        <thead>
+                                            <tr>
+                                                <th>CÓDIGO</th>
+                                                <th>ITEM</th>
+                                                <th>COLOR</th>
+                                                <th>TÉCNICA</th>
+                                                <th>U.M.</th>
+                                                <th>REQUERIDO</th>
+                                                <th>ENTREGADO</th>
+                                                <th>CONSUMIDO</th>
+                                                <th>DEVUELTO</th>
+                                                <th>MERMA</th>
+                                                <th>SALDO</th>
+                                                <th>LOTE/VENC</th>
+                                                <th>TRAZABILIDAD</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>AX4858</td>
+                                                <td>Plastizol azul</td>
+                                                <td>White</td>
+                                                <td>Plastisol</td>
+                                                <td>gr</td>
+                                                <td>60</td>
+                                                <td>90</td>
+                                                <td>81</td>
+                                                <td>5</td>
+                                                <td>4</td>
+                                                <td>0</td>
+                                                <td>Lote A / 30/11/2026</td>
+                                                <td>Entrega inicial + adicional</td>
+                                            </tr>
+                                            <tr>
+                                                <td>BZ7721</td>
+                                                <td>Base plastisol rojo</td>
+                                                <td>Rojo fuego</td>
+                                                <td>Plastisol</td>
+                                                <td>gr</td>
+                                                <td>40</td>
+                                                <td>45</td>
+                                                <td>38</td>
+                                                <td>0</td>
+                                                <td>7</td>
+                                                <td>0</td>
+                                                <td>Lote B / 15/12/2026</td>
+                                                <td>Reasignado desde NP H5667</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div style="font-size: 10px; color: #666;"><i class="bi bi-info-circle-fill text-primary"></i> Merma calculada: Ingresos - Consumos - Devoluciones.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>H8588</strong></td>
+                            <td>Azul marino</td>
+                            <td>Zara</td>
+                            <td>S61234</td>
+                            <td><span class="badge-status" style="background:#eee;">Pendiente entrega</span></td>
+                            <td>10/05/2026</td>
+                            <td>--</td>
+                            <td><button class="btn-pill" disabled>Consumo</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NUEVA LIQUIDACIÓN -->
+    <div class="modal fade" id="nuevaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--hialpesa-blue); font-size: 15px;">Generar Nueva Liquidación Diaria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="filter-card">
+                        <div class="fw-bold mb-3" style="font-size: 13px; color: var(--hialpesa-blue);">Filtros de búsqueda</div>
+                        <div class="row align-items-end g-3">
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted fw-bold">Desde</label>
+                                <input type="date" class="form-control form-control-sm" value="2026-05-15">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted fw-bold">Hasta</label>
+                                <input type="date" class="form-control form-control-sm" value="2026-05-15">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-sm w-100" style="background: var(--hialpesa-blue); border:none; padding:7px;">Buscar NPs</button>
+                            </div>
+                            <div class="col-md-4 ms-auto text-end">
+                                <span class="small text-muted fw-bold me-2">Añadir Ext:</span>
+                                <input type="text" class="form-control form-control-sm d-inline-block" style="width:120px;" placeholder="NP...">
+                                <button class="btn btn-success btn-sm ms-2" style="background:#15803d; border:none; font-weight:600;">+ Agregar NP</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-card">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                            <div class="fw-bold" style="font-size:13px; color:var(--hialpesa-blue);">NPs del periodo — Familia ES</div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;" onclick="selectAll(true)">Seleccionar todos</button>
+                                <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;" onclick="selectAll(false)">Deseleccionar</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 350px;">
+                            <table class="table erp-table mb-0" style="--bs-table-bg: #fff;">
+                                <thead class="sticky-top">
+                                    <tr>
+                                        <th style="width:40px; background:#fff; color:#666;"><input type="checkbox" id="mainCheck"></th>
+                                        <th style="background:#fff; color:#666;">N° NP</th>
+                                        <th style="background:#fff; color:#666;">Combo</th>
+                                        <th style="background:#fff; color:#666;">Estilo Propio</th>
+                                        <th style="background:#fff; color:#666;">Estilo Cliente</th>
+                                        <th style="background:#fff; color:#666;">Fec. Despacho</th>
+                                        <th style="background:#fff; color:#666;">Cliente</th>
+                                        <th style="background:#fff; color:#666;">Cant. Producir</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td><input type="checkbox" class="np-check"></td><td><strong>I7779</strong></td><td>FALL NAVY</td><td>A9117</td><td>161103*</td><td>29/05/2026</td><td>FORTY SEVEN</td><td>149</td></tr>
+                                    <tr><td><input type="checkbox" class="np-check"></td><td><strong>I7874</strong></td><td>GRAPE</td><td>A9050</td><td>161103</td><td>29/05/2026</td><td>FORTY SEVEN</td><td>117</td></tr>
+                                    <tr><td><input type="checkbox" class="np-check"></td><td><strong>I5339</strong></td><td>SELVEDGE BLUE</td><td>A0427</td><td>FW27-064</td><td>23/04/2026</td><td>BURTON</td><td>2</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-generar" id="btnGenerar">Generar Liquidación</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ MODAL: REGISTRAR CONSUMO DIARIO ══════ -->
+    <div class="modal fade modal-custom" id="consumoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-droplet-fill"></i> Registrar Consumo Diario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-white">
+                    <div class="mb-4">
+                        <label>Insumo</label>
+                        <select class="form-select">
+                            <option selected>Plastizol azul (saldo: 9 gr)</option>
+                            <option>Base plastisol rojo (saldo: 15 gr)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label>Cantidad (gr)</label>
+                        <input type="number" class="form-control" value="5">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-hialpesa-modal px-4" id="btnGuardarConsumo">Registrar Consumo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ MODAL: REGISTRAR MERMA ══════ -->
+    <div class="modal fade modal-custom" id="mermaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #f39c12;">
+                    <h5 class="modal-title"><i class="bi bi-recycle"></i> Registrar Merma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-white">
+                    <div class="mb-4">
+                        <label>Insumo</label>
+                        <select class="form-select">
+                            <option selected>Plastizol azul (saldo: 9 gr)</option>
+                            <option>Base plastisol rojo (saldo: 15 gr)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label>Cantidad (gr) a merma</label>
+                        <input type="number" class="form-control" placeholder="0">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-hialpesa-modal px-4" id="btnGuardarMerma" style="background-color: #f39c12;">Registrar Merma</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ MODAL: INGRESO ADICIONAL DE INSUMOS (IMAGEN ADJUNTA) ══════ -->
+    <div class="modal fade modal-custom" id="ingresoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle-fill"></i> Ingreso Adicional de Insumos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-white">
+                    <div class="row mb-3">
+                        <div class="col-md-7">
+                            <label>Insumo</label>
+                            <select class="form-select">
+                                <option selected>Plastizol azul</option>
+                                <option>Base plastisol rojo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label>Cantidad (gr)</label>
+                            <input type="number" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Motivo (obligatorio)</label>
+                        <textarea class="form-control" rows="3" placeholder="Ej. Daño en mezcla, reimpresión..."></textarea>
+                    </div>
+                    <div class="row align-items-end">
+                        <div class="col-md-7">
+                            <label>¿Reutilizar merma existente?</label>
+                            <select class="form-select">
+                                <option selected>MER-2405-01 (Dorado cielo, 250 gr)</option>
+                            </select>
+                            <div class="help-text">Se descontará del stock de merma con trazabilidad.</div>
+                        </div>
+                        <div class="col-md-5">
+                            <label>Lote / Vencimiento</label>
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn-hialpesa px-4 py-2" id="btnRegistrarIngreso" style="background: var(--hialpesa-blue); border-radius: 6px;">
+                        <i class="bi bi-check2 me-1"></i> Registrar Ingreso
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ MODAL: DEVOLUCIÓN AL ALMACÉN CENTRAL (IMAGENES ADJUNTAS) ══════ -->
+    <div class="modal fade modal-custom" id="devolucionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-arrow-return-left"></i> Devolución al Almacén Central</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-white">
+                    <div class="mb-3">
+                        <label>Insumo</label>
+                        <select class="form-select">
+                            <option selected>Plastizol azul - Saldo actual 9 gr</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Cantidad a devolver</label>
+                        <input type="text" class="form-control" placeholder="No mayor al saldo">
+                        <div class="help-text">Insumo puro no utilizado</div>
+                    </div>
+                    <div class="mb-2">
+                        <label>Motivo de devolución</label>
+                        <select class="form-select">
+                            <option selected disabled>Seleccione un motivo...</option>
+                            <option>Reasignación: saldo destinado a otra NP o requerimiento</option>
+                            <option>Venta: saldo disponible para venta</option>
+                            <option>Desecho: saldo no utilizable</option>
+                            <option>Uso para muestras: saldo destinado a pruebas o desarrollos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-hialpesa-modal px-4" id="btnRegistrarDevolucion">
+                        <i class="bi bi-check2 me-1"></i> Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para los botones de acción de la tabla
+        function accion(tipo) {
+            Swal.fire({
+                title: 'Módulo de ' + tipo,
+                text: 'Se ha iniciado el proceso de ' + tipo + ' para esta NP.',
+                icon: 'info',
+                confirmButtonColor: '#002D72'
+            });
+        }
+
+        // Lógica Guardar Consumo
+        document.getElementById('btnGuardarConsumo').addEventListener('click', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Consumo Registrado',
+                text: 'Se ha registrado el consumo correctamente.',
+                confirmButtonColor: '#002D72'
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('consumoModal')).hide();
+            });
+        });
+
+        // Lógica Registrar Ingreso
+        document.getElementById('btnRegistrarIngreso').addEventListener('click', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Ingreso Registrado',
+                text: 'El ingreso adicional de insumos se procesó correctamente.',
+                confirmButtonColor: '#002D72'
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('ingresoModal')).hide();
+            });
+        });
+
+        // Lógica Registrar Devolución
+        document.getElementById('btnRegistrarDevolucion').addEventListener('click', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Devolución Registrada',
+                text: 'La devolución al almacén central se ha procesado con éxito.',
+                confirmButtonColor: '#002D72'
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('devolucionModal')).hide();
+            });
+        });
+
+        // Lógica Registrar Merma
+        document.getElementById('btnGuardarMerma').addEventListener('click', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Merma Registrada',
+                text: 'Se ha registrado la merma correctamente.',
+                confirmButtonColor: '#f39c12'
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('mermaModal')).hide();
+            });
+        });
+
+        function selectAll(status) {
+            document.querySelectorAll('.np-check').forEach(c => c.checked = status);
+            document.getElementById('mainCheck').checked = status;
+        }
+
+        document.getElementById('btnGenerar').addEventListener('click', function() {
+            const selected = document.querySelectorAll('.np-check:checked').length;
+            if (selected === 0) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Selecciona al menos una NP', confirmButtonColor: '#002D72' });
+                return;
+            }
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Se generó la liquidación de hoy correctamente',
+                icon: 'success',
+                confirmButtonColor: '#002D72'
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('nuevaModal')).hide();
+            });
+        });
+
+        document.getElementById('mainCheck').addEventListener('change', function() { selectAll(this.checked); });
+    </script>
+</body>
+</html>

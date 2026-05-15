@@ -431,6 +431,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\assets\bundles\datatablescripts.bundle.js" />
+    <Content Include="Mockup\Liquidacion_de_Insumos_Estampado.html" />
     <Content Include="Mockup\sistema_gestion_insumos_estampado.html" />
     <Content Include="Content\assets\bundles\libscripts.bundle.js" />
     <Content Include="Content\assets\bundles\mainscripts.bundle.js" />
