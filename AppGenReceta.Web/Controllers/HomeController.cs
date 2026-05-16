@@ -678,14 +678,26 @@ namespace AppGenReceta.Web.Controllers
                     {
                         // Buscamos la información real de la receta usando el ID
                         item = visitaBL.ObtenerRecetaPorId(Convert.ToInt32(id));
-                        //Guardar informacion
-                        //List<string> listaTecnicas = visitaBL.ListarTecnicas(item.Cliente, item.Temporada, item.EstiloPropio, item.Item);
-                        //ViewBag.Tecnicas = listaTecnicas;
-                        ViewBag.Conceptos = visitaBL.ListarConceptos();
-                        //ViewBag.Conceptos = visitaBL.ListarConceptos(item.Cliente, item.Temporada, item.EstiloPropio, item.Item);
+                        
+                        // Implementación de caché para Conceptos (expira en 1 hora) para optimizar carga
+                        var cacheConceptos = System.Web.HttpContext.Current.Cache["ListaConceptos"];
+                        if (cacheConceptos == null)
+                        {
+                            cacheConceptos = visitaBL.ListarConceptos();
+                            if (cacheConceptos != null)
+                            {
+                                System.Web.HttpContext.Current.Cache.Insert("ListaConceptos", cacheConceptos, null, 
+                                    DateTime.Now.AddHours(1), System.Web.Caching.Cache.NoSlidingExpiration);
+                            }
+                        }
+                        ViewBag.Conceptos = cacheConceptos;
 
                         // Pasamos el ID a la vista mediante un ViewBag para el campo hidden
                         ViewBag.IdEditar = id;
+                        
+                        // Optimización de Carga: Serializar modelo aquí mismo para JavaScript
+                        ViewBag.JsonReceta = Newtonsoft.Json.JsonConvert.SerializeObject(new { success = true, data = item });
+
                         // Si viene de "Cerrar" o si la visita ya tiene datos de cierre en BD
                         ViewBag.IsReadOnly = preadonly || !string.IsNullOrEmpty(item.FechaCierre);
 

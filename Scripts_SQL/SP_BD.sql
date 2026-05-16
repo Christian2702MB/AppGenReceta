@@ -912,6 +912,7 @@ BEGIN
 	V.NP, 
 	V.OperarioUDP as 'Operario', 
 	V.Tecnica, 
+	--V.Concepto, 
 	V.Ubicacion, 
 	V.Arte,
 	CONVERT(VARCHAR, V.FechaUDP, 103) as 'FechaUDP',

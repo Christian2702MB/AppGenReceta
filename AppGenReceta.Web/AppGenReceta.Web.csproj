@@ -734,6 +734,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Home\Liquidacion_Insumos.cshtml" />
     <Content Include="Views\Home\MenuProveedor.cshtml" />
     <Content Include="Views\Home\Visita.cshtml" />
     <Content Include="Views\Home\MantenimientoVisitas.cshtml" />

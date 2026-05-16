@@ -416,17 +416,19 @@ function cancelarEdicion() {
 }
 
 $(document).ready(function () {
-    // Si el campo hidden tiene un ID, significa que el servidor ya cargó el modelo
     var idExistente = $("#hdnIdVisita").val();
-    if (idExistente && idExistente !== "0") {
-        // Mostrar SweetAlert mientras carga los datos por AJAX
+    
+    // Optimización de Carga: Si tenemos el JSON desde Razor, lo usamos de inmediato.
+    if (window.g_jsonReceta && window.g_jsonReceta.data) {
+        procesarDatosReceta(window.g_jsonReceta);
+    } else if (idExistente && idExistente !== "0") {
+        // Fallback a AJAX si por algún motivo no se serializó el modelo
         Swal.fire({
             title: 'Procesando Datos',
             text: 'Por favor espere...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
-        // Simulación de tu llamada de carga de datos
         cargarDatosParaEdicion(idExistente);
     }
 
@@ -472,56 +474,64 @@ $(document).ready(function () {
 
 function cargarDatosParaEdicion(id) {
     $.get("/Home/ObtenerRecetaCompleta", { id: id }, function (res) {
-        const d = res.data;
-        // Llenar cabecera
-
-        // 1. Re-formatear la fecha de DD/MM/YYYY a YYYY-MM-DD
-        if (d.FechaUDP) {
-            // Suponiendo que d.FechaUDP viene como "05/03/2026"
-            let partes = d.FechaUDP.split('/');
-            if (partes.length === 3) {
-                let fechaISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                $("#dtFechaUDP").val(fechaISO);
-            }
-        }
-        $("#txtNP").val(d.NP);
-        $("#txtTemporada").val(d.Temporada);
-        $("#txtItem").val(d.Item);
-        $("#txtOperario").val(d.Operario);
-        $("#txtTecnica").val(d.Tecnica);
-        $("#txtCombo").val(d.ComboCabecera);
-        $("#txtCliente").val(d.Cliente);
-        $("#txtEstilo").val(d.Estilo);
-        $("#txtEstiloPropio").val(d.EstiloPropio);
-        $("#txtPrendasReq").val(d.PrendasReq);
-        // $("#txtConcepto").val(d.Concepto); // Removido
-        // Llenar Radios Horizontales
-        $("#txtUbicacion").val(d.Ubicacion);
-        //Inicio
-        $("#txtArte").val(d.Arte);
-
-        /*$(`input[name='ubicacion'][value='${d.Ubicacion}']`).prop('checked', true);*/
-        // Dentro de la carga de datos:
-        res.data.Colores.forEach(c => {
-            c.Insumos.forEach(i => {
-                // Aseguramos que 'Cantidad' exista para que actualizarVistaColores no de error
-                i.Cantidad = i.Cantidad || i.GramosUDP;
-            });
-        });
-        // Reconstruir objeto global recetaMaster
-        recetaMaster.Colores = d.Colores;
-
-        // Justo después de cargar los datos del Model, sincronizamos las pruebas
-        sincronizarPruebasExistentes();
-
-        // Dibujamos la vista por primera vez
-        actualizarVistaColores();  // Tu función para pintar la tabla de colores
-
-        // AGREGA ESTA LÍNEA AL FINAL DE LA FUNCIÓN:
-        inyectarPruebasDOM();
-
+        procesarDatosReceta(res);
         Swal.close(); // Cerrar el "Break Time" cuando termine
     });
+}
+
+function procesarDatosReceta(res) {
+    const d = res.data;
+    // Llenar cabecera
+
+    // 1. Re-formatear la fecha de DD/MM/YYYY a YYYY-MM-DD
+    if (d.FechaUDP) {
+        // Suponiendo que d.FechaUDP viene como "05/03/2026"
+        let partes = d.FechaUDP.split('/');
+        if (partes.length === 3) {
+            let fechaISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            $("#dtFechaUDP").val(fechaISO);
+        }
+    }
+    $("#txtNP").val(d.NP);
+    $("#txtTemporada").val(d.Temporada);
+    $("#txtItem").val(d.Item);
+    $("#txtOperario").val(d.Operario);
+    $("#txtTecnica").val(d.Tecnica);
+    $("#txtCombo").val(d.ComboCabecera);
+    $("#txtCliente").val(d.Cliente);
+    $("#txtEstilo").val(d.Estilo);
+    $("#txtEstiloPropio").val(d.EstiloPropio);
+    $("#txtPrendasReq").val(d.PrendasReq);
+    // $("#txtConcepto").val(d.Concepto); // Removido
+    // Llenar Radios Horizontales
+    $("#txtUbicacion").val(d.Ubicacion);
+    //Inicio
+    $("#txtArte").val(d.Arte);
+
+    /*$(`input[name='ubicacion'][value='${d.Ubicacion}']`).prop('checked', true);*/
+    // Dentro de la carga de datos:
+    if (res.data.Colores) {
+        res.data.Colores.forEach(c => {
+            if (c.Insumos) {
+                c.Insumos.forEach(i => {
+                    // Aseguramos que 'Cantidad' exista para que actualizarVistaColores no de error
+                    i.Cantidad = i.Cantidad || i.GramosUDP;
+                });
+            }
+        });
+    }
+    
+    // Reconstruir objeto global recetaMaster
+    recetaMaster.Colores = d.Colores || [];
+
+    // Justo después de cargar los datos del Model, sincronizamos las pruebas
+    sincronizarPruebasExistentes();
+
+    // Dibujamos la vista por primera vez
+    actualizarVistaColores();  // Tu función para pintar la tabla de colores
+
+    // AGREGA ESTA LÍNEA AL FINAL DE LA FUNCIÓN:
+    inyectarPruebasDOM();
 }
 
 

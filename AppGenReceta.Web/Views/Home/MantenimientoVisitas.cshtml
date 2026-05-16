@@ -363,16 +363,16 @@
                                     <div class="btn-group">
                                         @if (rolActual == "Editor")
                                         {
-                                            <button class="btn btn-success btn-sm" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                            <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita" class="btn btn-success btn-sm">
                                                 <i class="fas fa-edit"></i> Editar
-                                            </button>
+                                            </a>
                                         }
                                         @if (rolActual == "Administrador")
                                         {
                                             <div class="mb-2" style="margin-bottom: 5px;">
-                                                <button class="btn btn-success btn-sm btn-fijo" style="margin-right: 4px;" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                                <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita" class="btn btn-success btn-sm btn-fijo" style="margin-right: 4px;">
                                                     <i class="fas fa-edit"></i> Editar
-                                                </button>
+                                                </a>
                                                 <button class="btn btn-danger btn-sm btn-fijo" onclick="eliminarVisita(@item.hdnIdVisita)">
                                                     <i class="fas fa-trash"></i> Eliminar
                                                 </button>
@@ -388,9 +388,9 @@
                                         }
                                         @if (rolActual == "Visualizador")
                                         {
-                                            <button class="btn btn-success btn-sm" onclick="irAEditarConLoader(@item.hdnIdVisita)">
+                                            <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita?preadonly=true" class="btn btn-success btn-sm">
                                                 <i class="fas fa-eye"></i> Visualizar
-                                            </button>
+                                            </a>
                                         }
                                     </div>
                                 </td>
@@ -405,17 +405,9 @@
 
 @*}*@
 
-<div id="loader-container" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h3 style="margin-top: 15px;">Optimizando y cargando la receta...</h3>
-    <p>Tiempo transcurrido: <span id="break-timer">0</span>s</p>
-</div>
+
 
 @section scripts {
-
-    <script src="https://cdn.jsdelivr.net/npm/promise-polyfill9/dist/polyfill.js"></script>
-    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
-    <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
 
     @*<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@9.1.5/dist/sweetalert2.all.min.js"></script>*@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -423,33 +415,7 @@
     @Scripts.Render("~/bundles/mantenimiento")
 
     <script>
-        let loaderInterval;
 
-        function irAEditarConLoader(id) {
-            // 1. Mostrar el temporizador (Break Time)
-            $("#loader-container").css("display", "flex");
-
-            let segundos = 0;
-            $("#break-timer").text(segundos);
-            
-            if (loaderInterval) clearInterval(loaderInterval);
-            loaderInterval = setInterval(function () {
-                segundos++;
-                $("#break-timer").text(segundos);
-            }, 1000);
-
-            // 2. Pequeña pausa para asegurar que el DOM muestre el loader antes de la carga pesada
-            setTimeout(function () {
-                // Redirige a la página de edición
-                window.location.href = "/Home/VisitaCorregirSCTR/" + id;
-            }, 300);
-        }
-
-        // Asegurar que el loader se oculte si el usuario regresa con el botón "Atrás" del navegador
-        $(window).on('pageshow', function (event) {
-            $("#loader-container").hide();
-            if (loaderInterval) clearInterval(loaderInterval);
-        });
 
         function btnAuditoria(id, cerrar) {
             const accion = cerrar ? 'Cerrar Registro' : 'Abrir Registro';
