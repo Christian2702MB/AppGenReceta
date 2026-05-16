@@ -307,6 +307,11 @@
                 np: opt == '1' ? f1 : ''
             };
 
+            if (opt == '1' && reqData.np.trim() === '') {
+                Swal.fire('Aviso', 'Debe ingresar un número de Partida (NP) para buscar', 'warning');
+                return;
+            }
+
             Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             $.post('@Url.Action("Listar", "ConsumoAdicional")', reqData, function(res) {
@@ -337,6 +342,8 @@
                 } else {
                     Swal.fire('Error', res.message || 'Error al cargar', 'error');
                 }
+            }).fail(function() {
+                Swal.fire('Error', 'Error de comunicación con el servidor. Por favor, intente nuevamente.', 'error');
             });
         }
 
