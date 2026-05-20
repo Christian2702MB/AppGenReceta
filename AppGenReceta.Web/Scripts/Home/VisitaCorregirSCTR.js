@@ -129,10 +129,26 @@ function agregarColumnaPrueba() { // <-- Usa el nombre exacto que tenga tu funci
                     let existe = insumo.Pruebas.find(p => (p.NombrePrueba || p.nombrePrueba || "").trim().toUpperCase() === nombreNorm);
 
                     if (!existe) {
+                        let valorCopiar = undefined;
+                        if (recetaMaster.PruebasGlobales.length > 1) {
+                            let pruebaAnteriorGlobal = recetaMaster.PruebasGlobales[recetaMaster.PruebasGlobales.length - 2];
+                            let nombreNormAnterior = pruebaAnteriorGlobal.NombreNormalizado;
+                            let pruebaAnteriorInsumo = insumo.Pruebas.find(p => (p.NombrePrueba || p.nombrePrueba || "").trim().toUpperCase() === nombreNormAnterior);
+                            if (pruebaAnteriorInsumo) {
+                                if (pruebaAnteriorInsumo.GramosUDP !== undefined) valorCopiar = pruebaAnteriorInsumo.GramosUDP;
+                                else if (pruebaAnteriorInsumo.gramosUDP !== undefined) valorCopiar = pruebaAnteriorInsumo.gramosUDP;
+                            }
+                        }
+
+                        if (valorCopiar === undefined || valorCopiar === null) {
+                            valorCopiar = insumo.Cantidad !== undefined ? insumo.Cantidad : insumo.cantidad;
+                        }
+
                         insumo.Pruebas.push({
                             IdPrueba: contadorPruebas,
                             NombrePrueba: titulo,
-                            GramosUDP: undefined, // En blanco para que el cuadro de texto salga limpio
+                            //GramosUDP: valorCopiar, // Modificar aqui si se desea que se pueda visualizar los datos
+                            GramosUDP: undefined,     // En blanco para que el cuadro de texto salga limpio
                             EsPrincipal: false
                         });
                     }
