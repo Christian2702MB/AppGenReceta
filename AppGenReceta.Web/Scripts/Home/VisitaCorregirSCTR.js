@@ -151,7 +151,7 @@ function agregarColumnaPrueba() { // <-- Usa el nombre exacto que tenga tu funci
     inyectarPruebasDOM();
 }
 
-function actualizarValorPrueba(idxColor, idxInsumo, nombrePrueba, valor) {
+function actualizarValorPrueba(idxColor, idxInsumo, nombrePrueba, element) {
     if (!recetaMaster || !recetaMaster.Colores || !recetaMaster.Colores[idxColor]) return;
 
     let colorActual = recetaMaster.Colores[idxColor];
@@ -168,6 +168,8 @@ function actualizarValorPrueba(idxColor, idxInsumo, nombrePrueba, valor) {
         let isPrincipalLocal = (colorActual.PruebaPrincipal === nombreNorm);
 
         let prueba = insumo.Pruebas.find(p => (p.NombrePrueba || p.nombrePrueba || "").trim().toUpperCase() === nombreNorm);
+        
+        let valor = $(element).val();
         let valorParseado = parseFloat(valor);
 
         if (prueba) {
@@ -186,6 +188,13 @@ function actualizarValorPrueba(idxColor, idxInsumo, nombrePrueba, valor) {
                 });
                 hayCambios = true;
             }
+        }
+
+        // Formatear visualmente el input a dos decimales
+        if (!isNaN(valorParseado)) {
+            $(element).val(valorParseado.toFixed(2));
+        } else {
+            $(element).val('');
         }
     }
 }
@@ -345,10 +354,15 @@ function inyectarPruebasDOM() {
                             return nombreLocal === nombreGlobalNorm;
                         });
 
-                        let valor = '';
+                        let valorStr = '';
                         if (pruebaData) {
-                            if (pruebaData.GramosUDP !== undefined) valor = pruebaData.GramosUDP;
-                            else if (pruebaData.gramosUDP !== undefined) valor = pruebaData.gramosUDP;
+                            let rawVal = undefined;
+                            if (pruebaData.GramosUDP !== undefined) rawVal = pruebaData.GramosUDP;
+                            else if (pruebaData.gramosUDP !== undefined) rawVal = pruebaData.gramosUDP;
+
+                            if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+                                valorStr = parseFloat(rawVal).toFixed(2);
+                            }
                         }
 
                         let isPrincipal = (pruebaPrincipalDelColor === nombreGlobalNorm);
@@ -366,8 +380,8 @@ function inyectarPruebasDOM() {
                             <td class="td-prueba text-center align-middle" style="padding: 4px 6px; ${bgColTd}">
                                 <input type="number" step="0.01" placeholder="0.00" min="0" class="form-control form-control-sm text-center font-weight-bold"
                                        style="width: 100%; min-width: 78px; max-width: 100px; margin: 0 auto; height: 28px; ${bgColorInput}" 
-                                       value="${valor}" ${disabledAttr}
-                                       onchange="actualizarValorPrueba('${idxColor}', '${idxInsumo}', '${nombreParam}', this.value)">
+                                       value="${valorStr}" ${disabledAttr}
+                                       onchange="actualizarValorPrueba('${idxColor}', '${idxInsumo}', '${nombreParam}', this)">
                             </td>
                         `;
                         // CORRECCIÓN ORDEN: mismo criterio que en thead.
@@ -443,6 +457,13 @@ $(document).ready(function () {
         // Si la tecla presionada es un punto (.) o una coma (,) o la letra 'e', bloqueamos la acción
         if (e.key === "." || e.key === "," || e.key === "e" || e.key === "E") {
             e.preventDefault();
+        }
+    });
+
+    $("#txtCantInsumo").on("change blur", function () {
+        var val = parseFloat($(this).val());
+        if (!isNaN(val)) {
+            $(this).val(val.toFixed(2));
         }
     });
 

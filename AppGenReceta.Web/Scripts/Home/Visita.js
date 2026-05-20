@@ -25,6 +25,13 @@ $(document).ready(function () {
         }
     });
 
+    $("#txtCantInsumo").on("change blur", function () {
+        var val = parseFloat($(this).val());
+        if (!isNaN(val)) {
+            $(this).val(val.toFixed(2));
+        }
+    });
+
     // --- PERSISTENCIA DEL MODO DE REGISTRO ---
     var modoQuery = getQueryParam('modo');
 
@@ -984,7 +991,7 @@ function renderizarTabla() {
         color.Insumos.forEach(function (ins, idxIns) {
             htmlInsumos += `
                             <div class="alert alert-warning" style="padding:5px; margin-bottom:2px;">
-                            <small><b>${ins.codigo}</b> - ${ins.descripcion} | <b>Cant:</b> ${ins.cantidad} </b> ${ins.unidades}</small>
+                            <small><b>${ins.codigo}</b> - ${ins.descripcion} | <b>Cant:</b> ${parseFloat(ins.cantidad).toFixed(2)} </b> ${ins.unidades}</small>
                             <button type="button" class="close" onclick="eliminarInsumo(${idx}, ${idxIns})">&times;</button>
                         </div>`;
         });
