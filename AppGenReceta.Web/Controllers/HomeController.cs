@@ -240,6 +240,7 @@ namespace AppGenReceta.Web.Controllers
                 ViewBag.Usuario = Session["NombreUsuario"];
                 ViewBag.Correo = Session["CorreoUsuario"];
             }
+            ViewBag.SessionID = Session.SessionID;
             return View();
         }
 
