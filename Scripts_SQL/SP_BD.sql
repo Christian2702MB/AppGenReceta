@@ -76,6 +76,8 @@ set @NombreRol = (select CASE @IdRol
 								WHEN 1 THEN 'Visualizador'
 								WHEN 2 THEN 'Editor'
 								WHEN 3 THEN 'Administrador'
+								WHEN 4 THEN 'Estampado'
+								WHEN 5 THEN 'Liquidador'
 								ELSE 'Visualizador' -- Por seguridad, si hay un valor raro, le damos el menor privilegio
 										END AS NombreRol)
 
