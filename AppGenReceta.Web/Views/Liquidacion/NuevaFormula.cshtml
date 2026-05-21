@@ -1,0 +1,525 @@
+@model List<AppGenReceta.BE.LIQ_RecetaDisponibleBE>
+@{
+    ViewBag.Title = "Nueva Fórmula";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-gold: #f39c12;
+    }
+
+    .results-panel {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table thead {
+        background-color: #f4f8fa !important;
+        border-top: 4px solid var(--hialpesa-blue) !important;
+    }
+
+    .table thead th {
+        border: none !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.5px;
+        padding: 14px 8px !important;
+        color: var(--hialpesa-blue) !important;
+    }
+
+    .btn-formular {
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 18px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+
+    .btn-formular:hover {
+        background: #1e8449;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(39,174,96,0.3);
+    }
+
+    .btn-header-back {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-header-back:hover {
+        background-color: #e2e6ea;
+        color: #495057;
+        text-decoration: none;
+    }
+
+    .contenedor-tabla-scroll {
+        max-height: 600px;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    .contenedor-tabla-scroll thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f4f8fa !important;
+        z-index: 2;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+    }
+
+    /* ── Modal de Preview ── */
+    .modal-preview .modal-dialog { max-width: 85%; }
+    .modal-preview .modal-header {
+        background: var(--hialpesa-blue);
+        color: white;
+        border-radius: 0;
+    }
+    .modal-preview .modal-title { font-weight: 700; }
+
+    .cabecera-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .cabecera-grid label {
+        font-weight: 700;
+        color: #555;
+        font-size: 0.8rem;
+        margin-bottom: 2px;
+        display: block;
+    }
+
+    .cabecera-grid input {
+        width: 100%;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .color-section-preview {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+
+    .color-header-preview {
+        background: #FFF8E1;
+        padding: 10px 15px;
+        border-bottom: 2px solid var(--hialpesa-gold);
+    }
+
+    .color-header-preview h5 {
+        margin: 0;
+        color: #333;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .insumos-table-preview {
+        width: 100%;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .insumos-table-preview thead {
+        background: #f4f8fa;
+    }
+
+    .insumos-table-preview thead th {
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--hialpesa-blue);
+        padding: 8px 10px;
+        text-transform: uppercase;
+    }
+
+    .insumos-table-preview tbody td {
+        padding: 6px 10px;
+        vertical-align: middle;
+    }
+
+    .btn-confirmar-formula {
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-confirmar-formula:hover {
+        background: #1e8449;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(39,174,96,0.3);
+    }
+
+    /* Búsqueda global */
+    .search-inline {
+        max-width: 400px;
+        margin-bottom: 15px;
+    }
+
+    .search-inline .input-group {
+        border-radius: 30px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+    }
+
+    .search-inline input {
+        border: none;
+        box-shadow: none;
+        height: 42px;
+    }
+
+    .search-inline .input-group-addon {
+        background: white;
+        border: none;
+        padding-left: 15px;
+        color: #6c757d;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
+        <div style="flex: 1 1 auto; margin-bottom: 10px;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px;">
+                Nueva Fórmula
+            </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
+                Recetas disponibles para formular. Solo se muestran recetas con NP de 5 dígitos que aún no tengan fórmula asignada.
+            </p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+            <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
+            </a>
+        </div>
+    </div>
+
+    <!-- Panel de Resultados -->
+    <div class="results-panel">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="color: var(--hialpesa-blue); font-weight: 700; margin: 0;">
+                <i class="fas fa-clipboard-list mr-2"></i> Recetas Disponibles
+                <span class="text-muted" style="font-size: 0.85rem;">(@Model.Count registros)</span>
+            </h4>
+        </div>
+
+        <!-- Búsqueda instantánea -->
+        <div class="search-inline">
+            <div class="input-group shadow-sm">
+                <span class="input-group-addon"><i class="fas fa-search"></i></span>
+                <input type="text" id="txtBusquedaGlobal" class="form-control"
+                       placeholder="Buscar por Cliente, Estilo, Item, NP..."
+                       onkeyup="filtrarTabla()">
+            </div>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="alert alert-info border-0 shadow-sm text-center" style="padding: 40px;">
+                <i class="fas fa-info-circle" style="font-size: 2.5rem; color: #17a2b8; display: block; margin-bottom: 10px;"></i>
+                <p style="font-size: 1.1rem; margin: 0;">No se encontraron recetas disponibles para formular.</p>
+                <small class="text-muted">Todas las recetas con NP de 5 dígitos ya tienen fórmula asignada o no existen.</small>
+            </div>
+        }
+        else
+        {
+            <div class="contenedor-tabla-scroll">
+                <table class="table table-bordered table-striped table-hover" id="tblRecetas">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Cliente</th>
+                            <th class="text-center">Estilo Cliente<br>/Propio</th>
+                            <th class="text-center">Combo</th>
+                            <th class="text-center">Item</th>
+                            <th class="text-center">Ubicación</th>
+                            <th class="text-center">NP</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center font-weight-bold text-primary">@item.Cliente</td>
+                                <td class="text-center">@item.Estilo<br>@item.EstiloPropio</td>
+                                <td class="text-center">@item.Combo</td>
+                                <td class="text-center">@item.Item</td>
+                                <td class="text-center">@item.Ubicacion</td>
+                                <td class="text-center font-weight-bold">@item.NP</td>
+                                <td class="text-center">
+                                    <button class="btn-formular" onclick="previsualizarReceta(@item.IdRecetas)">
+                                        <i class="fas fa-flask mr-1"></i> Formular
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- MODAL: Preview de Receta antes de Formular                       -->
+<!-- ================================================================ -->
+<div class="modal fade modal-preview" id="modalPreview" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"><i class="fas fa-flask mr-2"></i> Vista Previa de Receta</h4>
+                <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9;">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalPreviewBody" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Se carga dinámicamente -->
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #eee; text-align: center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="margin-right: 10px;">
+                    <i class="fas fa-times mr-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn-confirmar-formula" id="btnConfirmarFormula">
+                    <i class="fas fa-check-circle mr-1"></i> Confirmar y Crear Fórmula
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay de carga -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:15px; padding:40px; text-align:center; box-shadow:0 15px 30px rgba(0,0,0,0.3);">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--hialpesa-blue);"></i>
+        <p style="margin-top: 15px; font-weight: 600; color: #333;">Creando fórmula...</p>
+        <p style="color: #6c757d; font-size: 0.9rem;">Copiando receta y generando la nueva fórmula</p>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var idRecetaSeleccionada = 0;
+
+        // ── Filtro instantáneo en la tabla ──
+        function filtrarTabla() {
+            var filter = $('#txtBusquedaGlobal').val().toUpperCase();
+            var table = document.getElementById("tblRecetas");
+            if (!table) return;
+            var rows = table.getElementsByTagName("tr");
+            for (var i = 1; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName("td");
+                var show = false;
+                for (var j = 0; j < cells.length - 1; j++) { // Excluir columna de acción
+                    if ((cells[j].textContent || cells[j].innerText).toUpperCase().indexOf(filter) > -1) {
+                        show = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = show ? "" : "none";
+            }
+        }
+
+        // ── Previsualizar receta (cargar modal con detalle) ──
+        function previsualizarReceta(idReceta) {
+            idRecetaSeleccionada = idReceta;
+            Swal.fire({ title: 'Cargando receta...', didOpen: function () { Swal.showLoading(); } });
+
+            $.get("@Url.Action("ObtenerRecetaPreview", "Liquidacion")", { id: idReceta }, function (res) {
+                Swal.close();
+                if (res.success && res.data) {
+                    renderPreview(res.data);
+                    $('#modalPreview').modal('show');
+                } else {
+                    Swal.fire('Error', res.message || 'No se pudo cargar la receta.', 'error');
+                }
+            }).fail(function () {
+                Swal.close();
+                Swal.fire('Error', 'Error de comunicación con el servidor.', 'error');
+            });
+        }
+
+        // ── Renderizar la receta en el modal ──
+        function renderPreview(data) {
+            var html = '';
+
+            // Cabecera
+            html += '<div style="border-left: 5px solid ' + getCssVar('--hialpesa-blue', '#002D72') + '; padding-left: 15px; margin-bottom: 20px;">';
+            html += '<h4 style="color: #002D72; font-weight: 800; margin-bottom: 15px;">Datos de la Cabecera</h4>';
+            html += '</div>';
+            html += '<div class="cabecera-grid">';
+            html += campoPreview('Cliente', data.Cliente);
+            html += campoPreview('Temporada', data.Temporada);
+            html += campoPreview('Estilo Cliente', data.Estilo);
+            html += campoPreview('Estilo Propio', data.EstiloPropio);
+            html += campoPreview('Combo', data.ComboCabecera);
+            html += campoPreview('Item', data.Item);
+            html += campoPreview('Ubicación', data.Ubicacion);
+            html += campoPreview('Arte (Opcional)', data.Arte);
+            html += campoPreview('Fecha', data.FechaUDP);
+            html += campoPreview('Muestrista', data.Operario);
+            html += campoPreview('Técnica', data.Tecnica);
+            html += campoPreview('NP - MV', data.NP);
+            html += campoPreview('Prendas', data.PrendasReq);
+            html += '</div>';
+
+            // Colores e Insumos
+            if (data.Colores && data.Colores.length > 0) {
+                html += '<div style="border-left: 5px solid #e67e22; padding-left: 15px; margin: 20px 0 15px 0;">';
+                html += '<h4 style="color: #333; font-weight: 700;">Detalle de Receta</h4>';
+                html += '</div>';
+
+                for (var c = 0; c < data.Colores.length; c++) {
+                    var color = data.Colores[c];
+                    html += '<div class="color-section-preview">';
+                    html += '<div class="color-header-preview">';
+                    html += '<h5><i class="fas fa-tint mr-1" style="color:#e67e22;"></i> Color Pantone: ' + (color.Nombre || '') + '</h5>';
+                    html += '</div>';
+
+                    html += '<table class="insumos-table-preview">';
+                    html += '<thead><tr>';
+                    html += '<th style="width:15%;">Código</th>';
+                    html += '<th style="width:45%;">Insumo</th>';
+                    html += '<th style="width:15%; text-align:right;">STRIKE OFF</th>';
+
+                    // Buscar el nombre de la prueba principal
+                    var nombrePruebaPrincipal = buscarNombrePruebaPrincipal(color);
+                    if (nombrePruebaPrincipal) {
+                        html += '<th style="width:15%; text-align:right;">' + nombrePruebaPrincipal.toUpperCase() + '</th>';
+                    }
+                    html += '</tr></thead>';
+                    html += '<tbody>';
+
+                    if (color.Insumos) {
+                        for (var ins = 0; ins < color.Insumos.length; ins++) {
+                            var insumo = color.Insumos[ins];
+                            html += '<tr>';
+                            html += '<td><b>' + (insumo.CodigoInsumo || '') + '</b></td>';
+                            html += '<td>' + (insumo.Descripcion || '') + '</td>';
+                            html += '<td style="text-align:right;">' + formatDecimal(insumo.Cantidad) + '</td>';
+
+                            // Columna de prueba principal (EsPrincipal = true)
+                            if (nombrePruebaPrincipal) {
+                                var valorPrincipal = buscarValorPruebaPrincipal(insumo);
+                                html += '<td style="text-align:right;">';
+                                html += '<span style="background:#FFF8E1; padding:3px 8px; border-radius:4px; border:1px solid #e0d6b5;">';
+                                html += formatDecimal(valorPrincipal);
+                                html += '</span></td>';
+                            }
+                            html += '</tr>';
+                        }
+                    }
+                    html += '</tbody></table>';
+                    html += '</div>';
+                }
+            }
+
+            $('#modalPreviewBody').html(html);
+        }
+
+        function campoPreview(label, value) {
+            return '<div><label>' + label + '</label><input type="text" value="' + (value || '') + '" disabled /></div>';
+        }
+
+        function formatDecimal(val) {
+            var n = parseFloat(val);
+            return isNaN(n) ? '0.00' : n.toFixed(2);
+        }
+
+        // Buscar el nombre de la primera prueba que tenga EsPrincipal = true en un color
+        function buscarNombrePruebaPrincipal(color) {
+            if (!color.Insumos) return null;
+            for (var i = 0; i < color.Insumos.length; i++) {
+                var insumo = color.Insumos[i];
+                if (insumo.Pruebas && insumo.Pruebas.length > 0) {
+                    for (var p = 0; p < insumo.Pruebas.length; p++) {
+                        if (insumo.Pruebas[p].EsPrincipal === true) {
+                            return insumo.Pruebas[p].NombrePrueba || 'Principal';
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Buscar el valor (GramosUDP) de la prueba principal para un insumo específico
+        function buscarValorPruebaPrincipal(insumo) {
+            if (!insumo.Pruebas) return 0;
+            for (var p = 0; p < insumo.Pruebas.length; p++) {
+                if (insumo.Pruebas[p].EsPrincipal === true) {
+                    return insumo.Pruebas[p].GramosUDP || 0;
+                }
+            }
+            return 0;
+        }
+
+        function getCssVar(name, fallback) {
+            var val = getComputedStyle(document.documentElement).getPropertyValue(name);
+            return val ? val.trim() : fallback;
+        }
+
+        // ── Confirmar y crear la fórmula ──
+        $('#btnConfirmarFormula').on('click', function () {
+            if (!idRecetaSeleccionada) return;
+            $('#modalPreview').modal('hide');
+            $('#loadingOverlay').css('display', 'flex');
+
+            $.post("@Url.Action("CrearFormulaDesdeReceta", "Liquidacion")", { idReceta: idRecetaSeleccionada }, function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        title: '¡Fórmula Creada!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(function () {
+                        window.location.href = res.redirect;
+                    });
+                } else {
+                    $('#loadingOverlay').hide();
+                    Swal.fire('Error', res.message, 'error');
+                }
+            }).fail(function () {
+                $('#loadingOverlay').hide();
+                Swal.fire('Error', 'Error de comunicación con el servidor.', 'error');
+            });
+        });
+
+        // Enter en búsqueda
+        $(document).ready(function () {
+            $('#txtBusquedaGlobal').focus();
+        });
+    </script>
+}

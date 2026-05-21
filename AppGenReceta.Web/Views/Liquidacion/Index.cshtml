@@ -1,0 +1,196 @@
+@{
+    ViewBag.Title = "Liquidación de Insumos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+<style>
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-gold: #f39c12;
+        --bg-light: #f8f9fa;
+    }
+
+    .main-wrapper {
+        width: 100%;
+        padding: 40px 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .cards-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .cards-container .row {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+
+    .menu-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 35px 20px;
+        text-align: center;
+        border-radius: 15px;
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        background: #fff;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        margin-bottom: 18px;
+    }
+
+    .card-info h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #333;
+    }
+
+    .card-info p {
+        color: #777;
+        font-size: 1.1rem;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    /* Colores por módulo */
+    .card-stock .card-icon { color: #27ae60; }
+    .card-stock:hover { border-bottom: 5px solid #27ae60; }
+
+    .card-formulas .card-icon { color: var(--hialpesa-blue); }
+    .card-formulas:hover { border-bottom: 5px solid var(--hialpesa-blue); }
+
+    .card-requerimientos .card-icon { color: #e67e22; }
+    .card-requerimientos:hover { border-bottom: 5px solid #e67e22; }
+
+    .card-liquidaciones .card-icon { color: #8e44ad; }
+    .card-liquidaciones:hover { border-bottom: 5px solid #8e44ad; }
+
+    /* Badge "Próximamente" */
+    .badge-prox {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #e74c3c;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    .page-title-section {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-title-section h1 {
+        color: var(--hialpesa-blue);
+        font-weight: 800;
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+
+    .page-title-section p {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+</style>
+
+<div class="container main-wrapper">
+    <div class="cards-container w-100">
+
+        <div class="page-title-section">
+            <h1><i class="fas fa-flask" style="margin-right: 10px;"></i>Liquidación de Insumos de Estampado</h1>
+            <p>Gestione fórmulas, stock, requerimientos y liquidaciones del proceso de estampado.</p>
+        </div>
+
+        <div class="row">
+
+            <!-- 1. Stock Actual (Próximamente) -->
+            <div class="col-md-5 col-sm-6" style="padding: 10px;">
+                <div class="menu-card card-stock card-disabled">
+                    <span class="badge-prox">Próximamente</span>
+                    <div class="card-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Stock Actual</h3>
+                        <p>Inventario en tiempo real del almacén operativo de insumos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Gestión de Fórmulas (ACTIVO) -->
+            <div class="col-md-5 col-sm-6" style="padding: 10px;">
+                <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="menu-card card-formulas">
+                    <div class="card-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Gestión de Fórmulas</h3>
+                        <p>Crear y administrar fórmulas basadas en recetas registradas.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 3. Requerimientos (Próximamente) -->
+            <div class="col-md-5 col-sm-6" style="padding: 10px;">
+                <div class="menu-card card-requerimientos card-disabled">
+                    <span class="badge-prox">Próximamente</span>
+                    <div class="card-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Requerimientos</h3>
+                        <p>Gestión de requerimientos del proceso productivo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Liquidaciones (Próximamente) -->
+            <div class="col-md-5 col-sm-6" style="padding: 10px;">
+                <div class="menu-card card-liquidaciones card-disabled">
+                    <span class="badge-prox">Próximamente</span>
+                    <div class="card-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Liquidaciones</h3>
+                        <p>Control de saldos, devoluciones y cierre de liquidaciones.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

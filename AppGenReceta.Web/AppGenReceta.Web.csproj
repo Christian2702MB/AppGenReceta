@@ -709,6 +709,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InsumoEstampadoController.cs" />
     <Compile Include="Controllers\ProveedorController.cs" />
+    <Compile Include="Controllers\LiquidacionController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -740,6 +741,10 @@
     <Content Include="Views\Home\MantenimientoVisitas.cshtml" />
     <Content Include="Views\Home\VisitaCorregirSCTR.cshtml" />
     <Content Include="Views\Home\MantenimientoRoles.cshtml" />
+    <Content Include="Views\Liquidacion\Index.cshtml" />
+    <Content Include="Views\Liquidacion\MantenimientoFormulas.cshtml" />
+    <Content Include="Views\Liquidacion\NuevaFormula.cshtml" />
+    <Content Include="Views\Liquidacion\EditarFormula.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

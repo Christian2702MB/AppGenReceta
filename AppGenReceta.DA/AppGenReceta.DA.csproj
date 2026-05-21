@@ -51,6 +51,7 @@
     <Compile Include="Proveedor_DA.cs" />
     <Compile Include="UsuarioDA.cs" />
     <Compile Include="VisitaDA.cs" />
+    <Compile Include="Liquidacion_DA.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AppGenReceta.BE\AppGenReceta.BE.csproj">

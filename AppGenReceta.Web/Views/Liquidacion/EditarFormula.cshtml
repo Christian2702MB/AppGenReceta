@@ -1,0 +1,429 @@
+@model AppGenReceta.BE.LIQ_FormulaBE
+@{
+    ViewBag.Title = "Editar Fórmula";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string rolActual = ViewBag.RolActual ?? "Visualizador";
+    bool soloLectura = Model.IsReadOnly;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-gold: #f39c12;
+    }
+
+    .cabecera-panel {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+        border-left: 6px solid var(--hialpesa-blue);
+    }
+
+    .cabecera-panel h2 {
+        color: var(--hialpesa-blue);
+        font-weight: 800;
+        font-size: 1.6rem;
+        margin-bottom: 20px;
+    }
+
+    .cabecera-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .cabecera-grid label {
+        font-weight: 700;
+        color: #555;
+        font-size: 0.85rem;
+        margin-bottom: 3px;
+        display: block;
+    }
+
+    .cabecera-grid input {
+        width: 100%;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.95rem;
+        color: #333;
+    }
+
+    .cabecera-grid input:disabled {
+        background: #e9ecef;
+    }
+
+    .detalle-panel {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+    .color-section {
+        border: 1px solid #eee;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .color-header {
+        background: #f8f9fa;
+        padding: 12px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--hialpesa-blue);
+    }
+
+    .color-header h5 {
+        margin: 0;
+        color: var(--hialpesa-blue);
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .insumos-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .insumos-table thead {
+        background: #f4f8fa;
+    }
+
+    .insumos-table thead th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--hialpesa-blue);
+        padding: 10px 12px;
+        text-transform: uppercase;
+    }
+
+    .insumos-table tbody td {
+        padding: 8px 12px;
+        vertical-align: middle;
+    }
+
+    .insumos-table input.edit-cant {
+        width: 100px;
+        text-align: right;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 4px 8px;
+    }
+
+    .btn-eliminar-insumo {
+        color: #e74c3c;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: color 0.2s;
+    }
+
+    .btn-eliminar-insumo:hover { color: #c0392b; }
+
+    .acciones-footer {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .btn-guardar {
+        background: var(--hialpesa-blue);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-guardar:hover {
+        background: #004085;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,45,114,0.3);
+        color: white;
+    }
+
+    .btn-cancelar {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-cancelar:hover {
+        background: #c0392b;
+        color: white;
+    }
+
+    .btn-header-back {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-header-back:hover {
+        background-color: #e2e6ea;
+        color: #495057;
+        text-decoration: none;
+    }
+
+    .info-badge {
+        display: inline-block;
+        background: #17a2b8;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 15px;
+        margin-left: 10px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px;">
+        <div style="flex: 1 1 auto;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 26px; border-left: 6px solid #27ae60; padding-left: 15px;">
+                Editar Fórmula #@Model.IdFormula
+                @if (Model.Estado == "Cerrada")
+                {
+                    <span class="info-badge" style="background: #e74c3c;">Cerrada</span>
+                }
+                else
+                {
+                    <span class="info-badge" style="background: #27ae60;">Activa</span>
+                }
+            </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 13px;">
+                Basada en receta origen #@Model.IdRecetaOrigen | Registrada: @Model.FechaRegistro @Model.HoraRegistro
+            </p>
+        </div>
+        <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
+        </a>
+    </div>
+
+    <!-- Datos de Cabecera -->
+    <div class="cabecera-panel">
+        <h2><i class="fas fa-file-alt mr-2" style="color: #17a2b8;"></i>Datos de la Cabecera</h2>
+        <div class="cabecera-grid">
+            <div><label>Cliente</label><input type="text" id="txtCliente" value="@Model.Cliente" disabled /></div>
+            <div><label>Temporada</label><input type="text" id="txtTemporada" value="@Model.Temporada" disabled /></div>
+            <div><label>Estilo Cliente</label><input type="text" id="txtEstilo" value="@Model.Estilo" disabled /></div>
+            <div><label>Estilo Propio</label><input type="text" id="txtEstiloPropio" value="@Model.EstiloPropio" disabled /></div>
+            <div><label>Combo</label><input type="text" id="txtCombo" value="@Model.ComboCabecera" disabled /></div>
+            <div><label>Item</label><input type="text" id="txtItem" value="@Model.Item" disabled /></div>
+            <div><label>Ubicación</label><input type="text" id="txtUbicacion" value="@Model.Ubicacion" disabled /></div>
+            <div><label>Arte (Opcional)</label><input type="text" id="txtArte" value="@Model.Arte" disabled /></div>
+            <div><label>Fecha</label><input type="text" id="txtFechaUDP" value="@Model.FechaUDP" @(soloLectura ? "disabled" : "") /></div>
+            <div><label>Muestrista</label><input type="text" id="txtOperario" value="@Model.Operario" @(soloLectura ? "disabled" : "") /></div>
+            <div><label>Técnica</label><input type="text" id="txtTecnica" value="@Model.Tecnica" disabled /></div>
+            <div><label>NP - MV</label><input type="text" id="txtNP" value="@Model.NP" disabled /></div>
+            <div><label>Prendas</label><input type="text" id="txtPrendas" value="@Model.PrendasReq" @(soloLectura ? "disabled" : "") /></div>
+        </div>
+    </div>
+
+    <!-- Detalle de Fórmula (Colores e Insumos) -->
+    <div class="detalle-panel">
+        <h3 style="color: var(--hialpesa-blue); font-weight: 700; margin-bottom: 20px;">
+            <i class="fas fa-palette mr-2" style="color: #e67e22;"></i> Detalle de Fórmula
+        </h3>
+
+        <div id="divColores">
+            @if (Model.Colores != null && Model.Colores.Count > 0)
+            {
+                foreach (var color in Model.Colores)
+                {
+                    <div class="color-section" data-color="@color.Nombre">
+                        <div class="color-header">
+                            <h5><i class="fas fa-tint mr-2"></i> Color Pantone: @color.Nombre</h5>
+                            @if (!soloLectura)
+                            {
+                                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarColor(this)">
+                                    <i class="fas fa-trash mr-1"></i> Eliminar Color
+                                </button>
+                            }
+                        </div>
+                        <table class="insumos-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">Código</th>
+                                    <th style="width: 50%;">Insumo</th>
+                                    <th style="width: 20%;">STRIKE OFF</th>
+                                    @if (!soloLectura)
+                                    {
+                                        <th style="width: 15%; text-align: center;"></th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var insumo in color.Insumos)
+                                {
+                                    <tr data-codigo="@insumo.CodigoInsumo">
+                                        <td>@insumo.CodigoInsumo</td>
+                                        <td>@insumo.Descripcion</td>
+                                        <td>
+                                            @if (soloLectura)
+                                            {
+                                                <span>@insumo.Cantidad.ToString("N2")</span>
+                                            }
+                                            else
+                                            {
+                                                <input type="text" class="edit-cant" value="@insumo.Cantidad.ToString("N2")"
+                                                       onblur="formatearDecimal(this)" />
+                                            }
+                                        </td>
+                                        @if (!soloLectura)
+                                        {
+                                            <td style="text-align: center;">
+                                                <i class="fas fa-times-circle btn-eliminar-insumo" onclick="eliminarInsumo(this)"></i>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> No se encontraron colores e insumos para esta fórmula.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    @if (!soloLectura)
+    {
+        <div class="acciones-footer">
+            <button type="button" class="btn-guardar" onclick="guardarFormula()">
+                <i class="fas fa-save mr-2"></i> Actualizar
+            </button>
+            <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-cancelar" style="margin-left: 10px;">
+                <i class="fas fa-times mr-2"></i> Cancelar
+            </a>
+        </div>
+    }
+
+</div>
+
+@section scripts {
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var idFormula = @Model.IdFormula;
+
+        function formatearDecimal(input) {
+            var val = parseFloat(input.value.replace(',', '.'));
+            if (isNaN(val)) val = 0;
+            input.value = val.toFixed(2);
+        }
+
+        function eliminarInsumo(elem) {
+            var row = $(elem).closest('tr');
+            Swal.fire({
+                title: '¿Eliminar insumo?',
+                text: 'Se removerá este insumo de la fórmula.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (r) {
+                if (r.isConfirmed) row.remove();
+            });
+        }
+
+        function eliminarColor(elem) {
+            var section = $(elem).closest('.color-section');
+            Swal.fire({
+                title: '¿Eliminar color completo?',
+                text: 'Se eliminarán todos los insumos de este color.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (r) {
+                if (r.isConfirmed) section.remove();
+            });
+        }
+
+        function guardarFormula() {
+            // Recopilar datos de la vista
+            var colores = [];
+            $('#divColores .color-section').each(function () {
+                var nombreColor = $(this).data('color');
+                var insumos = [];
+                $(this).find('tbody tr').each(function () {
+                    var cant = $(this).find('.edit-cant').val();
+                    insumos.push({
+                        CodigoInsumo: $(this).data('codigo'),
+                        Descripcion: $(this).find('td:eq(1)').text().trim(),
+                        Cantidad: parseFloat(cant) || 0
+                    });
+                });
+                colores.push({
+                    Nombre: nombreColor,
+                    Combo: '',
+                    Insumos: insumos
+                });
+            });
+
+            var data = {
+                IdFormula: idFormula,
+                Operario: $('#txtOperario').val(),
+                Tecnica: $('#txtTecnica').val(),
+                FechaUDP: $('#txtFechaUDP').val(),
+                PrendasReq: $('#txtPrendas').val(),
+                Colores: colores
+            };
+
+            Swal.fire({ title: 'Guardando...', didOpen: function () { Swal.showLoading(); } });
+
+            $.ajax({
+                url: "@Url.Action("GuardarFormula", "Liquidacion")",
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire('¡Guardado!', res.message, 'success').then(function () {
+                            window.location.href = "@Url.Action("MantenimientoFormulas", "Liquidacion")";
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Error de comunicación con el servidor.', 'error');
+                }
+            });
+        }
+    </script>
+}
