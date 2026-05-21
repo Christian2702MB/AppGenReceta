@@ -7,423 +7,228 @@
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 <style>
-    :root {
-        --hialpesa-blue: #002D72;
-        --hialpesa-gold: #f39c12;
-    }
+    .swal2-footer { text-align: center !important; }
+    
+    .select2-container { width: 100% !important; min-width: 250px; }
+    .select2-container .select2-selection--single { height: 31px !important; padding-top: 2px; border: 1px solid #ccc !important; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 29px !important; }
 
-    .cabecera-panel {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 25px;
-        border-left: 6px solid var(--hialpesa-blue);
-    }
+    .col-prueba-header { background-color: #f8f9fa !important; border-bottom: 3px solid #17a2b8 !important; min-width: 130px; }
+    .col-prueba-cell { background-color: #fdfdfe; }
+    .prueba-elegida { background-color: #d4edda !important; border-bottom: 3px solid #28a745 !important; transition: background-color 0.3s ease; }
 
-    .cabecera-panel h2 {
-        color: var(--hialpesa-blue);
-        font-weight: 800;
-        font-size: 1.6rem;
-        margin-bottom: 20px;
-    }
-
-    .cabecera-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-    }
-
-    .cabecera-grid label {
-        font-weight: 700;
-        color: #555;
-        font-size: 0.85rem;
-        margin-bottom: 3px;
-        display: block;
-    }
-
-    .cabecera-grid input {
-        width: 100%;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        padding: 8px 12px;
-        font-size: 0.95rem;
-        color: #333;
-    }
-
-    .cabecera-grid input:disabled {
-        background: #e9ecef;
-    }
-
-    .detalle-panel {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 25px;
-    }
-
-    .color-section {
-        border: 1px solid #eee;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        overflow: hidden;
-    }
-
-    .color-header {
-        background: #f8f9fa;
-        padding: 12px 18px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid var(--hialpesa-blue);
-    }
-
-    .color-header h5 {
-        margin: 0;
-        color: var(--hialpesa-blue);
-        font-weight: 700;
-        font-size: 1rem;
-    }
-
-    .insumos-table {
-        width: 100%;
-        margin: 0;
-    }
-
-    .insumos-table thead {
-        background: #f4f8fa;
-    }
-
-    .insumos-table thead th {
-        font-weight: 700;
-        font-size: 0.85rem;
-        color: var(--hialpesa-blue);
-        padding: 10px 12px;
-        text-transform: uppercase;
-    }
-
-    .insumos-table tbody td {
-        padding: 8px 12px;
-        vertical-align: middle;
-    }
-
-    .insumos-table input.edit-cant {
-        width: 100px;
-        text-align: right;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        padding: 4px 8px;
-    }
-
-    .btn-eliminar-insumo {
-        color: #e74c3c;
-        cursor: pointer;
-        font-size: 1.1rem;
-        transition: color 0.2s;
-    }
-
-    .btn-eliminar-insumo:hover { color: #c0392b; }
-
-    .acciones-footer {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    .btn-guardar {
-        background: var(--hialpesa-blue);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 12px 30px;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.3s;
-    }
-
-    .btn-guardar:hover {
-        background: #004085;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0,45,114,0.3);
-        color: white;
-    }
-
-    .btn-cancelar {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 12px 30px;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.3s;
-    }
-
-    .btn-cancelar:hover {
-        background: #c0392b;
-        color: white;
-    }
-
-    .btn-header-back {
-        background-color: #f8f9fa;
-        color: #6c757d;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 10px 20px;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-    }
-
-    .btn-header-back:hover {
-        background-color: #e2e6ea;
-        color: #495057;
-        text-decoration: none;
-    }
-
-    .info-badge {
-        display: inline-block;
-        background: #17a2b8;
-        color: white;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 15px;
-        margin-left: 10px;
-    }
+    .th-prueba { background-color: #f8f9fa; min-width: 85px; width: 85px; padding: 6px; }
+    .td-prueba { padding: 4px 6px; }
+    
+    .btn-header-back { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px; font-weight: 600; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-header-back:hover { background-color: #e2e6ea; color: #495057; text-decoration: none; }
 </style>
 
-<div class="container-fluid py-4">
-
-    <!-- Header -->
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px;">
+<div class="panel-body">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div style="flex: 1 1 auto;">
-            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 26px; border-left: 6px solid #27ae60; padding-left: 15px;">
+            <h1 style="margin: 0; color: #002D72; font-weight: 800; font-size: 26px; border-left: 6px solid #27ae60; padding-left: 15px;">
                 Editar Fórmula #@Model.IdFormula
                 @if (Model.Estado == "Cerrada")
                 {
-                    <span class="info-badge" style="background: #e74c3c;">Cerrada</span>
+                    <span class="label label-danger ml-2" style="font-size: 14px;">Cerrada</span>
                 }
                 else
                 {
-                    <span class="info-badge" style="background: #27ae60;">Activa</span>
+                    <span class="label label-success ml-2" style="font-size: 14px;">Activa</span>
                 }
             </h1>
-            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 13px;">
-                Basada en receta origen #@Model.IdRecetaOrigen | Registrada: @Model.FechaRegistro @Model.HoraRegistro
-            </p>
         </div>
         <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
             <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
         </a>
     </div>
 
-    <!-- Datos de Cabecera -->
-    <div class="cabecera-panel">
-        <h2><i class="fas fa-file-alt mr-2" style="color: #17a2b8;"></i>Datos de la Cabecera</h2>
-        <div class="cabecera-grid">
-            <div><label>Cliente</label><input type="text" id="txtCliente" value="@Model.Cliente" disabled /></div>
-            <div><label>Temporada</label><input type="text" id="txtTemporada" value="@Model.Temporada" disabled /></div>
-            <div><label>Estilo Cliente</label><input type="text" id="txtEstilo" value="@Model.Estilo" disabled /></div>
-            <div><label>Estilo Propio</label><input type="text" id="txtEstiloPropio" value="@Model.EstiloPropio" disabled /></div>
-            <div><label>Combo</label><input type="text" id="txtCombo" value="@Model.ComboCabecera" disabled /></div>
-            <div><label>Item</label><input type="text" id="txtItem" value="@Model.Item" disabled /></div>
-            <div><label>Ubicación</label><input type="text" id="txtUbicacion" value="@Model.Ubicacion" disabled /></div>
-            <div><label>Arte (Opcional)</label><input type="text" id="txtArte" value="@Model.Arte" disabled /></div>
-            <div><label>Fecha</label><input type="text" id="txtFechaUDP" value="@Model.FechaUDP" @(soloLectura ? "disabled" : "") /></div>
-            <div><label>Muestrista</label><input type="text" id="txtOperario" value="@Model.Operario" @(soloLectura ? "disabled" : "") /></div>
-            <div><label>Técnica</label><input type="text" id="txtTecnica" value="@Model.Tecnica" disabled /></div>
-            <div><label>NP - MV</label><input type="text" id="txtNP" value="@Model.NP" disabled /></div>
-            <div><label>Prendas</label><input type="text" id="txtPrendas" value="@Model.PrendasReq" @(soloLectura ? "disabled" : "") /></div>
-        </div>
-    </div>
+    <form id="formFormula">
+        <input type="hidden" id="hdnIdFormula" value="@Model.IdFormula" />
+        <input type="hidden" id="hdnIdRecetaOrigen" value="@Model.IdRecetaOrigen" />
 
-    <!-- Detalle de Fórmula (Colores e Insumos) -->
-    <div class="detalle-panel">
-        <h3 style="color: var(--hialpesa-blue); font-weight: 700; margin-bottom: 20px;">
-            <i class="fas fa-palette mr-2" style="color: #e67e22;"></i> Detalle de Fórmula
-        </h3>
+        <div class="panel panel-default shadow-sm">
+            <div class="panel-body">
+                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid #07238a;">
+                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Datos de la Cabecera</span>
+                </h2>
 
-        <div id="divColores">
-            @if (Model.Colores != null && Model.Colores.Count > 0)
-            {
-                foreach (var color in Model.Colores)
-                {
-                    <div class="color-section" data-color="@color.Nombre">
-                        <div class="color-header">
-                            <h5><i class="fas fa-tint mr-2"></i> Color Pantone: @color.Nombre</h5>
-                            @if (!soloLectura)
-                            {
-                                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarColor(this)">
-                                    <i class="fas fa-trash mr-1"></i> Eliminar Color
-                                </button>
-                            }
-                        </div>
-                        <table class="insumos-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%;">Código</th>
-                                    <th style="width: 50%;">Insumo</th>
-                                    <th style="width: 20%;">STRIKE OFF</th>
-                                    @if (!soloLectura)
-                                    {
-                                        <th style="width: 15%; text-align: center;"></th>
-                                    }
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var insumo in color.Insumos)
-                                {
-                                    <tr data-codigo="@insumo.CodigoInsumo">
-                                        <td>@insumo.CodigoInsumo</td>
-                                        <td>@insumo.Descripcion</td>
-                                        <td>
-                                            @if (soloLectura)
-                                            {
-                                                <span>@insumo.Cantidad.ToString("N2")</span>
-                                            }
-                                            else
-                                            {
-                                                <input type="text" class="edit-cant" value="@insumo.Cantidad.ToString("N2")"
-                                                       onblur="formatearDecimal(this)" />
-                                            }
-                                        </td>
-                                        @if (!soloLectura)
-                                        {
-                                            <td style="text-align: center;">
-                                                <i class="fas fa-times-circle btn-eliminar-insumo" onclick="eliminarInsumo(this)"></i>
-                                            </td>
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Cliente</label><input type="text" class="form-control" value="@Model.Cliente" readonly /></div>
                     </div>
-                }
-            }
-            else
-            {
-                <div class="alert alert-warning text-center">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> No se encontraron colores e insumos para esta fórmula.
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Temporada</label><input type="text" class="form-control" value="@Model.Temporada" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Estilo Cliente</label><input type="text" class="form-control" value="@Model.Estilo" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Estilo Propio</label><input type="text" class="form-control" value="@Model.EstiloPropio" readonly /></div>
+                    </div>
                 </div>
-            }
-        </div>
-    </div>
 
-    <!-- Acciones -->
-    @if (!soloLectura)
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Combo</label><input type="text" class="form-control" value="@Model.ComboCabecera" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Item</label><input type="text" class="form-control" value="@Model.Item" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Ubicación</label><input type="text" class="form-control" value="@Model.Ubicacion" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Arte (Opcional)</label><input type="text" class="form-control" value="@Model.Arte" readonly /></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Fecha</label><input type="text" class="form-control" value="@Model.FechaUDP" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Muestrista</label><input type="text" class="form-control" value="@Model.Operario" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-6">
+                        <div class="form-group"><label>Técnica</label><input type="text" class="form-control" value="@Model.Tecnica" readonly /></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12 col-sm-3">
+                        <div class="form-group"><label>NP - MV</label><input type="text" class="form-control" value="@Model.NP" readonly /></div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group"><label>Prendas</label><input type="text" class="form-control" value="@Model.PrendasReq" readonly /></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!soloLectura)
+        {
+            <div class="panel panel-warning shadow-sm">
+                <div class="panel-heading" style="background-color: #fcf8e3;">
+                    <strong><i class="fa fa-plus-circle"></i> Agregar Elementos</strong>
+                </div>
+                <div class="panel-body">
+                    <div class="btn-group pull-right">
+                        <button type="button" class="btn btn-info btn-sm" onclick="abrirModalPrueba()" style="margin-right: 5px;">
+                            <i class="fa fa-flask"></i> Nueva Prueba Gramos
+                        </button>
+                    </div>
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-12">
+                            <label>Seleccionar Color a asignar Insumo:</label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <select id="ddlColorDestino" class="form-control"></select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select id="txtDescInsumo" class="form-control" style="background-color: #eee;" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
+                                        <option value="">Seleccione o busque un insumo...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" min="0" id="txtCantInsumo" class="form-control" placeholder="0.00">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-success" id="btnAgregarInsumo" type="button" onclick="agregarInsumoAColor()" title="Agregar Insumo"><i class="fa fa-plus"></i></button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row mt-3">
+            <div class="col-sm-12">
+                <h4 class="text-primary"><i class="fas fa-flask"></i> Detalle de Fórmula</h4>
+                <div class="table-responsive" style="overflow-x: auto; white-space: nowrap; padding-bottom: 15px;">
+                    <div id="contenedorColores"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    @if (!soloLectura)
+                    {
+                        <div class="col-xs-12 col-sm-6" style="text-align: right">
+                            <button type="button" id="btnGuardarFormula" class="btn btn-primary px-4 shadow-sm" onclick="guardarFormulaCompleta()">
+                                <i class="fa fa-save"></i> Actualizar
+                            </button>
+                        </div>
+                        <div class="col-xs-12 col-sm-6" style="text-align: left">
+                            <a class="btn btn-danger px-4 shadow-sm" href="@Url.Action("MantenimientoFormulas", "Liquidacion")">
+                                <i class="fa fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-xs-12 text-center">
+                            <a class="btn btn-primary px-4 shadow-sm" href="@Url.Action("MantenimientoFormulas", "Liquidacion")">
+                                <i class="fa fa-arrow-left"></i> Volver
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.FechaCierre))
     {
-        <div class="acciones-footer">
-            <button type="button" class="btn-guardar" onclick="guardarFormula()">
-                <i class="fas fa-save mr-2"></i> Actualizar
-            </button>
-            <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-cancelar" style="margin-left: 10px;">
-                <i class="fas fa-times mr-2"></i> Cancelar
-            </a>
+        <div class="alert alert-warning shadow-sm mt-3">
+            <i class="fas fa-user-lock"></i> <strong>CERRADO POR:</strong> @Model.UsuarioCierre
+            <i class="fas fa-calendar-alt ml-3"></i> <strong>FECHA:</strong> @Model.FechaCierre
         </div>
     }
 
+    <!-- Modal Agregar Prueba -->
+    <div class="modal fade" id="modalAgregarPrueba" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Ingresar Nueva Prueba Gramos</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre de la Prueba</label>
+                        <select id="txtNombrePrueba" class="form-control select2" style="width: 100%;">
+                            <option value="">Escriba el nombre...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer text-center">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="agregarColumnaPrueba()">Agregar Columna</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section scripts {
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        var idFormula = @Model.IdFormula;
-
-        function formatearDecimal(input) {
-            var val = parseFloat(input.value.replace(',', '.'));
-            if (isNaN(val)) val = 0;
-            input.value = val.toFixed(2);
-        }
-
-        function eliminarInsumo(elem) {
-            var row = $(elem).closest('tr');
-            Swal.fire({
-                title: '¿Eliminar insumo?',
-                text: 'Se removerá este insumo de la fórmula.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then(function (r) {
-                if (r.isConfirmed) row.remove();
-            });
-        }
-
-        function eliminarColor(elem) {
-            var section = $(elem).closest('.color-section');
-            Swal.fire({
-                title: '¿Eliminar color completo?',
-                text: 'Se eliminarán todos los insumos de este color.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then(function (r) {
-                if (r.isConfirmed) section.remove();
-            });
-        }
-
-        function guardarFormula() {
-            // Recopilar datos de la vista
-            var colores = [];
-            $('#divColores .color-section').each(function () {
-                var nombreColor = $(this).data('color');
-                var insumos = [];
-                $(this).find('tbody tr').each(function () {
-                    var cant = $(this).find('.edit-cant').val();
-                    insumos.push({
-                        CodigoInsumo: $(this).data('codigo'),
-                        Descripcion: $(this).find('td:eq(1)').text().trim(),
-                        Cantidad: parseFloat(cant) || 0
-                    });
-                });
-                colores.push({
-                    Nombre: nombreColor,
-                    Combo: '',
-                    Insumos: insumos
-                });
-            });
-
-            var data = {
-                IdFormula: idFormula,
-                Operario: $('#txtOperario').val(),
-                Tecnica: $('#txtTecnica').val(),
-                FechaUDP: $('#txtFechaUDP').val(),
-                PrendasReq: $('#txtPrendas').val(),
-                Colores: colores
-            };
-
-            Swal.fire({ title: 'Guardando...', didOpen: function () { Swal.showLoading(); } });
-
-            $.ajax({
-                url: "@Url.Action("GuardarFormula", "Liquidacion")",
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    if (res.success) {
-                        Swal.fire('¡Guardado!', res.message, 'success').then(function () {
-                            window.location.href = "@Url.Action("MantenimientoFormulas", "Liquidacion")";
-                        });
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Error de comunicación con el servidor.', 'error');
-                }
-            });
-        }
+        window.g_isReadOnly = '@soloLectura'.toLowerCase() === 'true';
+        window.idFormulaActual = @Model.IdFormula;
+        window.urlGuardarFormula = "@Url.Action("GuardarFormula", "Liquidacion")";
+        window.urlMantenimiento = "@Url.Action("MantenimientoFormulas", "Liquidacion")";
     </script>
+    
+    <script src="~/Scripts/Liquidacion/EditarFormula.js"></script>
 }
