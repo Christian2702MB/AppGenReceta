@@ -1,4 +1,5 @@
 var hayCambios = false;
+var nuevaPruebaCreada = false;
 var recetaMaster = {
     IdFormula: 0,
     Colores: [],
@@ -60,22 +61,8 @@ $(document).ready(function () {
             }
         });
 
-        $('#txtCantInsumo').on('keydown', function (e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-                e.preventDefault();
-                $('#btnAgregarInsumo').click();
-            }
-        });
-
         $('#formFormula').on('change input', 'input', function () {
             hayCambios = true;
-        });
-
-        $("#txtCantInsumo").on("change blur", function () {
-            var val = parseFloat($(this).val());
-            if (!isNaN(val)) {
-                $(this).val(val.toFixed(2));
-            }
         });
     }
 
@@ -233,6 +220,7 @@ function agregarColumnaPrueba() {
     }
 
     hayCambios = true;
+    nuevaPruebaCreada = true;
     $("#txtNombrePrueba").val(null).trigger('change');
     $("#modalAgregarPrueba").modal('hide');
 
@@ -318,8 +306,7 @@ function agregarInsumoAColor() {
     }
 
     const indexColor = $("#ddlColorDestino").val();
-    let cantidad = parseFloat($("#txtCantInsumo").val());
-    if (isNaN(cantidad)) cantidad = 0;
+    let cantidad = 0;
 
     if (indexColor === "" || !codigoReal || !descripcionReal) {
         Swal.fire("Atención", "Seleccione el color a asignar.", "warning");
@@ -348,7 +335,6 @@ function agregarInsumoAColor() {
     }
 
     $("#txtDescInsumo").val("").trigger('change');
-    $("#txtCantInsumo").val("");
     hayCambios = true;
     actualizarVistaColores();
 }
@@ -457,11 +443,18 @@ function inyectarPruebasDOM() {
                     let isPrincipal = (pruebaPrincipalDelColor === nombreGlobalNorm);
                     let isLastRow = (indexRow === filasInsumos.length - 1);
                     
-                    let isLastColumn = (idxPruebaGlobal === recetaMaster.PruebasGlobales.length - 1);
-                    let disabledAttr = (window.g_isReadOnly || !isLastColumn) ? 'disabled="disabled"' : '';
+                    let habilitado = true;
+                    if (window.g_isReadOnly) {
+                        habilitado = false;
+                    } else if (nuevaPruebaCreada) {
+                        let isLastColumn = (idxPruebaGlobal === recetaMaster.PruebasGlobales.length - 1);
+                        habilitado = isLastColumn;
+                    }
+
+                    let disabledAttr = habilitado ? '' : 'disabled="disabled"';
                     
                     let bgColorInput = '';
-                    if (window.g_isReadOnly || !isLastColumn) {
+                    if (!habilitado) {
                         bgColorInput = 'background-color: #e9ecef; color: #495057; cursor: not-allowed;';
                     } else if (isPrincipal) {
                         bgColorInput = 'background-color: #fff; font-weight: bold; border-color: #ffc107;';
