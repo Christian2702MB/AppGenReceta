@@ -319,5 +319,23 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpPost]
+        public JsonResult RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                string msj = _stockReqBl.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario);
+                return Json(new { success = true, message = msj });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

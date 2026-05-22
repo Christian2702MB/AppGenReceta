@@ -86,6 +86,7 @@ BEGIN
         StockActual,
         CONVERT(VARCHAR(10), FechaUltimaActualizacion, 103) + ' ' + CONVERT(VARCHAR(8), FechaUltimaActualizacion, 108) AS FechaModificacion
     FROM LIQ_STK_StockInsumos
+    WHERE StockActual <> 0.00
     ORDER BY Descripcion ASC;
 END
 GO
@@ -180,6 +181,67 @@ BEGIN
 
         COMMIT TRANSACTION;
         SELECT 1 AS Resultado, 'Recepción confirmada y stock actualizado correctamente.' AS Mensaje;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SELECT 0 AS Resultado, ERROR_MESSAGE() AS Mensaje;
+    END CATCH
+END
+GO
+
+-- -----------------------------------------------------------------------
+-- 5. REGISTRAR CARGA INICIAL (LIQ_STK)
+-- -----------------------------------------------------------------------
+
+IF OBJECT_ID('dbo.LIQ_STK_SP_RegistrarCargaInicial', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_STK_SP_RegistrarCargaInicial;
+GO
+CREATE PROCEDURE [dbo].[LIQ_STK_SP_RegistrarCargaInicial]
+    @CodInsumo VARCHAR(50),
+    @Descripcion VARCHAR(250),
+    @UnidadMedida VARCHAR(20),
+    @PesoGramos DECIMAL(18,4),
+    @Usuario VARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Validar Unidad de Medida por defecto
+        IF ISNULL(@UnidadMedida, '') = '' SET @UnidadMedida = 'KG';
+
+        -- Convertir gramos a kilogramos (si la unidad de medida es KG)
+        DECLARE @StockIncremento DECIMAL(18,2) = @PesoGramos;
+        IF @UnidadMedida = 'KG'
+        BEGIN
+            SET @StockIncremento = @PesoGramos / 1000.00;
+        END
+
+        DECLARE @NuevoStock DECIMAL(18,2) = 0.00;
+
+        IF NOT EXISTS (SELECT 1 FROM LIQ_STK_StockInsumos WHERE CodInsumo = @CodInsumo)
+        BEGIN
+            SET @NuevoStock = @StockIncremento;
+            INSERT INTO LIQ_STK_StockInsumos (CodInsumo, Descripcion, UnidadMedida, StockActual, FechaUltimaActualizacion, UsuarioUltimaActualizacion)
+            VALUES (@CodInsumo, @Descripcion, @UnidadMedida, @NuevoStock, GETDATE(), @Usuario);
+        END
+        ELSE
+        BEGIN
+            SELECT @NuevoStock = StockActual + @StockIncremento FROM LIQ_STK_StockInsumos WHERE CodInsumo = @CodInsumo;
+
+            UPDATE LIQ_STK_StockInsumos SET
+                StockActual = @NuevoStock,
+                FechaUltimaActualizacion = GETDATE(),
+                UsuarioUltimaActualizacion = @Usuario
+            WHERE CodInsumo = @CodInsumo;
+        END
+
+        -- Registrar en Kardex
+        INSERT INTO LIQ_STK_Kardex (CodInsumo, TipoMovimiento, Concepto, Cantidad, StockResultante, ReferenciaID, Observaciones, FechaMovimiento, Usuario)
+        VALUES (@CodInsumo, 'Entrada', 'Carga Inicial', @StockIncremento, @NuevoStock, NULL, 'Carga inicial simulada', GETDATE(), @Usuario);
+
+        COMMIT TRANSACTION;
+        SELECT 1 AS Resultado, 'Carga inicial registrada correctamente.' AS Mensaje;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;

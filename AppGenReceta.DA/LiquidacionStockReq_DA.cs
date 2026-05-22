@@ -149,5 +149,34 @@ namespace AppGenReceta.DA
             }
             return mensaje;
         }
+
+        public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario)
+        {
+            string mensaje = "";
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("LIQ_STK_SP_RegistrarCargaInicial", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
+                    cmd.Parameters.AddWithValue("@Descripcion", descripcion);
+                    cmd.Parameters.AddWithValue("@UnidadMedida", unidadMedida);
+                    cmd.Parameters.AddWithValue("@PesoGramos", pesoGramos);
+                    cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            int res = Convert.ToInt32(dr["Resultado"]);
+                            mensaje = dr["Mensaje"].ToString();
+                            if (res == 0) throw new Exception(mensaje);
+                        }
+                    }
+                }
+            }
+            return mensaje;
+        }
     }
 }

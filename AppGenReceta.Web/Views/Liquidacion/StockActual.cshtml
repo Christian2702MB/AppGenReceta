@@ -33,6 +33,26 @@
         text-decoration: none;
     }
 
+    .btn-carga-inicial {
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-carga-inicial:hover {
+        background-color: #219150;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(39, 174, 96, 0.2);
+    }
+
     .table-container {
         background: white;
         padding: 25px;
@@ -55,6 +75,28 @@
         padding: 14px !important;
         color: var(--hialpesa-blue) !important;
     }
+
+    /* Modal / Select2 Integration Styles */
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 8px !important;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        padding-left: 12px !important;
+        color: #495057 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
+    .select2-dropdown {
+        z-index: 1060 !important; /* Above Bootstrap modal */
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 1px solid #ced4da !important;
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -68,6 +110,9 @@
         </div>
 
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+            <button type="button" id="btnCargaInicial" class="btn-carga-inicial" data-toggle="modal" data-target="#modalCargaInicial">
+                <i class="fas fa-plus-circle" style="margin-right: 6px;"></i> Carga Inicial
+            </button>
             <a href="@Url.Action("Index", "Liquidacion")" class="btn-header-back">
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar al Menú
             </a>
@@ -106,9 +151,65 @@
     </div>
 </div>
 
+<!-- Modal Carga Inicial -->
+<div class="modal fade" id="modalCargaInicial" tabindex="-1" role="dialog" aria-labelledby="modalCargaInicialLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white; padding: 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color: white; opacity: 0.8; font-size: 1.6rem; outline: none; border: none; background: transparent; float: right; margin-top: -3px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalCargaInicialLabel" style="font-weight: 700; margin: 0; display: inline-flex; align-items: center;">
+                    <i class="fas fa-plus-circle" style="margin-right: 10px; font-size: 1.3rem;"></i> Registrar Carga Inicial de Insumo
+                </h4>
+            </div>
+            <div class="modal-body" style="padding: 30px; background-color: #fcfdfe;">
+                <form id="formCargaInicial">
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Descripción o Código de Insumo (mínimo 3 caracteres):</label>
+                            <select id="txtDescInsumo" class="form-control" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")" style="width: 100%;">
+                                <option value="">Busque un insumo...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-4 form-group">
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Código de Insumo:</label>
+                            <input type="text" id="txtCodInsumo" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">U.M.:</label>
+                            <input type="text" id="txtUM" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center;" />
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Peso (gr):</label>
+                            <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="0.01" min="0.01" required style="font-weight: bold; text-align: right;" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 15px 30px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 8px 20px;">
+                    Cancelar
+                </button>
+                <button type="button" id="btnGuardarCarga" class="btn btn-success" style="border-radius: 8px; font-weight: 600; padding: 8px 25px; background-color: #27ae60; border: none;">
+                    <i class="fas fa-save" style="margin-right: 6px;"></i> Registrar Stock
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="~/Scripts/Liquidacion/StockActual.js"></script>
     <script>
         $(document).ready(function () {
             if ($.fn.dataTable && $.fn.dataTable.isDataTable('#tblStockActual')) {
