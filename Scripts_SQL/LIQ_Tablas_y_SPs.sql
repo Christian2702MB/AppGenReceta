@@ -316,12 +316,12 @@ BEGIN
 
             DECLARE @IdFormula INT = @XML_DATA.value('(FormulaBE/IdFormula)[1]', 'INT');
 
-            -- Actualizar cabecera
+            -- Actualizar cabecera (protegiendo campos nulos o vacíos)
             UPDATE LIQ_Formulas SET
-                OperarioUDP = @XML_DATA.value('(FormulaBE/Operario)[1]', 'VARCHAR(100)'),
-                Tecnica     = @XML_DATA.value('(FormulaBE/Tecnica)[1]', 'VARCHAR(100)'),
-                FechaUDP    = @XML_DATA.value('(FormulaBE/FechaUDP)[1]', 'VARCHAR(100)'),
-                Prendas     = @XML_DATA.value('(FormulaBE/PrendasReq)[1]', 'VARCHAR(100)'),
+                OperarioUDP = ISNULL(NULLIF(@XML_DATA.value('(FormulaBE/Operario)[1]', 'VARCHAR(100)'), ''), OperarioUDP),
+                Tecnica     = ISNULL(NULLIF(@XML_DATA.value('(FormulaBE/Tecnica)[1]', 'VARCHAR(100)'), ''), Tecnica),
+                FechaUDP    = ISNULL(NULLIF(@XML_DATA.value('(FormulaBE/FechaUDP)[1]', 'VARCHAR(100)'), ''), FechaUDP),
+                Prendas     = ISNULL(NULLIF(@XML_DATA.value('(FormulaBE/PrendasReq)[1]', 'VARCHAR(100)'), ''), Prendas),
                 FechaModificacion = GETDATE(),
                 UsuarioModificacion = @XML_DATA.value('(FormulaBE/UsuarioModificacion)[1]', 'VARCHAR(100)')
             WHERE IdFormula = @IdFormula;

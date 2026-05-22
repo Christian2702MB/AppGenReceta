@@ -445,7 +445,7 @@ function inyectarPruebasDOM() {
             if (insumo) {
                 let pruebasDelInsumo = insumo.Pruebas || [];
                 
-                recetaMaster.PruebasGlobales.forEach(p => {
+                recetaMaster.PruebasGlobales.forEach((p, idxPruebaGlobal) => {
                     let nombreGlobalNorm = p.NombreNormalizado;
                     let pruebaData = pruebasDelInsumo.find(x => (x.NombrePrueba || "").trim().toUpperCase() === nombreGlobalNorm);
 
@@ -457,8 +457,16 @@ function inyectarPruebasDOM() {
                     let isPrincipal = (pruebaPrincipalDelColor === nombreGlobalNorm);
                     let isLastRow = (indexRow === filasInsumos.length - 1);
                     
-                    let disabledAttr = window.g_isReadOnly ? 'disabled="disabled"' : '';
-                    let bgColorInput = isPrincipal ? 'background-color: #fff; font-weight: bold; border-color: #ffc107;' : '';
+                    let isLastColumn = (idxPruebaGlobal === recetaMaster.PruebasGlobales.length - 1);
+                    let disabledAttr = (window.g_isReadOnly || !isLastColumn) ? 'disabled="disabled"' : '';
+                    
+                    let bgColorInput = '';
+                    if (window.g_isReadOnly || !isLastColumn) {
+                        bgColorInput = 'background-color: #e9ecef; color: #495057; cursor: not-allowed;';
+                    } else if (isPrincipal) {
+                        bgColorInput = 'background-color: #fff; font-weight: bold; border-color: #ffc107;';
+                    }
+                    
                     let borderBtm = isLastRow ? 'border-bottom: 2px solid #ffc107;' : '';
                     let bgColTd = isPrincipal ? `background-color: #fff3cd !important; border-left: 2px solid #ffc107; border-right: 2px solid #ffc107; ${borderBtm}` : '';
                     let nombreParam = p.NombrePrueba.replace(/'/g, "\\'");

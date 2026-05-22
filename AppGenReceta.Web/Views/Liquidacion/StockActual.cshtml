@@ -1,0 +1,127 @@
+@model List<AppGenReceta.BE.LIQ_StockInsumoBE>
+@{
+    ViewBag.Title = "Stock Actual de Insumos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+<style>
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-accent: #f39c12;
+        --bg-light: #f8f9fa;
+    }
+
+    .btn-header-back {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-header-back:hover {
+        background-color: #e2e6ea;
+        color: #495057;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        text-decoration: none;
+    }
+
+    .table-container {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table thead {
+        background-color: #f4f8fa !important;
+        border-top: 4px solid var(--hialpesa-blue) !important;
+        border-bottom: 2px solid #DEE2E6 !important;
+    }
+
+    .table thead th {
+        border: none !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        font-size: 0.95rem !important;
+        letter-spacing: 0.8px;
+        padding: 14px !important;
+        color: var(--hialpesa-blue) !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Título y Botones de Acción -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
+        <div style="flex: 1 1 auto; margin-bottom: 15px;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px; letter-spacing: -0.5px;">
+                Stock Actual de Insumos
+            </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Inventario en tiempo real del almacén operativo de insumos para liquidación.</p>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+            <a href="@Url.Action("Index", "Liquidacion")" class="btn-header-back">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar al Menú
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabla de Contenido -->
+    <div class="table-container">
+        <div class="table-responsive">
+            <table id="tblStockActual" class="table table-hover table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th class="text-center">Código Insumo</th>
+                        <th>Descripción</th>
+                        <th class="text-center">U.M.</th>
+                        <th class="text-right">Stock Actual</th>
+                        <th class="text-center">Última Modificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center font-weight-bold text-primary">@item.CodInsumo</td>
+                            <td>@item.Descripcion</td>
+                            <td class="text-center">@item.UnidadMedida</td>
+                            <td class="text-right font-weight-bold @(item.StockActual <= 0 ? "text-danger" : "text-success")">
+                                @item.StockActual.ToString("N2")
+                            </td>
+                            <td class="text-center text-muted">@item.FechaModificacion</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            if ($.fn.dataTable && $.fn.dataTable.isDataTable('#tblStockActual')) {
+                $('#tblStockActual').DataTable().destroy();
+            }
+
+            $('#tblStockActual').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                },
+                "order": [[1, "asc"]],
+                "pageLength": 25
+            });
+        });
+    </script>
+}

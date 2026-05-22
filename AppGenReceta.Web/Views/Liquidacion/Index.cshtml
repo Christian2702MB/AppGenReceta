@@ -136,10 +136,9 @@
 
         <div class="row">
 
-            <!-- 1. Stock Actual (Próximamente) -->
+            <!-- 1. Stock Actual (ACTIVO) -->
             <div class="col-md-5 col-sm-6" style="padding: 10px;">
-                <div class="menu-card card-stock card-disabled">
-                    <span class="badge-prox">Próximamente</span>
+                <a href="@Url.Action("StockActual", "Liquidacion")" class="menu-card card-stock">
                     <div class="card-icon">
                         <i class="fas fa-warehouse"></i>
                     </div>
@@ -147,7 +146,7 @@
                         <h3>Stock Actual</h3>
                         <p>Inventario en tiempo real del almacén operativo de insumos.</p>
                     </div>
-                </div>
+                </a>
             </div>
 
             <!-- 2. Gestión de Fórmulas (ACTIVO) -->
@@ -163,10 +162,9 @@
                 </a>
             </div>
 
-            <!-- 3. Requerimientos (Próximamente) -->
+            <!-- 3. Requerimientos (ACTIVO) -->
             <div class="col-md-5 col-sm-6" style="padding: 10px;">
-                <div class="menu-card card-requerimientos card-disabled">
-                    <span class="badge-prox">Próximamente</span>
+                <a href="@Url.Action("Requerimientos", "Liquidacion")" class="menu-card card-requerimientos">
                     <div class="card-icon">
                         <i class="fas fa-tasks"></i>
                     </div>
@@ -174,13 +172,12 @@
                         <h3>Requerimientos</h3>
                         <p>Gestión de requerimientos del proceso productivo.</p>
                     </div>
-                </div>
+                </a>
             </div>
 
-            <!-- 4. Liquidaciones (Próximamente) -->
+            <!-- 4. Liquidaciones (ACTIVO) -->
             <div class="col-md-5 col-sm-6" style="padding: 10px;">
-                <div class="menu-card card-liquidaciones card-disabled">
-                    <span class="badge-prox">Próximamente</span>
+                <a href="@Url.Action("Liquidacion_Insumos", "Home")" class="menu-card card-liquidaciones">
                     <div class="card-icon">
                         <i class="fas fa-balance-scale"></i>
                     </div>
@@ -188,7 +185,7 @@
                         <h3>Liquidaciones</h3>
                         <p>Control de saldos, devoluciones y cierre de liquidaciones.</p>
                     </div>
-                </div>
+                </a>
             </div>
 
         </div>

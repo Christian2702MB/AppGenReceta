@@ -13,6 +13,7 @@ namespace AppGenReceta.Web.Controllers
     public class LiquidacionController : Controller
     {
         private Liquidacion_BL bl = new Liquidacion_BL();
+        private LiquidacionStockReq_BL _stockReqBl = new LiquidacionStockReq_BL();
 
         // ==========================================
         // MENÚ PRINCIPAL DEL MÓDULO
@@ -191,6 +192,16 @@ namespace AppGenReceta.Web.Controllers
                 string usuario = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "GUEST";
                 entidad.UsuarioModificacion = usuario;
 
+                // Recuperar los datos de cabecera que son de solo lectura y no se envían desde la vista
+                LIQ_FormulaBE formulaExistente = bl.ObtenerFormulaCompleta(entidad.IdFormula);
+                if (formulaExistente != null)
+                {
+                    entidad.Operario = formulaExistente.Operario;
+                    entidad.Tecnica = formulaExistente.Tecnica;
+                    entidad.FechaUDP = formulaExistente.FechaUDP;
+                    entidad.PrendasReq = formulaExistente.PrendasReq;
+                }
+
                 bool resultado = bl.ActualizarFormula(entidad);
                 if (resultado)
                     return Json(new { success = true, message = "Fórmula actualizada correctamente." });
@@ -238,6 +249,70 @@ namespace AppGenReceta.Web.Controllers
                     return Json(new { success = true, message = "Estado actualizado correctamente." });
                 else
                     return Json(new { success = false, message = "Error al actualizar el estado." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ==========================================
+        // SUB-MÓDULO: STOCK ACTUAL
+        // ==========================================
+        [HttpGet]
+        public ActionResult StockActual()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
+
+            try
+            {
+                var lista = _stockReqBl.ListarStockActual();
+                return View(lista);
+            }
+            catch (Exception)
+            {
+                return View(new List<LIQ_StockInsumoBE>());
+            }
+        }
+
+        // ==========================================
+        // SUB-MÓDULO: REQUERIMIENTOS
+        // ==========================================
+        [HttpGet]
+        public ActionResult Requerimientos()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
+
+            try
+            {
+                var lista = _stockReqBl.ListarRequerimientosPendientes();
+                return View(lista);
+            }
+            catch (Exception)
+            {
+                return View(new List<LIQ_RequerimientoBE>());
+            }
+        }
+
+        [HttpPost]
+        public JsonResult ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                string msj = _stockReqBl.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuario);
+                return Json(new { success = true, message = msj });
             }
             catch (Exception ex)
             {

@@ -49,6 +49,7 @@
     <Compile Include="UsuarioBL.cs" />
     <Compile Include="VisitaBL.cs" />
     <Compile Include="Liquidacion_BL.cs" />
+    <Compile Include="LiquidacionStockReq_BL.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AppGenReceta.BE\AppGenReceta.BE.csproj">
