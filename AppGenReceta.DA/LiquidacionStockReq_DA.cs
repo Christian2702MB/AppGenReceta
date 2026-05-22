@@ -39,6 +39,123 @@ namespace AppGenReceta.DA
             return lista;
         }
 
+        public List<LIQ_REQ_RecepcionBE> ListarRecepcionesHistoricas(string fechaDesde, string fechaHasta)
+        {
+            var lista = new List<LIQ_REQ_RecepcionBE>();
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                string sql = @"
+                    SELECT NumRequerimiento, CodOrdPro, Motivo, Estado, FechaRecepcion, UsuarioRecepcion, Observaciones 
+                    FROM LIQ_REQ_Recepciones 
+                    WHERE CONVERT(DATE, FechaRecepcion) BETWEEN @desde AND @hasta 
+                    ORDER BY FechaRecepcion DESC";
+                
+                using (SqlCommand cmd = new SqlCommand(sql, cn))
+                {
+                    cmd.Parameters.AddWithValue("@desde", string.IsNullOrEmpty(fechaDesde) ? DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd") : fechaDesde);
+                    cmd.Parameters.AddWithValue("@hasta", string.IsNullOrEmpty(fechaHasta) ? DateTime.Now.ToString("yyyy-MM-dd") : fechaHasta);
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while(dr.Read())
+                        {
+                            lista.Add(new LIQ_REQ_RecepcionBE
+                            {
+                                NumRequerimiento = Convert.ToInt32(dr["NumRequerimiento"]),
+                                CodOrdPro = dr["CodOrdPro"].ToString(),
+                                Motivo = dr["Motivo"].ToString(),
+                                Estado = dr["Estado"].ToString(),
+                                FechaRecepcion = Convert.ToDateTime(dr["FechaRecepcion"]).ToString("dd/MM/yyyy HH:mm"),
+                                UsuarioRecepcion = dr["UsuarioRecepcion"].ToString(),
+                                Observaciones = dr["Observaciones"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
+        public List<LIQ_RequerimientoBE> ListarRequerimientosAJAX(string opcion, string fechaDesde, string fechaHasta, string np = "", int? numReqBusqueda = null)
+        {
+            var lista = new List<LIQ_RequerimientoBE>();
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("LIQ_REQ_SUSP_REQ_ADICIONALES_ESTAMPADO", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@opcion", string.IsNullOrEmpty(opcion) ? "1" : opcion);
+                    cmd.Parameters.AddWithValue("@fecha", string.IsNullOrEmpty(fechaDesde) ? "" : fechaDesde);
+                    cmd.Parameters.AddWithValue("@fecha2", string.IsNullOrEmpty(fechaHasta) ? "" : fechaHasta);
+                    cmd.Parameters.AddWithValue("@cod_ordpro", string.IsNullOrEmpty(np) ? "" : np);
+                    cmd.Parameters.AddWithValue("@Num_Requerimiento", numReqBusqueda.HasValue ? numReqBusqueda.Value : 0);
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        var idsProcesados = new HashSet<int>();
+                        while (dr.Read())
+                        {
+                            int numReq = dr["Num_Requerimiento"] != DBNull.Value ? Convert.ToInt32(dr["Num_Requerimiento"]) : 0;
+                            if (numReq > 0 && idsProcesados.Contains(numReq)) continue;
+                            if (numReq > 0) idsProcesados.Add(numReq);
+
+                            string codOrdPro = dr["Partida"] != DBNull.Value ? dr["Partida"].ToString().Trim() : "";
+                            string motivo = dr["Motivo"] != DBNull.Value ? dr["Motivo"].ToString().Trim() : "";
+
+                            if (!string.IsNullOrEmpty(codOrdPro) && motivo == "30")
+                            {
+                                lista.Add(new LIQ_RequerimientoBE
+                                {
+                                    NumRequerimiento = numReq,
+                                    CodOrdPro = codOrdPro,
+                                    Motivo = motivo,
+                                    FecCreacion = dr["Fec_Creacion"] != DBNull.Value ? dr["Fec_Creacion"].ToString() : "",
+                                    Partida = dr["Partida"] != DBNull.Value ? dr["Partida"].ToString() : "",
+                                    Cliente = dr["Cod_Cliente"] != DBNull.Value ? dr["Cod_Cliente"].ToString() : "",
+                                    Observaciones = dr["Observaciones"] != DBNull.Value ? dr["Observaciones"].ToString() : ""
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            var pendientes = new List<LIQ_RequerimientoBE>();
+            if (lista.Count > 0)
+            {
+                var nums = new List<int>();
+                foreach(var req in lista) nums.Add(req.NumRequerimiento);
+                var strNums = string.Join(",", nums);
+
+                using (SqlConnection cn = new SqlConnection(ConnectionString))
+                {
+                    string sql = $"SELECT NumRequerimiento FROM LIQ_REQ_Recepciones WHERE NumRequerimiento IN ({strNums})";
+                    using (SqlCommand cmd = new SqlCommand(sql, cn))
+                    {
+                        cn.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            var recibidos = new HashSet<int>();
+                            while(dr.Read())
+                            {
+                                recibidos.Add(Convert.ToInt32(dr["NumRequerimiento"]));
+                            }
+                            
+                            foreach(var req in lista)
+                            {
+                                if (!recibidos.Contains(req.NumRequerimiento))
+                                {
+                                    pendientes.Add(req);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return pendientes;
+        }
+
         public List<LIQ_RequerimientoBE> ListarRequerimientosPendientes()
         {
             var lista = new List<LIQ_RequerimientoBE>();
@@ -61,8 +178,8 @@ namespace AppGenReceta.DA
                     {
                         while (dr.Read())
                         {
-                            string codOrdPro = dr["cod_ordpro"] != DBNull.Value ? dr["cod_ordpro"].ToString().Trim() : "";
-                            string motivo = dr["Cod_Motivo_Requer"] != DBNull.Value ? dr["Cod_Motivo_Requer"].ToString().Trim() : "";
+                            string codOrdPro = dr["Partida"] != DBNull.Value ? dr["Partida"].ToString().Trim() : "";
+                            string motivo = dr["Motivo"] != DBNull.Value ? dr["Motivo"].ToString().Trim() : "";
                             int numReq = dr["Num_Requerimiento"] != DBNull.Value ? Convert.ToInt32(dr["Num_Requerimiento"]) : 0;
 
                             // Regla de Negocio: Mostrar solo las que tengan "Cod.OrdPro" y "Motivo = 30"
@@ -75,7 +192,7 @@ namespace AppGenReceta.DA
                                     Motivo = motivo,
                                     FecCreacion = dr["Fec_Creacion"] != DBNull.Value ? dr["Fec_Creacion"].ToString() : "",
                                     Partida = dr["Partida"] != DBNull.Value ? dr["Partida"].ToString() : "",
-                                    Cliente = dr["Cliente"] != DBNull.Value ? dr["Cliente"].ToString() : "",
+                                    Cliente = dr["Cod_Cliente"] != DBNull.Value ? dr["Cod_Cliente"].ToString() : "",
                                     Observaciones = dr["Observaciones"] != DBNull.Value ? dr["Observaciones"].ToString() : ""
                                 });
                             }
@@ -126,9 +243,10 @@ namespace AppGenReceta.DA
             string mensaje = "";
             using (SqlConnection cn = new SqlConnection(ConnectionString))
             {
-                using (SqlCommand cmd = new SqlCommand("LIQ_REQ_SP_ConfirmarRecepcion", cn))
+                string sql = "SET ARITHABORT ON; EXEC LIQ_REQ_SP_ConfirmarRecepcion @NumRequerimiento, @CodOrdPro, @Motivo, @UsuarioRecepcion, @XMLDetalle";
+                using (SqlCommand cmd = new SqlCommand(sql, cn))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@NumRequerimiento", numRequerimiento);
                     cmd.Parameters.AddWithValue("@CodOrdPro", codOrdPro);
                     cmd.Parameters.AddWithValue("@Motivo", motivo);

@@ -1,4 +1,4 @@
-@model List<AppGenReceta.BE.LIQ_RequerimientoBE>
+
 @{
     ViewBag.Title = "Requerimientos Pendientes";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -50,7 +50,7 @@
         border: none !important;
         font-weight: 700 !important;
         text-transform: uppercase;
-        font-size: 0.95rem !important;
+        font-size: 1.1rem !important;
         letter-spacing: 0.8px;
         padding: 14px !important;
         color: var(--hialpesa-blue) !important;
@@ -67,10 +67,51 @@
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Lista de requerimientos de insumos pendientes de confirmación y recepción.</p>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
-            <a href="@Url.Action("Index", "Liquidacion")" class="btn-header-back">
-                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar al Menú
+            <a href="@Url.Action("MantenimientoProcesoProductivo", "Liquidacion")" class="btn-header-back">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
             </a>
+    </div>
+
+    <!-- Panel de Filtros -->
+    <div class="panel panel-default shadow-sm mb-4" style="border: 1px solid #f39c12; border-left: 6px solid #f39c12; border-radius: 8px;">
+        <div class="panel-body" style="padding: 15px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px;">
+                <div style="flex: 0 0 auto; min-width: 150px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="optBusqueda" id="optFecha" value="1" checked>
+                        <label class="form-check-label font-weight-bold" for="optFecha">Fecha</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="optBusqueda" id="optNP" value="2">
+                        <label class="form-check-label font-weight-bold" for="optNP">Partidas (NP)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="optBusqueda" id="optNumReq" value="3">
+                        <label class="form-check-label font-weight-bold" for="optNumReq">N° Requerimiento</label>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 200px;" id="divDesde">
+                    <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-alt text-warning mr-1"></i> Desde</label>
+                    <input type="date" class="form-control" id="txtDesde" />
+                </div>
+                <div style="flex: 1; min-width: 200px;" id="divHasta">
+                    <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-check text-warning mr-1"></i> Hasta</label>
+                    <input type="date" class="form-control" id="txtHasta" />
+                </div>
+                <div style="flex: 1; min-width: 150px;" id="divNumReq">
+                    <label class="font-weight-bold text-muted mb-1"><i class="fas fa-hashtag text-warning mr-1"></i> N° Req.</label>
+                    <input type="number" class="form-control" id="txtNumReq" placeholder="Ej. 12345" min="1" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                </div>
+                <div style="flex: 1; min-width: 150px;" id="divNP">
+                    <label class="font-weight-bold text-muted mb-1"><i class="fas fa-file-alt text-warning mr-1"></i> NP</label>
+                    <input type="text" class="form-control" id="txtNP" placeholder="Nota Pedido" />
+                </div>
+                <div style="flex: 0 0 auto; min-width: auto; padding-bottom: 2px;">
+                    <button type="button" class="btn btn-warning px-4 mb-0" id="btnBuscar" style="border-radius: 6px; color: white;">
+                        <i class="fas fa-search mr-2"></i> Buscar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -83,31 +124,58 @@
                         <th class="text-center">N° Req.</th>
                         <th class="text-center">Fecha Creación</th>
                         <th class="text-center">Partida</th>
-                        <th class="text-center">Cod. OP</th>
-                        <th>Cliente</th>
                         <th>Observaciones</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var req in Model)
-                    {
-                        <tr id="row_@req.NumRequerimiento">
-                            <td class="text-center font-weight-bold text-primary">@req.NumRequerimiento</td>
-                            <td class="text-center">@req.FecCreacion</td>
-                            <td class="text-center">@req.Partida</td>
-                            <td class="text-center">@req.CodOrdPro</td>
-                            <td>@req.Cliente</td>
-                            <td>@req.Observaciones</td>
-                            <td class="text-center">
-                                <button class="btn btn-success btn-sm" onclick="confirmarRecepcion(@req.NumRequerimiento, '@req.CodOrdPro', '@req.Motivo')">
-                                    <i class="fas fa-check-circle"></i> Confirmar
-                                </button>
-                            </td>
-                        </tr>
-                    }
+                    <!-- Llenado por AJAX -->
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Vista Previa -->
+<div class="modal fade" id="modalVistaPrevia" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 900px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white;">
+                <h5 class="modal-title" id="modalVistaPreviaLabel"><i class="fas fa-box-open mr-2"></i> Vista Previa del Requerimiento <span id="spanNumReq"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body bg-light">
+                <input type="hidden" id="hdnNumReq" />
+                <input type="hidden" id="hdnCodOrdPro" />
+                <input type="hidden" id="hdnMotivo" />
+                
+                <div class="alert alert-info">
+                    <strong><i class="fas fa-info-circle mr-1"></i> OP:</strong> <span id="spanOp"></span><br />
+                    <strong><i class="fas fa-comment mr-1"></i> Observaciones:</strong> <span id="spanObs"></span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered bg-white" id="tblDetalleReq">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Item</th>
+                                <th>Descripción</th>
+                                <th class="text-right">Cantidad</th>
+                                <th class="text-center">UM</th>
+                                <th class="text-center">Lote</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarRecepcion"><i class="fas fa-check-double"></i> Confirmar y recibir requerimiento</button>
+            </div>
         </div>
     </div>
 </div>

@@ -280,8 +280,38 @@ namespace AppGenReceta.Web.Controllers
         }
 
         // ==========================================
-        // SUB-MÓDULO: REQUERIMIENTOS
+        // SUB-MÓDULO: REQUERIMIENTOS Y RECEPCIÓN
         // ==========================================
+        [HttpGet]
+        public ActionResult MantenimientoProcesoProductivo(string start = null, string end = null)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return RedirectToAction("Index", "Home");
+
+                ViewBag.Usuario = Session["NombreUsuario"];
+                ViewBag.Correo = Session["CorreoUsuario"];
+
+                // Fechas por defecto: hoy
+                if (string.IsNullOrEmpty(start)) start = DateTime.Now.ToString("yyyy-MM-dd");
+                if (string.IsNullOrEmpty(end)) end = DateTime.Now.ToString("yyyy-MM-dd");
+
+                ViewBag.FechaInicio = start;
+                ViewBag.FechaFin = end;
+
+                // Formatear a dd/MM/yyyy para la BD
+                string fechaInicioDB = DateTime.ParseExact(start, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
+                string fechaFinDB = DateTime.ParseExact(end, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
+
+                var lista = _stockReqBl.ListarRecepcionesHistoricas(fechaInicioDB, fechaFinDB);
+                return View(lista);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
         [HttpGet]
         public ActionResult Requerimientos()
         {
@@ -291,14 +321,53 @@ namespace AppGenReceta.Web.Controllers
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
 
+            return View(new List<LIQ_RequerimientoBE>());
+        }
+
+        [HttpPost]
+        public JsonResult ListarRequerimientosAJAX(string opcion, string desde, string hasta, string np = "", int? numReq = null)
+        {
             try
             {
-                var lista = _stockReqBl.ListarRequerimientosPendientes();
-                return View(lista);
+                string strDesde = "";
+                string strHasta = "";
+
+                if (!string.IsNullOrEmpty(desde))
+                {
+                    DateTime dtDesde;
+                    if (DateTime.TryParse(desde, out dtDesde)) strDesde = dtDesde.ToString("dd/MM/yyyy");
+                    else strDesde = desde;
+                }
+                else strDesde = DateTime.Now.AddMonths(-1).ToString("dd/MM/yyyy");
+
+                if (!string.IsNullOrEmpty(hasta))
+                {
+                    DateTime dtHasta;
+                    if (DateTime.TryParse(hasta, out dtHasta)) strHasta = dtHasta.ToString("dd/MM/yyyy");
+                    else strHasta = hasta;
+                }
+                else strHasta = DateTime.Now.ToString("dd/MM/yyyy");
+
+                var lista = _stockReqBl.ListarRequerimientosAJAX(opcion, strDesde, strHasta, np, numReq);
+                return Json(new { success = true, data = lista });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return View(new List<LIQ_RequerimientoBE>());
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult ObtenerVistaPreviaReq(int numReq)
+        {
+            try
+            {
+                var detalles = _stockReqBl.ObtenerDetalleRequerimiento(numReq);
+                return Json(new { success = true, data = detalles });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

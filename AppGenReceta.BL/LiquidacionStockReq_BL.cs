@@ -25,6 +25,21 @@ namespace AppGenReceta.BL
             return _da.ListarRequerimientosPendientes();
         }
 
+        public List<LIQ_REQ_RecepcionBE> ListarRecepcionesHistoricas(string fechaDesde, string fechaHasta)
+        {
+            return _da.ListarRecepcionesHistoricas(fechaDesde, fechaHasta);
+        }
+
+        public List<LIQ_RequerimientoBE> ListarRequerimientosAJAX(string opcion, string fechaDesde, string fechaHasta, string np = "", int? numReqBusqueda = null)
+        {
+            return _da.ListarRequerimientosAJAX(opcion, fechaDesde, fechaHasta, np, numReqBusqueda);
+        }
+
+        public List<E_ConsumoAdicionalDetalle> ObtenerDetalleRequerimiento(int numReq)
+        {
+            return _daConsumoAdicional.ListarDetalles(numReq);
+        }
+
         public string ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string usuarioRecepcion)
         {
             // Primero, debemos obtener el detalle real de "ConsumoAdicional" 
