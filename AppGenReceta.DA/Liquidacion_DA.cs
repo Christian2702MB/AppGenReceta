@@ -332,5 +332,145 @@ namespace AppGenReceta.DA
                 return true;
             }
         }
+
+        // =======================================================================
+        // METODOS OPERATIVOS (CONSUMOS, MERMAS, DEVOLUCIONES)
+        // =======================================================================
+
+        public bool RegistrarOperacion(LIQ_OperacionBE ope)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarOperacion", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", ope.NP);
+                cmd.Parameters.AddWithValue("@CodInsumo", ope.CodInsumo);
+                cmd.Parameters.AddWithValue("@TipoOperacion", ope.TipoOperacion);
+                cmd.Parameters.AddWithValue("@Cantidad", ope.Cantidad);
+                cmd.Parameters.AddWithValue("@Motivo", ope.Motivo ?? "");
+                cmd.Parameters.AddWithValue("@MermaReutilizada", ope.MermaReutilizada ?? "");
+                cmd.Parameters.AddWithValue("@Usuario", ope.Usuario ?? "");
+
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        return Convert.ToInt32(dr["Resultado"]) > 0;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado)
+        {
+            List<LIQ_LiquidacionConsolidadaBE> lista = new List<LIQ_LiquidacionConsolidadaBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Estado", estado);
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        // 1. LEER CABECERAS
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_LiquidacionConsolidadaBE
+                            {
+                                NP = dr["NP"].ToString(),
+                                Cliente = dr["Cliente"].ToString(),
+                                Estilo = dr["Estilo"].ToString(),
+                                Combo = dr["Combo"].ToString(),
+                                Estado = dr["Estado"].ToString(),
+                                Creacion = dr["FechaCreacion"].ToString(),
+                                Cierre = dr["FechaCierre"].ToString(),
+                                Colores = new List<LIQ_LiquidacionColorBE>()
+                            });
+                        }
+
+                        // 2. LEER DETALLE Y ASOCIAR
+                        if (dr.NextResult())
+                        {
+                            while (dr.Read())
+                            {
+                                string np = dr["NP"].ToString();
+                                string pantone = dr["Pantone"].ToString();
+
+                                var cabecera = lista.Find(x => x.NP == np);
+                                if (cabecera != null)
+                                {
+                                    var color = cabecera.Colores.Find(c => c.Pantone == pantone);
+                                    if (color == null)
+                                    {
+                                        color = new LIQ_LiquidacionColorBE { Pantone = pantone, Insumos = new List<LIQ_LiquidacionInsumoBE>() };
+                                        cabecera.Colores.Add(color);
+                                    }
+
+                                    decimal entregado = Convert.ToDecimal(dr["Entregado"]);
+                                    decimal consumido = Convert.ToDecimal(dr["Consumido"]);
+                                    decimal devuelto = Convert.ToDecimal(dr["Devuelto"]);
+                                    decimal merma = Convert.ToDecimal(dr["Merma"]);
+                                    decimal saldo = entregado - consumido - devuelto - merma;
+                                    if (saldo < 0) saldo = 0;
+
+                                    color.Insumos.Add(new LIQ_LiquidacionInsumoBE
+                                    {
+                                        Codigo = dr["CodigoInsumo"].ToString(),
+                                        Nombre = dr["NombreInsumo"].ToString(),
+                                        Tecnica = dr["Tecnica"].ToString(),
+                                        UM = dr["UM"].ToString(),
+                                        Requerido = Convert.ToDecimal(dr["Requerido"]),
+                                        Entregado = entregado,
+                                        Consumido = consumido,
+                                        Devuelto = devuelto,
+                                        Merma = merma,
+                                        Saldo = saldo,
+                                        LoteVenc = "", // Para implementar si se requiere de lote real
+                                        Trazabilidad = dr["Trazabilidad"].ToString()
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
+
+        public List<LIQ_MermaStockBE> ObtenerMermasStock()
+        {
+            List<LIQ_MermaStockBE> lista = new List<LIQ_MermaStockBE>();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerMermasStock", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(new LIQ_MermaStockBE
+                        {
+                            Codigo = dr["Codigo"].ToString(),
+                            Descripcion = dr["Descripcion"].ToString(),
+                            Tecnica = dr["Tecnica"].ToString(),
+                            NPOrigen = dr["NPOrigen"].ToString(),
+                            FechaGeneracion = dr["FechaGeneracion"].ToString(),
+                            FechaVencimiento = dr["FechaVencimiento"].ToString(),
+                            CantidadDisponible = Convert.ToDecimal(dr["CantidadDisponible"]),
+                            UM = dr["UM"].ToString(),
+                            Estado = dr["Estado"].ToString()
+                        });
+                    }
+                }
+            }
+            return lista;
+        }
     }
 }

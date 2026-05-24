@@ -73,5 +73,36 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        // =======================================================================
+        // METODOS OPERATIVOS (CONSUMOS, MERMAS, DEVOLUCIONES)
+        // =======================================================================
+
+        public bool RegistrarOperacion(LIQ_OperacionBE ope)
+        {
+            try
+            {
+                return new Liquidacion_DA().RegistrarOperacion(ope);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerLiquidacionesConsolidadas(estado);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public List<LIQ_MermaStockBE> ObtenerMermasStock()
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerMermasStock();
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

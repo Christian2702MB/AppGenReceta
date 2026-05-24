@@ -34,6 +34,21 @@ namespace AppGenReceta.Web.Controllers
         }
 
         // ==========================================
+        // GESTIÓN DE LIQUIDACIONES DE INSUMOS
+        // ==========================================
+        [HttpGet]
+        public ActionResult LiquidacionInsumos()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.Correo = Session["CorreoUsuario"];
+
+            return View();
+        }
+
+        // ==========================================
         // MANTENIMIENTO DE FÓRMULAS
         // ==========================================
         [HttpGet]
@@ -400,6 +415,56 @@ namespace AppGenReceta.Web.Controllers
                 string usuario = Session["NombreUsuario"].ToString();
                 string msj = _stockReqBl.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario);
                 return Json(new { success = true, message = msj });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // =======================================================================
+        // METODOS OPERATIVOS (CONSUMOS, MERMAS, DEVOLUCIONES)
+        // =======================================================================
+
+        [HttpGet]
+        public JsonResult ObtenerLiquidacionesConsolidadas(string estado)
+        {
+            try
+            {
+                var data = bl.ObtenerLiquidacionesConsolidadas(estado);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerMermasStock()
+        {
+            try
+            {
+                var data = bl.ObtenerMermasStock();
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarOperacion(LIQ_OperacionBE ope)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                ope.Usuario = Session["NombreUsuario"].ToString();
+                bool res = bl.RegistrarOperacion(ope);
+                return Json(new { success = res });
             }
             catch (Exception ex)
             {

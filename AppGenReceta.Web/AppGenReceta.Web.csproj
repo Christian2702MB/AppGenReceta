@@ -747,6 +747,8 @@
     <Content Include="Views\Liquidacion\EditarFormula.cshtml" />
     <Content Include="Views\Liquidacion\StockActual.cshtml" />
     <Content Include="Views\Liquidacion\Requerimientos.cshtml" />
+    <Content Include="Views\Liquidacion\LiquidacionInsumos.cshtml" />
+    <Content Include="Views\Liquidacion\MantenimientoProcesoProductivo.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
