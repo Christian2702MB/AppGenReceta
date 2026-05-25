@@ -16,6 +16,7 @@ namespace AppGenReceta.BE
         public string Motivo { get; set; }
         public string MermaReutilizada { get; set; }
         public string Usuario { get; set; }
+        public string FuenteConsumo { get; set; }
     }
 
     /// <summary>
@@ -76,12 +77,21 @@ namespace AppGenReceta.BE
         public string Tecnica { get; set; }
         public string UM { get; set; }
         public decimal Requerido { get; set; }
-        public decimal Entregado { get; set; }
         public decimal Consumido { get; set; }
+        public decimal ConsumidoInicial { get; set; }
+        public decimal ConsumidoSolicitud { get; set; }
         public decimal Devuelto { get; set; }
         public decimal Merma { get; set; }
         public decimal Saldo { get; set; }
         public string LoteVenc { get; set; }
         public string Trazabilidad { get; set; }
+    }
+
+    [Serializable]
+    public class LIQ_SaldosPopupBE
+    {
+        public decimal StockInicial { get; set; }
+        public decimal StockSolicitud { get; set; }
+        public decimal StockTotal { get; set; }
     }
 }

@@ -104,5 +104,14 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public LIQ_SaldosPopupBE ObtenerSaldosPopup(string np, string codInsumo)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerSaldosPopup(np, codInsumo);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

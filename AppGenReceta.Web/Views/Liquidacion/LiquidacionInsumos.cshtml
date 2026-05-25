@@ -379,7 +379,8 @@
     .inner-table-wrapper {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
         margin-bottom: 15px;
     }
 
@@ -610,9 +611,34 @@
                     <label>Insumo en Receta</label>
                     <select class="form-control" id="ddlConsumoInsumo"></select>
                 </div>
+                <div class="row" style="margin-top: 15px; background: #f8fafc; padding: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0; margin-left: 0; margin-right: 0;">
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: var(--hialpesa-dark);">Stock Inicial (g)</label>
+                        <input type="text" class="form-control" id="txtSaldoInicial" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: var(--hialpesa-accent);">Stock Solicitud (g)</label>
+                        <input type="text" class="form-control" id="txtSaldoSolicitud" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: #0ea5e9;">Stock Total (g)</label>
+                        <input type="text" class="form-control" id="txtSaldoTotal" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                </div>
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Cantidad consumida (gr)</label>
-                    <input type="number" class="form-control" id="txtConsumoCantidad" placeholder="0.00" step="0.01" />
+                    <label>Fuente de Consumo</label>
+                    <div style="display: flex; gap: 20px; margin-top: 5px;">
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumir de Stock Inicial
+                        </label>
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteConsumo" value="Solicitud Realizada" /> Consumir de Solicitud Realizada
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Cantidad a consumir (gr)</label>
+                    <input type="number" class="form-control" id="txtConsumoCantidad" placeholder="0.00" step="0.01" style="font-size: 16px; font-weight: bold; color: var(--hialpesa-dark);" />
                 </div>
             </div>
             <div class="modal-footer">
@@ -858,7 +884,8 @@
                         pantone: c.Pantone,
                         insumos: c.Insumos.map(i => ({
                             codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
-                            requerido: i.Requerido, entregado: i.Entregado, consumido: i.Consumido,
+                            requerido: i.Requerido, consumido: i.Consumido,
+                            consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud,
                             devuelto: i.Devuelto, merma: i.Merma, saldo: i.Saldo, 
                             loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad
                         }))
@@ -997,7 +1024,6 @@
                                         <th>Insumo</th>
                                         <th>U.M.</th>
                                         <th class="text-right">Req.</th>
-                                        <th class="text-right">Entregado</th>
                                         <th class="text-right">Consumido</th>
                                         <th class="text-right">Devuelto</th>
                                         <th class="text-right">Merma</th>
@@ -1008,16 +1034,16 @@
                                 <tbody>`;
                 
                 col.insumos.forEach(function(ins) {
-                    var saldoVal = ins.entregado - ins.consumido - ins.devuelto - ins.merma;
+                    var saldoVal = ins.requerido - ins.consumido - ins.devuelto - ins.merma;
                     if (saldoVal < 0) saldoVal = 0;
 
                     // Si la NP no está cerrada, mostrar botones operativos por fila
                     var accionesHtml = "";
                     if (tipo === 'activa') {
                         accionesHtml = `
-                            <button class="btn btn-xs btn-outline-hialpesa" style="font-size:10px; padding:3px 6px; border-color: var(--hialpesa-dark); color: var(--hialpesa-dark);" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
-                            <button class="btn btn-xs btn-outline-hialpesa" style="font-size:10px; padding:3px 6px; border-color: var(--hialpesa-accent); color: var(--hialpesa-accent);" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'merma')" title="Registrar Merma"><i class="fas fa-sync-alt"></i> Merma</button>
-                            <button class="btn btn-xs btn-outline-hialpesa" style="font-size:10px; padding:3px 6px; border-color: #0ea5e9; color: #0ea5e9;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-xs btn-primary-hialpesa" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
+                            <button class="btn btn-xs btn-warning" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent); margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'merma')" title="Registrar Merma"><i class="fas fa-sync-alt"></i> Merma</button>
+                            <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
                         `;
                     }
 
@@ -1026,7 +1052,6 @@
                         <td>${ins.nombre}</td>
                         <td>${ins.um}</td>
                         <td class="text-right">${ins.requerido.toFixed(2)}</td>
-                        <td class="text-right"><strong>${ins.entregado.toFixed(2)}</strong></td>
                         <td class="text-right">${ins.consumido.toFixed(2)}</td>
                         <td class="text-right">${ins.devuelto.toFixed(2)}</td>
                         <td class="text-right text-warning"><strong>${ins.merma.toFixed(2)}</strong></td>
@@ -1050,7 +1075,7 @@
                                 <td>${ins.nombre}</td>
                                 <td>${ins.tecnica}</td>
                                 <td>${ins.loteVenc}</td>
-                                <td class="text-right">${ins.entregado.toFixed(2)}</td>
+                                <td class="text-right">${ins.requerido.toFixed(2)}</td>
                                 <td class="text-right">${ins.consumido.toFixed(2)}</td>
                                 <td class="text-right">${ins.merma.toFixed(2)}</td>
                                 <td class="text-right text-primary" style="font-size:14px;"><strong>${saldoVal.toFixed(2)}</strong></td>
@@ -1187,6 +1212,24 @@
         });
 
         if (tipo === "consumo") {
+            $("#txtSaldoInicial").val("Cargando...");
+            $("#txtSaldoSolicitud").val("Cargando...");
+            $("#txtSaldoTotal").val("Cargando...");
+            $("input[name='optFuenteConsumo'][value='Stock Inicial']").prop("checked", true);
+            
+            $.get('@Url.Action("ObtenerSaldosInsumo", "Liquidacion")?np=' + selectedNP + '&codInsumo=' + codInsumo, function(response) {
+                if (response && !response.error) {
+                    $("#txtSaldoInicial").val(response.StockInicial.toFixed(2));
+                    $("#txtSaldoSolicitud").val(response.StockSolicitud.toFixed(2));
+                    $("#txtSaldoTotal").val(response.StockTotal.toFixed(2));
+                } else {
+                    $("#txtSaldoInicial").val("0.00");
+                    $("#txtSaldoSolicitud").val("0.00");
+                    $("#txtSaldoTotal").val("0.00");
+                    console.error("Error obteniendo stock:", response.error);
+                }
+            });
+
             $("#ddlConsumoInsumo").html(selectOptionsHtml).prop("disabled", true);
             $("#consumoModal").modal("show");
             setTimeout(function() { $("#txtConsumoCantidad").focus(); }, 400);
@@ -1206,10 +1249,11 @@
     }
 
     // ── FUNCION MAESTRA PARA ENVIAR OPERACION AL SERVIDOR ──
-    function enviarOperacion(np, codInsumo, tipoOpe, cant, motivo, mermaRef, modalId) {
+    function enviarOperacion(np, codInsumo, tipoOpe, cant, motivo, mermaRef, modalId, fuenteConsumo) {
         var ope = {
             NP: np, CodInsumo: codInsumo, TipoOperacion: tipoOpe, 
-            Cantidad: cant, Motivo: motivo, MermaReutilizada: mermaRef
+            Cantidad: cant, Motivo: motivo, MermaReutilizada: mermaRef,
+            FuenteConsumo: fuenteConsumo || null
         };
         $.post('@Url.Action("RegistrarOperacion", "Liquidacion")', ope, function(response) {
             if (response.success) {
@@ -1231,11 +1275,20 @@
     function registrarConsumo() {
         var codInsumo = $("#ddlConsumoInsumo").val();
         var cant = parseFloat($("#txtConsumoCantidad").val());
+        var fuente = $("input[name='optFuenteConsumo']:checked").val();
+
         if (isNaN(cant) || cant <= 0) {
             Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0.', icon: 'error', confirmButtonColor: '#002D72' });
             return;
         }
-        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, "Consumo diario registrado", null, "#consumoModal");
+
+        var saldoDisp = fuente === 'Stock Inicial' ? parseFloat($("#txtSaldoInicial").val()) : parseFloat($("#txtSaldoSolicitud").val());
+        if (cant > saldoDisp) {
+            Swal.fire({ title: 'Saldo Insuficiente', text: 'La cantidad a consumir supera el saldo disponible de la fuente seleccionada (' + fuente + ': ' + saldoDisp.toFixed(2) + ' gr).', icon: 'warning', confirmButtonColor: '#f39c12' });
+            return;
+        }
+
+        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, "Consumo registrado", null, "#consumoModal", fuente);
     }
 
     // ── REGISTRO DE ACCIÓN: MERMA ──

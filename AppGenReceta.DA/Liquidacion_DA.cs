@@ -350,6 +350,7 @@ namespace AppGenReceta.DA
                 cmd.Parameters.AddWithValue("@Motivo", ope.Motivo ?? "");
                 cmd.Parameters.AddWithValue("@MermaReutilizada", ope.MermaReutilizada ?? "");
                 cmd.Parameters.AddWithValue("@Usuario", ope.Usuario ?? "");
+                cmd.Parameters.AddWithValue("@FuenteConsumo", string.IsNullOrEmpty(ope.FuenteConsumo) ? "Stock Inicial" : ope.FuenteConsumo);
 
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
@@ -411,11 +412,13 @@ namespace AppGenReceta.DA
                                         cabecera.Colores.Add(color);
                                     }
 
-                                    decimal entregado = Convert.ToDecimal(dr["Entregado"]);
                                     decimal consumido = Convert.ToDecimal(dr["Consumido"]);
+                                    decimal consumidoInicial = Convert.ToDecimal(dr["ConsumidoInicial"]);
+                                    decimal consumidoSolicitud = Convert.ToDecimal(dr["ConsumidoSolicitud"]);
                                     decimal devuelto = Convert.ToDecimal(dr["Devuelto"]);
                                     decimal merma = Convert.ToDecimal(dr["Merma"]);
-                                    decimal saldo = entregado - consumido - devuelto - merma;
+                                    decimal requerido = Convert.ToDecimal(dr["Requerido"]);
+                                    decimal saldo = requerido - consumido - devuelto - merma;
                                     if (saldo < 0) saldo = 0;
 
                                     color.Insumos.Add(new LIQ_LiquidacionInsumoBE
@@ -424,9 +427,10 @@ namespace AppGenReceta.DA
                                         Nombre = dr["NombreInsumo"].ToString(),
                                         Tecnica = dr["Tecnica"].ToString(),
                                         UM = dr["UM"].ToString(),
-                                        Requerido = Convert.ToDecimal(dr["Requerido"]),
-                                        Entregado = entregado,
+                                        Requerido = requerido,
                                         Consumido = consumido,
+                                        ConsumidoInicial = consumidoInicial,
+                                        ConsumidoSolicitud = consumidoSolicitud,
                                         Devuelto = devuelto,
                                         Merma = merma,
                                         Saldo = saldo,
@@ -471,6 +475,29 @@ namespace AppGenReceta.DA
                 }
             }
             return lista;
+        }
+
+        public LIQ_SaldosPopupBE ObtenerSaldosPopup(string np, string codInsumo)
+        {
+            LIQ_SaldosPopupBE saldos = new LIQ_SaldosPopupBE();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerSaldosPopup", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        saldos.StockInicial = Convert.ToDecimal(dr["StockInicial"]);
+                        saldos.StockSolicitud = Convert.ToDecimal(dr["StockSolicitud"]);
+                        saldos.StockTotal = Convert.ToDecimal(dr["StockTotal"]);
+                    }
+                }
+            }
+            return saldos;
         }
     }
 }

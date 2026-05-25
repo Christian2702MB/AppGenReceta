@@ -471,5 +471,19 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet]
+        public JsonResult ObtenerSaldosInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                var data = bl.ObtenerSaldosPopup(np, codInsumo);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }
