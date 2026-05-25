@@ -15,19 +15,23 @@ namespace AppGenReceta.Web.Controllers
         private Liquidacion_BL bl = new Liquidacion_BL();
         private LiquidacionStockReq_BL _stockReqBl = new LiquidacionStockReq_BL();
 
+        protected override void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            string rol = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "";
+            if (rol != "Liquidador")
+            {
+                filterContext.Result = new RedirectToRouteResult(new System.Web.Routing.RouteValueDictionary(new { controller = "Home", action = "Index" }));
+                return;
+            }
+            base.OnActionExecuting(filterContext);
+        }
+
         // ==========================================
         // MENÚ PRINCIPAL DEL MÓDULO
         // ==========================================
         [HttpGet]
         public ActionResult Index()
         {
-            if (Session["NombreUsuario"] == null)
-                return RedirectToAction("Index", "Home");
-
-            string rol = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "";
-            if (rol != "Liquidador" && rol != "Administrador")
-                return RedirectToAction("Index", "Home");
-
             ViewBag.Usuario = Session["NombreUsuario"];
             ViewBag.Correo = Session["CorreoUsuario"];
             return View();
