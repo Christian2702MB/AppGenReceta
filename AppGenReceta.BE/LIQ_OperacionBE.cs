@@ -47,6 +47,15 @@ namespace AppGenReceta.BE
         public string UsuarioRegistro { get; set; }
         public string EstadoIndicador { get; set; }
     }
+    [Serializable]
+    public class LIQ_AjusteHistoricoBE
+    {
+        public int IdAjuste { get; set; }
+        public decimal Cantidad { get; set; }
+        public string Motivo { get; set; }
+        public string FechaRegistro { get; set; }
+        public string UsuarioRegistro { get; set; }
+    }
 
     /// <summary>
     /// Entidades de lectura (DTO) estructuradas para enviar JSON agrupado a la Vista

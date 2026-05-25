@@ -618,5 +618,38 @@ namespace AppGenReceta.DA
             catch (Exception ex) { throw ex; }
             return lista;
         }
+
+        public List<LIQ_AjusteHistoricoBE> ObtenerAjustesPorInsumo(string np, string codInsumo)
+        {
+            List<LIQ_AjusteHistoricoBE> lista = new List<LIQ_AjusteHistoricoBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerAjustesPorInsumo", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", np);
+                    cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_AjusteHistoricoBE
+                            {
+                                IdAjuste = Convert.ToInt32(dr["IdAjuste"]),
+                                Cantidad = Convert.ToDecimal(dr["Cantidad"]),
+                                Motivo = dr["Motivo"].ToString(),
+                                FechaRegistro = dr["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "",
+                                UsuarioRegistro = dr["UsuarioRegistro"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
     }
 }

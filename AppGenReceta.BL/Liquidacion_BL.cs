@@ -140,5 +140,14 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public List<LIQ_AjusteHistoricoBE> ObtenerAjustesPorInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerAjustesPorInsumo(np, codInsumo);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

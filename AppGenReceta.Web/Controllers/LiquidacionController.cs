@@ -553,5 +553,19 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        [HttpGet]
+        public JsonResult ObtenerAjustesPorInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                var data = bl.ObtenerAjustesPorInsumo(np, codInsumo);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }
