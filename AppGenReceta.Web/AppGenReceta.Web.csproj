@@ -678,6 +678,9 @@
     <Content Include="Scripts\Home\Index.js" />
     <Content Include="Scripts\Home\VisitaCorregirSCTR.js" />
     <Content Include="Scripts\Home\Visita.js" />
+    <Content Include="Scripts\Liquidacion\EditarFormula.js" />
+    <Content Include="Scripts\Liquidacion\Requerimientos.js" />
+    <Content Include="Scripts\Liquidacion\StockActual.js" />
     <Content Include="Scripts\qrCode.min.js" />
     <Content Include="Content\assets\fonts\Material-Design-Iconic-Font.eot" />
     <Content Include="Content\assets\fonts\Material-Design-Iconic-Font.ttf" />

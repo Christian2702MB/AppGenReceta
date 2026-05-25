@@ -227,5 +227,5 @@
         window.urlMantenimiento = "@Url.Action("MantenimientoFormulas", "Liquidacion")";
     </script>
     
-    <script src="~/Scripts/Liquidacion/EditarFormula.js?v=@DateTime.Now.Ticks"></script>
+    <script src="@Url.Content("~/Scripts/Liquidacion/EditarFormula.js")?v=@DateTime.Now.Ticks"></script>
 }
