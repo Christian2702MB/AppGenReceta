@@ -50,7 +50,9 @@ namespace AppGenReceta.BE
         public int IdRecepcionDetalle { get; set; }
         public int NumRequerimiento { get; set; }
         public string CodInsumo { get; set; }
+        public string NombreInsumo { get; set; }
         public decimal CantidadRecibida { get; set; }
+        public string UnidadMedida { get; set; }
         public string Lote { get; set; }
     }
 }

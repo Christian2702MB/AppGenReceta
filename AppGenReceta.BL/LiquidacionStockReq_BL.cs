@@ -40,6 +40,11 @@ namespace AppGenReceta.BL
             return _daConsumoAdicional.ListarDetalles(numReq);
         }
 
+        public List<LIQ_REQ_RecepcionDetalleBE> ObtenerDetalleRecepcion(int numReq)
+        {
+            return _da.ObtenerDetalleRecepcion(numReq);
+        }
+
         public string ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string usuarioRecepcion)
         {
             // Primero, debemos obtener el detalle real de "ConsumoAdicional" 

@@ -44,16 +44,12 @@ namespace AppGenReceta.DA
             var lista = new List<LIQ_REQ_RecepcionBE>();
             using (SqlConnection cn = new SqlConnection(ConnectionString))
             {
-                string sql = @"
-                    SELECT NumRequerimiento, CodOrdPro, Motivo, Estado, FechaRecepcion, UsuarioRecepcion, Observaciones 
-                    FROM LIQ_REQ_Recepciones 
-                    WHERE CONVERT(DATE, FechaRecepcion) BETWEEN @desde AND @hasta 
-                    ORDER BY FechaRecepcion DESC";
-                
-                using (SqlCommand cmd = new SqlCommand(sql, cn))
+                using (SqlCommand cmd = new SqlCommand("LIQ_SP_ListarRecepcionesHistoricas", cn))
                 {
-                    cmd.Parameters.AddWithValue("@desde", string.IsNullOrEmpty(fechaDesde) ? DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd") : fechaDesde);
-                    cmd.Parameters.AddWithValue("@hasta", string.IsNullOrEmpty(fechaHasta) ? DateTime.Now.ToString("yyyy-MM-dd") : fechaHasta);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (!string.IsNullOrEmpty(fechaDesde)) cmd.Parameters.AddWithValue("@FechaDesde", fechaDesde);
+                    if (!string.IsNullOrEmpty(fechaHasta)) cmd.Parameters.AddWithValue("@FechaHasta", fechaHasta);
+
                     cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
@@ -295,6 +291,37 @@ namespace AppGenReceta.DA
                 }
             }
             return mensaje;
+        }
+        public List<LIQ_REQ_RecepcionDetalleBE> ObtenerDetalleRecepcion(int numRequerimiento)
+        {
+            var lista = new List<LIQ_REQ_RecepcionDetalleBE>();
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerDetalleRecepcion", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NumRequerimiento", numRequerimiento);
+
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_REQ_RecepcionDetalleBE
+                            {
+                                IdRecepcionDetalle = Convert.ToInt32(dr["IdRecepcionDetalle"]),
+                                NumRequerimiento = Convert.ToInt32(dr["NumRequerimiento"]),
+                                CodInsumo = dr["CodInsumo"].ToString(),
+                                NombreInsumo = dr["NombreInsumo"].ToString(),
+                                CantidadRecibida = Convert.ToDecimal(dr["CantidadRecibida"]),
+                                UnidadMedida = dr["UnidadMedida"].ToString(),
+                                Lote = dr["Lote"] != DBNull.Value ? dr["Lote"].ToString() : ""
+                            });
+                        }
+                    }
+                }
+            }
+            return lista;
         }
     }
 }

@@ -308,8 +308,8 @@ namespace AppGenReceta.Web.Controllers
                 ViewBag.Usuario = Session["NombreUsuario"];
                 ViewBag.Correo = Session["CorreoUsuario"];
 
-                // Fechas por defecto: hoy
-                if (string.IsNullOrEmpty(start)) start = DateTime.Now.ToString("yyyy-MM-dd");
+                // Fechas por defecto: un mes atrás hasta hoy
+                if (string.IsNullOrEmpty(start)) start = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
                 if (string.IsNullOrEmpty(end)) end = DateTime.Now.ToString("yyyy-MM-dd");
 
                 ViewBag.FechaInicio = start;
@@ -319,12 +319,26 @@ namespace AppGenReceta.Web.Controllers
                 string fechaInicioDB = DateTime.ParseExact(start, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
                 string fechaFinDB = DateTime.ParseExact(end, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
 
-                var lista = _stockReqBl.ListarRecepcionesHistoricas(fechaInicioDB, fechaFinDB);
+                var lista = _stockReqBl.ListarRecepcionesHistoricas(start, end);
                 return View(lista);
             }
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerDetalleRecepcion(int id)
+        {
+            try
+            {
+                var detalle = _stockReqBl.ObtenerDetalleRecepcion(id);
+                return Json(new { success = true, data = detalle }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
         [HttpGet]
