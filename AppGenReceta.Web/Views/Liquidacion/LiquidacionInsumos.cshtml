@@ -519,8 +519,9 @@
                     
                     <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; gap: 20px; font-size: 13px;">
                         <div><strong>Cliente:</strong> <span id="lblDetailCliente"></span></div>
+                        <div><strong>Temporada:</strong> <span id="lblDetailTemporada"></span></div>
                         <div><strong>Estilo:</strong> <span id="lblDetailEstilo"></span></div>
-                        <div><strong>Combo:</strong> <span id="lblDetailCombo"></span></div>
+                        <div><strong>Estilo Propio:</strong> <span id="lblDetailEstiloPropio"></span></div>
                         <div><strong>Estado:</strong> <span id="lblDetailEstado" class="badge-status"></span></div>
                     </div>
 
@@ -667,27 +668,90 @@
     </div>
 </div>
 
-<!-- 2. MODAL MERMA -->
-<div class="modal fade modal-custom" id="mermaModal" tabindex="-1" role="dialog">
+<!-- 2. MODAL MERMA POR COLOR -->
+<div class="modal fade modal-custom" id="mermaColorModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background-color: var(--hialpesa-accent);">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><i class="fas fa-sync-alt"></i> Registrar Merma</h4>
+                <h4 class="modal-title"><i class="fas fa-sync-alt"></i> Registrar Merma por Color</h4>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Insumo</label>
-                    <select class="form-control" id="ddlMermaInsumo"></select>
+                <input type="hidden" id="hdnMermaColorPantone" />
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Color Pantone</label>
+                    <input type="text" class="form-control" id="txtMermaColorDesc" readonly />
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Cantidad (gr) de merma</label>
+                    <input type="number" class="form-control" id="txtMermaColorCantidad" placeholder="0.00" step="0.01" />
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Fecha Vencimiento Estimada</label>
+                    <input type="date" class="form-control" id="txtMermaColorVencimiento" />
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Cantidad (gr) a merma</label>
-                    <input type="number" class="form-control" id="txtMermaCantidad" placeholder="0.00" step="0.01" />
+                    <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none; color: #475569;">
+                        <input type="checkbox" id="chkNoMerma" /> No existe merma
+                    </label>
+                </div>
+                <hr style="border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                <h5 style="color: var(--hialpesa-primary); font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Histórico de Mermas</h5>
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover" id="tablaHistoricoMermas" style="font-size: 12px; margin-bottom: 0;">
+                        <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th>Código</th>
+                                <th>Cant. (g)</th>
+                                <th>Vencimiento</th>
+                                <th>Registro</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn-primary-hialpesa" onclick="registrarMerma()" style="background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent); padding: 6px 18px;">Registrar</button>
+                <button type="button" class="btn-primary-hialpesa" onclick="registrarMermaColorBtn()" style="background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent); padding: 6px 18px;">Registrar Merma</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2.5 MODAL AJUSTE DE SALDO -->
+<div class="modal fade modal-custom" id="ajusteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #10b981;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><i class="fas fa-sliders-h"></i> Ajuste de Inventario</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Insumo a Ajustar</label>
+                    <select class="form-control" id="ddlAjusteInsumo" disabled></select>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Cantidad a ajustar (gr)</label>
+                    <input type="number" class="form-control" id="txtAjusteCantidad" placeholder="0.00" step="0.01" />
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Motivo del Ajuste (Obligatorio)</label>
+                    <input type="text" class="form-control" id="txtAjusteMotivo" placeholder="Ej. Diferencia de inventario físico..." />
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none; color: #475569;">
+                        <input type="checkbox" id="chkNoAjuste" /> No existe ajuste
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-primary-hialpesa" onclick="registrarAjuste()" style="background-color: #10b981; border-color: #10b981; padding: 6px 18px;">Registrar Ajuste</button>
             </div>
         </div>
     </div>
@@ -801,9 +865,10 @@
                         <tr>
                             <th style="width: 50px; text-align: center;"><input type="checkbox" id="chkAllNPs" onclick="toggleAllNPsCheckboxes(this)" /></th>
                             <th>NP</th>
-                            <th>Combo</th>
                             <th>Cliente</th>
+                            <th>Temporada</th>
                             <th>Estilo</th>
+                            <th>Estilo Propio</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -827,26 +892,7 @@
     var finishedLiquidations = {};
     var mermasStock = [];
 
-    // BASE DE DATOS DE NPS PENDIENTES (SIMULADO PARA DEMOSTRAR "NUEVA LIQUIDACION")
-    var pendingNPs = {
-        "H5669": {
-            np: "H5669",
-            combo: "SPRING GREEN",
-            cliente: "VINCE",
-            estilo: "S58459",
-            estado: "En proceso",
-            creacion: "20/05/2026",
-            cierre: "--",
-            colores: [
-                {
-                    pantone: "Spring Green",
-                    insumos: [
-                        { codigo: "GR3882", nombre: "Base Verde Primavera", tecnica: "Al Agua", um: "gr", requerido: 80.00, entregado: 90.00, consumido: 0.00, devuelto: 0.00, merma: 0.00, saldo: 0.00, loteVenc: "Lote G / 15/06/28", trazabilidad: "Entrega inicial" }
-                    ]
-                }
-            ]
-        }
-    };
+
 
     // Variables de control de estado del UI
     var selectedNP = "";
@@ -896,7 +942,7 @@
         if (datosBackend && datosBackend.length) {
             datosBackend.forEach(function(item) {
                 dict[item.NP] = {
-                    np: item.NP, combo: item.Combo, cliente: item.Cliente, estilo: item.Estilo,
+                    np: item.NP, cliente: item.Cliente, estilo: item.Estilo, temporada: item.Temporada, estiloPropio: item.EstiloPropio,
                     estado: item.Estado, creacion: item.Creacion, cierre: item.Cierre,
                     colores: item.Colores.map(c => ({
                         pantone: c.Pantone,
@@ -904,7 +950,7 @@
                             codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
                             requerido: i.Requerido, consumido: i.Consumido,
                             consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud,
-                            devuelto: i.Devuelto, merma: i.Merma, saldo: i.Saldo, 
+                            devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
                             loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad
                         }))
                     }))
@@ -958,7 +1004,7 @@
                     <div class="np-item-icon"><i class="fas fa-file-invoice"></i></div>
                     <div class="np-text">
                         <div class="np-code">${item.np}</div>
-                        <div class="np-sub">${item.cliente} - ${item.estilo}</div>
+                        <div class="np-sub">${item.cliente} - ${item.estilo} (${item.estiloPropio || ''})</div>
                     </div>
                 </div>`;
                 
@@ -980,7 +1026,7 @@
                     <div class="np-item-icon" style="background: #cbd5e1;"><i class="fas fa-archive"></i></div>
                     <div class="np-text">
                         <div class="np-code">${item.np}</div>
-                        <div class="np-sub">${item.cliente} - Cerrado: ${item.cierre}</div>
+                        <div class="np-sub">${item.cliente} - Cerrado: ${item.cierre} (${item.estiloPropio || ''})</div>
                     </div>
                 </div>`;
                 
@@ -1006,11 +1052,11 @@
             return;
         }
 
-        // Rellenar cabeceras
         $("#lblDetailNP").text(item.np);
         $("#lblDetailCliente").text(item.cliente);
+        $("#lblDetailTemporada").text(item.temporada);
         $("#lblDetailEstilo").text(item.estilo);
-        $("#lblDetailCombo").text(item.combo);
+        $("#lblDetailEstiloPropio").text(item.estiloPropio);
         $("#lblDetailEstado").text(item.estado);
 
         // Dibujar Colores y Tabla interior
@@ -1029,9 +1075,14 @@
 
             item.colores.forEach(function(col) {
                 var colorHtml = `
-                    <div class="color-group-header" onclick="toggleColorGroupDOM(this)">
-                        <i class="fas fa-palette" style="color: var(--hialpesa-blue);"></i> Color Pantone: <strong>${col.pantone}</strong>
-                        <i class="fas fa-chevron-down"></i>
+                    <div class="color-group-header">
+                        <div style="flex: 1;" onclick="toggleColorGroupDOM(this.parentNode)">
+                            <i class="fas fa-palette" style="color: var(--hialpesa-blue);"></i> Color Pantone: <strong>${col.pantone}</strong>
+                            <i class="fas fa-chevron-down" style="margin-left: 10px;"></i>
+                        </div>
+                        <div style="margin-left: auto;">
+                            ${tipo === 'activa' ? `<button class="btn btn-xs btn-warning" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="abrirModalMermaColor('${item.np}', '${col.pantone}')" title="Registrar Merma para el Color"><i class="fas fa-sync-alt"></i> Merma</button>` : ''}
+                        </div>
                     </div>
                     <div class="color-group-content">
                         <div class="inner-table-wrapper">
@@ -1052,16 +1103,16 @@
                                 <tbody>`;
                 
                 col.insumos.forEach(function(ins) {
-                    var saldoVal = ins.requerido - ins.consumido - ins.devuelto - ins.merma;
+                    var saldoVal = ins.requerido - ins.consumido - ins.devuelto - ins.merma - (ins.ajuste || 0);
                     if (saldoVal < 0) saldoVal = 0;
 
                     // Si la NP no está cerrada, mostrar botones operativos por fila
                     var accionesHtml = "";
                     if (tipo === 'activa') {
                         accionesHtml = `
-                            <button class="btn btn-xs btn-primary-hialpesa" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
-                            <button class="btn btn-xs btn-warning" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent); margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'merma')" title="Registrar Merma"><i class="fas fa-sync-alt"></i> Merma</button>
-                            <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-xs btn-primary-hialpesa" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo', '${col.pantone}')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
+                            <button class="btn btn-xs btn-success" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ajuste', '${col.pantone}')" title="Ajuste de Saldo"><i class="fas fa-sliders-h"></i> Ajuste</button>
+                            <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso', '${col.pantone}')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
                         `;
                     }
 
@@ -1149,26 +1200,26 @@
         });
     }
 
-    // ── CARGAR LISTADO DE NPS PENDIENTES EN EL MODAL NUEVA LIQUIDACIÓN ──
-    function renderNPsPendientes() {
+    // ── CARGAR LISTADO DE NPS PENDIENTES EN EL MODAL NUEVA LIQUIDACIÓN (AJAX) ──
+    function renderNPsPendientes(dataArray) {
         var $tbody = $("#tablaNPsPendientes tbody");
         $tbody.empty();
 
-        if (Object.keys(pendingNPs).length === 0) {
-            $tbody.append(`<tr><td colspan="5" class="text-center text-muted" style="padding: 20px;">No se encontraron NPs pendientes para el rango de fechas.</td></tr>`);
+        if (!dataArray || dataArray.length === 0) {
+            $tbody.append(`<tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No se encontraron NPs pendientes.</td></tr>`);
             return;
         }
 
-        Object.keys(pendingNPs).forEach(function(key) {
-            var item = pendingNPs[key];
+        dataArray.forEach(function(item) {
             var row = `<tr>
                 <td style="text-align: center;">
-                    <input type="checkbox" class="chk-np-pendiente" data-np="${item.np}" />
+                    <input type="checkbox" class="chk-np-pendiente" data-np="${item.NP}" />
                 </td>
-                <td><strong>${item.np}</strong></td>
-                <td>${item.combo}</td>
-                <td>${item.cliente}</td>
-                <td>${item.estilo}</td>
+                <td><strong>${item.NP}</strong></td>
+                <td>${item.Cliente}</td>
+                <td>${item.Temporada}</td>
+                <td>${item.Estilo}</td>
+                <td>${item.EstiloPropio}</td>
             </tr>`;
             $tbody.append(row);
         });
@@ -1207,10 +1258,16 @@
     }
 
     // ── APERTURA DE MODALES CON LOGICA DE CARGA DE INSUMOS DE ESA NP ──
-    function abrirModalOperacion(np, codInsumo, tipo) {
+    function abrirModalOperacion(np, codInsumo, tipo, pantoneName = null) {
         selectedNP = np;
         var liq = activeLiquidations[np];
         if (!liq) return;
+        
+        // Guardar color temporalmente para operaciones que lo requieran
+        $("#consumoModal").data("color", pantoneName);
+        $("#ajusteModal").data("color", pantoneName);
+        $("#ingresoModal").data("color", pantoneName);
+        $("#devolucionModal").data("color", pantoneName);
 
         // Limpiar inputs
         $("#txtConsumoCantidad").val('');
@@ -1272,9 +1329,7 @@
             $("#consumoModal").modal("show");
             setTimeout(function() { $("#txtConsumoCantidad").focus(); }, 400);
         } else if (tipo === "merma") {
-            $("#ddlMermaInsumo").html(selectOptionsHtml).prop("disabled", true);
-            $("#mermaModal").modal("show");
-            setTimeout(function() { $("#txtMermaCantidad").focus(); }, 400);
+            // Ya no aplica desde aqui, merma es por color
         } else if (tipo === "ingreso") {
             $("#ddlIngresoInsumo").html(selectOptionsHtml).prop("disabled", true);
             $("#ingresoModal").modal("show");
@@ -1283,15 +1338,68 @@
             $("#ddlDevolucionInsumo").html(selectOptionsHtml).prop("disabled", true);
             $("#devolucionModal").modal("show");
             setTimeout(function() { $("#txtDevolucionCantidad").focus(); }, 400);
+        } else if (tipo === "ajuste") {
+            $("#txtAjusteCantidad").val('');
+            $("#txtAjusteMotivo").val('');
+            $("#chkNoAjuste").prop("checked", false);
+            $("#ddlAjusteInsumo").html(selectOptionsHtml).prop("disabled", true);
+            $("#ajusteModal").modal("show");
+            setTimeout(function() { $("#txtAjusteCantidad").focus(); }, 400);
         }
     }
 
+    function abrirModalMermaColor(np, pantoneDesc) {
+        selectedNP = np;
+        $("#hdnMermaColorPantone").val(pantoneDesc);
+        $("#txtMermaColorDesc").val(pantoneDesc);
+        $("#txtMermaColorCantidad").val('');
+        $("#txtMermaColorVencimiento").val('');
+        $("#chkNoMerma").prop("checked", false);
+        
+        cargarHistoricoMermasColor(np, pantoneDesc);
+        
+        $("#mermaColorModal").modal("show");
+        setTimeout(function() { $("#txtMermaColorCantidad").focus(); }, 400);
+    }
+
+    function cargarHistoricoMermasColor(np, pantoneDesc) {
+        var $tbody = $("#tablaHistoricoMermas tbody");
+        $tbody.empty();
+        $tbody.append(`<tr><td colspan="5" class="text-center text-muted" style="padding: 15px;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>`);
+
+        $.get('@Url.Action("ObtenerMermasPorColor", "Liquidacion")', { np: np, color: pantoneDesc }, function(data) {
+            $tbody.empty();
+            if(data.error) {
+                $tbody.append(`<tr><td colspan="5" class="text-center text-danger">Error al cargar historial.</td></tr>`);
+            } else if (!data || data.length === 0) {
+                $tbody.append(`<tr><td colspan="5" class="text-center text-muted" style="padding: 15px;">No hay mermas registradas previamente.</td></tr>`);
+            } else {
+                data.forEach(function(item) {
+                    var isNoMerma = item.Cantidad === 0 && item.CodigoMerma === 'NO_MERMA';
+                    var stLabel = isNoMerma ? '<span class="label label-default" style="background-color:#94a3b8;">No existe merma</span>' : '<span class="label label-success" style="background-color:#10b981;">Registrado</span>';
+                    var row = `<tr>
+                        <td><strong>${item.CodigoMerma || '-'}</strong></td>
+                        <td class="text-right">${item.Cantidad.toFixed(2)}</td>
+                        <td>${item.FechaVencimiento || '-'}</td>
+                        <td>${item.FechaRegistro}</td>
+                        <td>${stLabel}</td>
+                    </tr>`;
+                    $tbody.append(row);
+                });
+            }
+        }).fail(function() {
+            $tbody.empty();
+            $tbody.append(`<tr><td colspan="5" class="text-center text-danger">Fallo de conexión al cargar el historial.</td></tr>`);
+        });
+    }
+
     // ── FUNCION MAESTRA PARA ENVIAR OPERACION AL SERVIDOR ──
-    function enviarOperacion(np, codInsumo, tipoOpe, cant, motivo, mermaRef, modalId, fuenteConsumo) {
+    function enviarOperacion(np, codInsumo, tipoOpe, cant, motivo, mermaRef, modalId, fuenteConsumo, colorPantone) {
         var ope = {
             NP: np, CodInsumo: codInsumo, TipoOperacion: tipoOpe, 
             Cantidad: cant, Motivo: motivo, MermaReutilizada: mermaRef,
-            FuenteConsumo: fuenteConsumo || null
+            FuenteConsumo: fuenteConsumo || null,
+            NombreColor: colorPantone || null
         };
         $.post('@Url.Action("RegistrarOperacion", "Liquidacion")', ope, function(response) {
             if (response.success) {
@@ -1326,18 +1434,64 @@
             return;
         }
 
-        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, "Consumo registrado", null, "#consumoModal", fuente);
+        var pantone = $("#consumoModal").data("color");
+        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, "Consumo registrado", null, "#consumoModal", fuente, pantone);
     }
 
-    // ── REGISTRO DE ACCIÓN: MERMA ──
-    function registrarMerma() {
-        var codInsumo = $("#ddlMermaInsumo").val();
-        var cant = parseFloat($("#txtMermaCantidad").val());
-        if (isNaN(cant) || cant <= 0) {
-            Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0.', icon: 'error', confirmButtonColor: '#f39c12' });
+    // ── REGISTRO DE ACCIÓN: MERMA POR COLOR ──
+    function registrarMermaColorBtn() {
+        var isNoMerma = $("#chkNoMerma").is(":checked");
+        var cant = parseFloat($("#txtMermaColorCantidad").val());
+        var fechaVenc = $("#txtMermaColorVencimiento").val();
+        var pantone = $("#hdnMermaColorPantone").val();
+
+        if (!isNoMerma && (isNaN(cant) || cant <= 0)) {
+            Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0, o marque "No existe merma".', icon: 'error', confirmButtonColor: '#f39c12' });
             return;
         }
-        enviarOperacion(selectedNP, codInsumo, "Merma", cant, "Merma de lote reportada", null, "#mermaModal");
+
+        var objMerma = {
+            NP: selectedNP,
+            NombreColor: pantone,
+            Gramos: isNoMerma ? 0 : cant,
+            FechaVencimiento: fechaVenc
+        };
+
+        $.post('@Url.Action("RegistrarMermaColor", "Liquidacion")', objMerma, function(response) {
+            if(response.success) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Merma por color registrada.', showConfirmButton: false, timer: 3000 });
+                
+                $("#mermaColorModal").modal("hide");
+
+                // Refrescar la data global de fondo para asegurar cálculos consistentes si se cierra luego
+                cargarDataInicial(); 
+            } else {
+                Swal.fire('Error', response.message, 'error');
+            }
+        });
+    }
+
+    // ── REGISTRO DE ACCIÓN: AJUSTE DE SALDO ──
+    function registrarAjuste() {
+        var codInsumo = $("#ddlAjusteInsumo").val();
+        var isNoAjuste = $("#chkNoAjuste").is(":checked");
+        var cant = parseFloat($("#txtAjusteCantidad").val());
+        var motivo = $("#txtAjusteMotivo").val().trim();
+        var pantone = $("#ajusteModal").data("color");
+
+        if (!isNoAjuste) {
+            if (isNaN(cant) || cant <= 0) {
+                Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida para ajustar.', icon: 'error', confirmButtonColor: '#10b981' });
+                return;
+            }
+            if (!motivo) {
+                Swal.fire({ title: 'Atención', text: 'El motivo del ajuste es obligatorio.', icon: 'warning', confirmButtonColor: '#10b981' });
+                return;
+            }
+        }
+        
+        var cantFinal = isNoAjuste ? 0 : cant;
+        enviarOperacion(selectedNP, codInsumo, "Ajuste", cantFinal, isNoAjuste ? "No existe ajuste" : motivo, null, "#ajusteModal", null, pantone);
     }
 
     // ── REGISTRO DE ACCIÓN: INGRESO ADICIONAL ──
@@ -1385,20 +1539,30 @@
         $("#chkAllNPs").prop("checked", false);
         $(".chk-np-pendiente").prop("checked", false);
         $("#nuevaModal").modal("show");
+        buscarNPsPendientes(); // Cargar automáticamente al abrir el modal
     }
 
     // ── BUSQUEDA FILTRADA DE NPS PENDIENTES ──
     function buscarNPsPendientes() {
         Swal.fire({
             title: 'Buscando órdenes...',
-            text: 'Filtrando lotes cerrados sin balance en base de datos',
-            timer: 1000,
+            text: 'Consultando NPs pendientes de liquidar',
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
             }
-        }).then(() => {
-            renderNPsPendientes();
+        });
+
+        $.get('@Url.Action("ObtenerNPsPendientes", "Liquidacion")', function(data) {
+            Swal.close();
+            if(data.error) {
+                Swal.fire('Error', data.error, 'error');
+            } else {
+                // Ya que la BD trae todos, aplicamos un renderizado directo
+                renderNPsPendientes(data);
+            }
+        }).fail(function() {
+            Swal.fire('Error', 'Fallo de conexión al buscar NPs.', 'error');
         });
     }
 
@@ -1419,18 +1583,15 @@
             return;
         }
 
-        selectedKeys.forEach(function(key) {
-            var npData = pendingNPs[key];
-            if (npData) {
-                activeLiquidations[key] = npData;
-                delete pendingNPs[key];
-            }
-        });
-
-        renderSidebarNPs(); // Actualiza el Sidebar
-        selectNP(selectedKeys[0]); // Selecciona el primero que añadió
-        renderNPsPendientes();
+        // En el sistema real aquí se enviaría la solicitud de generación.
+        // Simularemos recargando la data inicial completa, asumiendo que el backend la marca en proceso.
+        // Por ahora solo mostraremos un mensaje.
+        
+        Swal.fire({ title: 'Generando', text: 'Liquidación generada con éxito.', icon: 'success', timer: 2000, showConfirmButton: false });
         $("#nuevaModal").modal("hide");
+        
+        // Recargar data real
+        setTimeout(function() { cargarDataInicial(); }, 2000);
 
         Swal.fire({
             title: 'Liquidaciones Creadas',

@@ -17,6 +17,7 @@ namespace AppGenReceta.BE
         public string MermaReutilizada { get; set; }
         public string Usuario { get; set; }
         public string FuenteConsumo { get; set; }
+        public string NombreColor { get; set; }
     }
 
     /// <summary>
@@ -35,6 +36,17 @@ namespace AppGenReceta.BE
         public string UM { get; set; }
         public string Estado { get; set; }
     }
+    [Serializable]
+    public class LIQ_MermaHistoricoBE
+    {
+        public int IdMermaColor { get; set; }
+        public string CodigoMerma { get; set; }
+        public decimal Cantidad { get; set; }
+        public string FechaVencimiento { get; set; }
+        public string FechaRegistro { get; set; }
+        public string UsuarioRegistro { get; set; }
+        public string EstadoIndicador { get; set; }
+    }
 
     /// <summary>
     /// Entidades de lectura (DTO) estructuradas para enviar JSON agrupado a la Vista
@@ -45,7 +57,8 @@ namespace AppGenReceta.BE
         public string NP { get; set; }
         public string Cliente { get; set; }
         public string Estilo { get; set; }
-        public string Combo { get; set; }
+        public string Temporada { get; set; }
+        public string EstiloPropio { get; set; }
         public string Estado { get; set; }
         public string Creacion { get; set; }
         public string Cierre { get; set; }
@@ -82,6 +95,7 @@ namespace AppGenReceta.BE
         public decimal ConsumidoSolicitud { get; set; }
         public decimal Devuelto { get; set; }
         public decimal Merma { get; set; }
+        public decimal Ajuste { get; set; }
         public decimal Saldo { get; set; }
         public string LoteVenc { get; set; }
         public string Trazabilidad { get; set; }
@@ -103,5 +117,24 @@ namespace AppGenReceta.BE
         public string Usuario { get; set; }
         public string Fuente { get; set; }
         public decimal Cantidad { get; set; }
+    }
+
+    [Serializable]
+    public class LIQ_NPPendienteBE
+    {
+        public string NP { get; set; }
+        public string Cliente { get; set; }
+        public string Temporada { get; set; }
+        public string Estilo { get; set; }
+        public string EstiloPropio { get; set; }
+    }
+
+    [Serializable]
+    public class LIQ_MermaColorRegistroBE
+    {
+        public string NP { get; set; }
+        public string NombreColor { get; set; }
+        public decimal Gramos { get; set; }
+        public string FechaVencimiento { get; set; }
     }
 }

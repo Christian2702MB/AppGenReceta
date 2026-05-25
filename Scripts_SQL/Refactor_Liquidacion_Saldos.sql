@@ -71,7 +71,7 @@ BEGIN
     -- Convirtiendo a gramos si la unidad (UM) está en kilogramos (kg)
     SELECT TOP 1 @StockInicial = 
         CASE 
-            WHEN LOWER(LTRIM(RTRIM(ISNULL(UM, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
+            WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
             ELSE ISNULL(StockActual, 0)
         END
     FROM LIQ_STK_StockInsumos
@@ -81,7 +81,7 @@ BEGIN
     -- Asumiendo estructura estándar de cabecera-detalle o detalle directo con CodOrdPro
     SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida), 0)
     FROM LIQ_REQ_RecepcionesDetalle D
-    INNER JOIN LIQ_REQ_Recepciones R ON D.IdRecepcion = R.IdRecepcion
+    INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
     WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
 
     SELECT 

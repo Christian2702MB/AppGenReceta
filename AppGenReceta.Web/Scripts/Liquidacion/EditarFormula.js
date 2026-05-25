@@ -7,6 +7,7 @@ var recetaMaster = {
 };
 
 var contadorPruebas = 0;
+window.edicionHabilitada = false;
 
 $(document).ready(function () {
     if (window.idFormulaActual && window.idFormulaActual !== 0) {
@@ -71,7 +72,15 @@ $(document).ready(function () {
         if ($('.select2').length > 0) {
             $('.select2').prop('disabled', true);
         }
-    }
+    } 
+
+    $('#btnHabilitarEdicion').click(function () {
+        if (!window.g_isReadOnly) {
+            window.edicionHabilitada = true;
+            inyectarPruebasDOM();
+            $(this).prop('disabled', true).html('<i class="fa fa-check"></i> Edición Habilitada');
+        }
+    });
 });
 
 function cargarDatosParaEdicion(id) {
@@ -221,6 +230,7 @@ function agregarColumnaPrueba() {
 
     hayCambios = true;
     nuevaPruebaCreada = true;
+    window.edicionHabilitada = true;
     $("#txtNombrePrueba").val(null).trigger('change');
     $("#modalAgregarPrueba").modal('hide');
 
@@ -445,6 +455,8 @@ function inyectarPruebasDOM() {
                     
                     let habilitado = true;
                     if (window.g_isReadOnly) {
+                        habilitado = false;
+                    } else if (!window.edicionHabilitada) {
                         habilitado = false;
                     } else if (nuevaPruebaCreada) {
                         let isLastColumn = (idxPruebaGlobal === recetaMaster.PruebasGlobales.length - 1);

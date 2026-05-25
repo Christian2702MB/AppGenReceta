@@ -18,7 +18,7 @@ namespace AppGenReceta.Web.Controllers
         protected override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             string rol = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "";
-            if (rol != "Liquidador")
+            if (rol != "Liquidador" && filterContext.ActionDescriptor.ActionName != "ObtenerNPsPendientes")
             {
                 filterContext.Result = new RedirectToRouteResult(new System.Web.Routing.RouteValueDictionary(new { controller = "Home", action = "Index" }));
                 return;
@@ -500,6 +500,52 @@ namespace AppGenReceta.Web.Controllers
             try
             {
                 var data = bl.ObtenerSaldosPopup(np, codInsumo);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerNPsPendientes()
+        {
+            try
+            {
+                var data = bl.ObtenerNPsPendientes();
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarMermaColor(LIQ_MermaColorRegistroBE merma)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                bool res = bl.RegistrarMermaColor(merma, usuario);
+                return Json(new { success = res });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerMermasPorColor(string np, string color)
+        {
+            try
+            {
+                var data = bl.ObtenerMermasPorColor(np, color);
                 return Json(data, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)

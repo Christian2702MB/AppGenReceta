@@ -113,5 +113,32 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public List<LIQ_NPPendienteBE> ObtenerNPsPendientes()
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerNPsPendientes();
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public bool RegistrarMermaColor(LIQ_MermaColorRegistroBE merma, string usuario)
+        {
+            try
+            {
+                return new Liquidacion_DA().RegistrarMermaColor(merma, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public List<LIQ_MermaHistoricoBE> ObtenerMermasPorColor(string np, string color)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerMermasPorColor(np, color);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

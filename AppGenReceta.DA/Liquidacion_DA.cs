@@ -351,6 +351,7 @@ namespace AppGenReceta.DA
                 cmd.Parameters.AddWithValue("@MermaReutilizada", ope.MermaReutilizada ?? "");
                 cmd.Parameters.AddWithValue("@Usuario", ope.Usuario ?? "");
                 cmd.Parameters.AddWithValue("@FuenteConsumo", string.IsNullOrEmpty(ope.FuenteConsumo) ? "Stock Inicial" : ope.FuenteConsumo);
+                cmd.Parameters.AddWithValue("@NombreColor", string.IsNullOrEmpty(ope.NombreColor) ? (object)DBNull.Value : ope.NombreColor);
 
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
@@ -386,7 +387,8 @@ namespace AppGenReceta.DA
                                 NP = dr["NP"].ToString(),
                                 Cliente = dr["Cliente"].ToString(),
                                 Estilo = dr["Estilo"].ToString(),
-                                Combo = dr["Combo"].ToString(),
+                                Temporada = dr["Temporada"].ToString(),
+                                EstiloPropio = dr["EstiloPropio"].ToString(),
                                 Estado = dr["Estado"].ToString(),
                                 Creacion = dr["FechaCreacion"].ToString(),
                                 Cierre = dr["FechaCierre"].ToString(),
@@ -417,8 +419,9 @@ namespace AppGenReceta.DA
                                     decimal consumidoSolicitud = Convert.ToDecimal(dr["ConsumidoSolicitud"]);
                                     decimal devuelto = Convert.ToDecimal(dr["Devuelto"]);
                                     decimal merma = Convert.ToDecimal(dr["Merma"]);
+                                    decimal ajuste = Convert.ToDecimal(dr["Ajuste"]);
                                     decimal requerido = Convert.ToDecimal(dr["Requerido"]);
-                                    decimal saldo = requerido - consumido - devuelto - merma;
+                                    decimal saldo = requerido - consumido - devuelto - merma - ajuste;
                                     if (saldo < 0) saldo = 0;
 
                                     color.Insumos.Add(new LIQ_LiquidacionInsumoBE
@@ -433,6 +436,7 @@ namespace AppGenReceta.DA
                                         ConsumidoSolicitud = consumidoSolicitud,
                                         Devuelto = devuelto,
                                         Merma = merma,
+                                        Ajuste = ajuste,
                                         Saldo = saldo,
                                         LoteVenc = "", // Para implementar si se requiere de lote real
                                         Trazabilidad = dr["Trazabilidad"].ToString()
@@ -512,6 +516,107 @@ namespace AppGenReceta.DA
                 }
             }
             return saldos;
+        }
+
+        public List<LIQ_NPPendienteBE> ObtenerNPsPendientes()
+        {
+            List<LIQ_NPPendienteBE> lista = new List<LIQ_NPPendienteBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerNPsPendientes", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_NPPendienteBE
+                            {
+                                NP = dr["NP"].ToString(),
+                                Cliente = dr["Cliente"].ToString(),
+                                Temporada = dr["Temporada"].ToString(),
+                                Estilo = dr["Estilo"].ToString(),
+                                EstiloPropio = dr["EstiloPropio"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
+
+        public bool RegistrarMermaColor(LIQ_MermaColorRegistroBE merma, string usuario)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarMermaColor", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", merma.NP);
+                cmd.Parameters.AddWithValue("@NombreColor", merma.NombreColor);
+                cmd.Parameters.AddWithValue("@Gramos", merma.Gramos);
+                
+                if (string.IsNullOrEmpty(merma.FechaVencimiento))
+                    cmd.Parameters.AddWithValue("@FechaVencimiento", DBNull.Value);
+                else
+                {
+                    DateTime fechaParsed;
+                    if (DateTime.TryParse(merma.FechaVencimiento, out fechaParsed))
+                        cmd.Parameters.AddWithValue("@FechaVencimiento", fechaParsed);
+                    else
+                        cmd.Parameters.AddWithValue("@FechaVencimiento", DBNull.Value);
+                }
+
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        return Convert.ToInt32(dr["Resultado"]) > 0;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public List<LIQ_MermaHistoricoBE> ObtenerMermasPorColor(string np, string nombreColor)
+        {
+            List<LIQ_MermaHistoricoBE> lista = new List<LIQ_MermaHistoricoBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_MER_SP_ObtenerMermasPorColor", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", np);
+                    cmd.Parameters.AddWithValue("@NombreColor", nombreColor);
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_MermaHistoricoBE
+                            {
+                                IdMermaColor = Convert.ToInt32(dr["IdMermaColor"]),
+                                CodigoMerma = dr["CodigoMerma"].ToString(),
+                                Cantidad = Convert.ToDecimal(dr["Cantidad"]),
+                                FechaVencimiento = dr["FechaVencimiento"] != DBNull.Value ? Convert.ToDateTime(dr["FechaVencimiento"]).ToString("dd/MM/yyyy") : "",
+                                FechaRegistro = dr["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "",
+                                UsuarioRegistro = dr["UsuarioRegistro"].ToString(),
+                                EstadoIndicador = dr["EstadoIndicador"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
         }
     }
 }
