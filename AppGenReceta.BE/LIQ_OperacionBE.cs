@@ -93,5 +93,15 @@ namespace AppGenReceta.BE
         public decimal StockInicial { get; set; }
         public decimal StockSolicitud { get; set; }
         public decimal StockTotal { get; set; }
+        public List<LIQ_OperacionDetalleBE> HistorialConsumo { get; set; } = new List<LIQ_OperacionDetalleBE>();
+    }
+
+    [Serializable]
+    public class LIQ_OperacionDetalleBE
+    {
+        public string Fecha { get; set; }
+        public string Usuario { get; set; }
+        public string Fuente { get; set; }
+        public decimal Cantidad { get; set; }
     }
 }

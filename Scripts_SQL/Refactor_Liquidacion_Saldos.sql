@@ -88,5 +88,15 @@ BEGIN
         @StockInicial AS StockInicial,
         @StockSolicitud AS StockSolicitud,
         (@StockInicial + @StockSolicitud) AS StockTotal;
+        
+    -- Result Set 2: Historial de Consumos
+    SELECT 
+        FechaRegistro,
+        UsuarioRegistro,
+        FuenteConsumo,
+        Cantidad
+    FROM LIQ_OperacionesDetalle
+    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo'
+    ORDER BY FechaRegistro DESC;
 END
 GO

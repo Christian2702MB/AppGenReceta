@@ -495,6 +495,20 @@ namespace AppGenReceta.DA
                         saldos.StockSolicitud = Convert.ToDecimal(dr["StockSolicitud"]);
                         saldos.StockTotal = Convert.ToDecimal(dr["StockTotal"]);
                     }
+                    
+                    if (dr.NextResult())
+                    {
+                        while (dr.Read())
+                        {
+                            saldos.HistorialConsumo.Add(new LIQ_OperacionDetalleBE
+                            {
+                                Fecha = Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm"),
+                                Usuario = dr["UsuarioRegistro"].ToString(),
+                                Fuente = dr["FuenteConsumo"] != DBNull.Value ? dr["FuenteConsumo"].ToString() : "N/A",
+                                Cantidad = Convert.ToDecimal(dr["Cantidad"])
+                            });
+                        }
+                    }
                 }
             }
             return saldos;

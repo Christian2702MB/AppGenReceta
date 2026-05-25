@@ -640,6 +640,24 @@
                     <label>Cantidad a consumir (gr)</label>
                     <input type="number" class="form-control" id="txtConsumoCantidad" placeholder="0.00" step="0.01" style="font-size: 16px; font-weight: bold; color: var(--hialpesa-dark);" />
                 </div>
+                <div style="margin-top: 20px;">
+                    <label style="font-size: 11px; color: var(--hialpesa-dark);">Historial de Consumos</label>
+                    <div style="max-height: 150px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <table class="table table-striped table-hover" style="margin-bottom: 0; font-size: 11px;">
+                            <thead style="background-color: #f1f5f9; position: sticky; top: 0;">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Fuente</th>
+                                    <th class="text-right">Cantidad (g)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyHistorialConsumo">
+                                <!-- Llenado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
@@ -1217,15 +1235,35 @@
             $("#txtSaldoTotal").val("Cargando...");
             $("input[name='optFuenteConsumo'][value='Stock Inicial']").prop("checked", true);
             
+            $("#tbodyHistorialConsumo").html('<tr><td colspan="4" class="text-center">Cargando historial...</td></tr>');
+            
             $.get('@Url.Action("ObtenerSaldosInsumo", "Liquidacion")?np=' + selectedNP + '&codInsumo=' + codInsumo, function(response) {
                 if (response && !response.error) {
                     $("#txtSaldoInicial").val(response.StockInicial.toFixed(2));
                     $("#txtSaldoSolicitud").val(response.StockSolicitud.toFixed(2));
                     $("#txtSaldoTotal").val(response.StockTotal.toFixed(2));
+                    
+                    var $tbody = $("#tbodyHistorialConsumo");
+                    $tbody.empty();
+                    if (response.HistorialConsumo && response.HistorialConsumo.length > 0) {
+                        response.HistorialConsumo.forEach(function(op) {
+                            $tbody.append(`
+                                <tr>
+                                    <td>${op.Fecha}</td>
+                                    <td>${op.Usuario}</td>
+                                    <td>${op.Fuente}</td>
+                                    <td class="text-right text-primary"><strong>${op.Cantidad.toFixed(2)}</strong></td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        $tbody.append('<tr><td colspan="4" class="text-center text-muted" style="padding:15px;">No hay consumos registrados</td></tr>');
+                    }
                 } else {
                     $("#txtSaldoInicial").val("0.00");
                     $("#txtSaldoSolicitud").val("0.00");
                     $("#txtSaldoTotal").val("0.00");
+                    $("#tbodyHistorialConsumo").html('<tr><td colspan="4" class="text-center text-danger">Error al cargar historial</td></tr>');
                     console.error("Error obteniendo stock:", response.error);
                 }
             });
