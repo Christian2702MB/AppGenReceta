@@ -1,4 +1,4 @@
-@model List<AppGenReceta.BE.LIQ_REQ_RecepcionBE>
+@inherits System.Web.Mvc.WebViewPage<List<AppGenReceta.BE.LIQ_REQ_RecepcionBE>>
 @{
     ViewBag.Title = "Mantenimiento de Requerimientos Recepcionados";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -254,7 +254,7 @@
     </div>
 </div>
 
-@section scripts {
+@section Scripts {
     <script>
         function filtrarTablaGlobal() {
             var input = document.getElementById("txtBusquedaGlobal");

@@ -364,16 +364,20 @@ namespace AppGenReceta.Web.Controllers
                 if (!string.IsNullOrEmpty(desde))
                 {
                     DateTime dtDesde;
-                    if (DateTime.TryParse(desde, out dtDesde)) strDesde = dtDesde.ToString("dd/MM/yyyy");
-                    else strDesde = desde;
+                    if (DateTime.TryParseExact(desde, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dtDesde)) 
+                        strDesde = dtDesde.ToString("dd/MM/yyyy");
+                    else 
+                        strDesde = desde;
                 }
                 else strDesde = DateTime.Now.AddMonths(-1).ToString("dd/MM/yyyy");
 
                 if (!string.IsNullOrEmpty(hasta))
                 {
                     DateTime dtHasta;
-                    if (DateTime.TryParse(hasta, out dtHasta)) strHasta = dtHasta.ToString("dd/MM/yyyy");
-                    else strHasta = hasta;
+                    if (DateTime.TryParseExact(hasta, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dtHasta)) 
+                        strHasta = dtHasta.ToString("dd/MM/yyyy");
+                    else 
+                        strHasta = hasta;
                 }
                 else strHasta = DateTime.Now.ToString("dd/MM/yyyy");
 
