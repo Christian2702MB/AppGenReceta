@@ -443,7 +443,8 @@ namespace AppGenReceta.DA
                                         Ajuste = ajuste,
                                         Saldo = saldo,
                                         LoteVenc = "", // Para implementar si se requiere de lote real
-                                        Trazabilidad = dr["Trazabilidad"].ToString()
+                                        Trazabilidad = dr["Trazabilidad"].ToString(),
+                                        BloqueoAjuste = Convert.ToBoolean(dr["BloqueoAjuste"])
                                     });
                                 }
                             }

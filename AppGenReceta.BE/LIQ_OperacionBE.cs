@@ -83,6 +83,7 @@ namespace AppGenReceta.BE
     public class LIQ_LiquidacionColorBE
     {
         public string Pantone { get; set; }
+        public bool BloqueoMerma { get; set; }
         public List<LIQ_LiquidacionInsumoBE> Insumos { get; set; }
 
         public LIQ_LiquidacionColorBE()
@@ -108,6 +109,7 @@ namespace AppGenReceta.BE
         public decimal Saldo { get; set; }
         public string LoteVenc { get; set; }
         public string Trazabilidad { get; set; }
+        public bool BloqueoAjuste { get; set; }
     }
 
     [Serializable]

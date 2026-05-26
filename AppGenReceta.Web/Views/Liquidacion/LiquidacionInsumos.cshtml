@@ -543,7 +543,6 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Descripción / Color</th>
-                                <th>Técnica</th>
                                 <th>NP Origen</th>
                                 <th>F. Generación</th>
                                 <th>F. Vencimiento</th>
@@ -572,8 +571,6 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Insumo</th>
-                                <th>Técnica</th>
-                                <th>Lote / Vencimiento</th>
                                 <th class="text-right">Entregado</th>
                                 <th class="text-right">Consumido</th>
                                 <th class="text-right">Mermas</th>
@@ -825,9 +822,20 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><i class="fas fa-exchange-alt"></i> Devolución al Almacén Central</h4>
+                <h4 class="modal-title"><i class="fas fa-exchange-alt"></i> Devolución Saldos</h4>
             </div>
             <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Tipo de Devolución</label>
+                    <div style="display: flex; gap: 15px; margin-top: 5px;">
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer;">
+                            <input type="radio" name="optTipoDevolucion" value="Almacén Central" checked /> Almacén Central
+                        </label>
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer;">
+                            <input type="radio" name="optTipoDevolucion" value="Stock Inicial Almacén Operativo" /> Stock Inicial Almacén Operativo
+                        </label>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>Insumo a Devolver</label>
                     <select class="form-control" id="ddlDevolucionInsumo"></select>
@@ -836,7 +844,7 @@
                     <label>Cantidad a retornar</label>
                     <input type="number" class="form-control" id="txtDevolucionCantidad" placeholder="No mayor al saldo disponible" step="0.01" />
                 </div>
-                <div class="form-group" style="margin-top: 15px;">
+                <div class="form-group" style="margin-top: 15px;" id="divDevolucionMotivo">
                     <label>Motivo o Destino</label>
                     <select class="form-control" id="ddlDevolucionMotivo">
                         <option>Reasignación: saldo destinado a otra NP o requerimiento</option>
@@ -918,6 +926,38 @@
     $(document).ready(function() {
         renderNPsPendientes();
         cargarDataInicial();
+
+        // Listeners para bloqueos de inputs
+        $("#chkNoMerma").change(function() {
+            if($(this).is(":checked")) {
+                $("#txtMermaColorCantidad").val("0.00").prop("disabled", true);
+                $("#txtMermaColorVencimiento").val("").prop("disabled", true);
+            } else {
+                $("#txtMermaColorCantidad").val("").prop("disabled", false);
+                $("#txtMermaColorVencimiento").val("").prop("disabled", false);
+            }
+        });
+
+        $("#chkNoAjuste").change(function() {
+            if($(this).is(":checked")) {
+                $("#txtAjusteCantidad").val("0.00").prop("disabled", true);
+                $("#txtAjusteMotivo").val("No existe ajuste").prop("disabled", true);
+            } else {
+                $("#txtAjusteCantidad").val("").prop("disabled", false);
+                $("#txtAjusteMotivo").val("").prop("disabled", false);
+            }
+        });
+
+        // Listener para popup Devolucion
+        $("input[name='optTipoDevolucion']").change(function() {
+            if($(this).val() === "Stock Inicial Almacén Operativo") {
+                $("#divDevolucionMotivo").hide();
+                $("#ddlDevolucionMotivo").prop("disabled", true);
+            } else {
+                $("#divDevolucionMotivo").show();
+                $("#ddlDevolucionMotivo").prop("disabled", false);
+            }
+        });
     });
 
     // ── CARGA ASÍNCRONA DESDE EL BACKEND ──
@@ -1086,7 +1126,7 @@
 
         if(!item.colores || item.colores.length === 0) {
             $coloresContainer.append('<div style="padding: 20px; text-align:center; color:#94a3b8;">No hay insumos registrados.</div>');
-            $saldosTbody.append('<tr><td colspan="10" class="text-center">No hay insumos.</td></tr>');
+            $saldosTbody.append('<tr><td colspan="8" class="text-center">No hay insumos.</td></tr>');
         } else {
             var haySaldos = false;
 
@@ -1098,7 +1138,7 @@
                             <i class="fas fa-chevron-down" style="margin-left: 10px;"></i>
                         </div>
                         <div style="margin-left: auto;">
-                            ${tipo === 'activa' ? `<button class="btn btn-xs btn-warning" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="abrirModalMermaColor('${item.np}', '${col.pantone}')" title="Registrar Merma para el Color"><i class="fas fa-sync-alt"></i> Merma</button>` : ''}
+                            ${tipo === 'activa' ? `<button class="btn btn-xs btn-warning ${col.bloqueoMerma ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="abrirModalMermaColor('${item.np}', '${col.pantone}')" title="${col.bloqueoMerma ? 'Merma bloqueada (No existe)' : 'Registrar Merma para el Color'}" ${col.bloqueoMerma ? 'disabled' : ''}><i class="fas fa-sync-alt"></i> Merma</button>` : ''}
                         </div>
                     </div>
                     <div class="color-group-content">
@@ -1128,7 +1168,7 @@
                     if (tipo === 'activa') {
                         accionesHtml = `
                             <button class="btn btn-xs btn-primary-hialpesa" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo', '${col.pantone}')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
-                            <button class="btn btn-xs btn-success" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ajuste', '${col.pantone}')" title="Ajuste de Saldo"><i class="fas fa-sliders-h"></i> Ajuste</button>
+                            <button class="btn btn-xs btn-success ${ins.bloqueoAjuste ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ajuste', '${col.pantone}')" title="${ins.bloqueoAjuste ? 'Ajuste bloqueado (No existe)' : 'Ajuste de Saldo'}" ${ins.bloqueoAjuste ? 'disabled' : ''}><i class="fas fa-sliders-h"></i> Ajuste</button>
                             <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso', '${col.pantone}')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
                         `;
                     }
@@ -1159,8 +1199,6 @@
                             <tr>
                                 <td><strong>${ins.codigo}</strong></td>
                                 <td>${ins.nombre}</td>
-                                <td>${ins.tecnica}</td>
-                                <td>${ins.loteVenc}</td>
                                 <td class="text-right">${ins.requerido.toFixed(2)}</td>
                                 <td class="text-right">${ins.consumido.toFixed(2)}</td>
                                 <td class="text-right">${ins.merma.toFixed(2)}</td>
@@ -1180,7 +1218,7 @@
             });
 
             if (!haySaldos) {
-                $saldosTbody.append('<tr><td colspan="10" class="text-center" style="padding:20px;">No hay saldos pendientes de tratar en esta NP.</td></tr>');
+                $saldosTbody.append('<tr><td colspan="8" class="text-center" style="padding:20px;">No hay saldos pendientes de tratar en esta NP.</td></tr>');
             }
         }
 
@@ -1194,7 +1232,7 @@
         $tbody.empty();
 
         if (mermasStock.length === 0) {
-            $tbody.append(`<tr><td colspan="10" class="text-center text-muted" style="padding: 20px;">No hay stock de mermas registradas.</td></tr>`);
+            $tbody.append(`<tr><td colspan="9" class="text-center text-muted" style="padding: 20px;">No hay stock de mermas registradas.</td></tr>`);
             return;
         }
 
@@ -1202,7 +1240,6 @@
             var row = `<tr>
                 <td><strong>${item.codigo}</strong></td>
                 <td>${item.descripcion}</td>
-                <td>${item.tecnica}</td>
                 <td>${item.npOrigen}</td>
                 <td>${item.fGeneracion}</td>
                 <td>${item.fVencimiento}</td>
@@ -1352,12 +1389,16 @@
             $("#ingresoModal").modal("show");
             setTimeout(function() { $("#txtIngresoCantidad").focus(); }, 400);
         } else if (tipo === "devolucion") {
+            $("#txtDevolucionCantidad").val('');
+            $("input[name='optTipoDevolucion'][value='Almacén Central']").prop("checked", true);
+            $("#divDevolucionMotivo").show();
+            $("#ddlDevolucionMotivo").prop("disabled", false).val($("#ddlDevolucionMotivo option:first").val());
             $("#ddlDevolucionInsumo").html(selectOptionsHtml).prop("disabled", true);
             $("#devolucionModal").modal("show");
             setTimeout(function() { $("#txtDevolucionCantidad").focus(); }, 400);
         } else if (tipo === "ajuste") {
-            $("#txtAjusteCantidad").val('');
-            $("#txtAjusteMotivo").val('');
+            $("#txtAjusteCantidad").val('').prop("disabled", false);
+            $("#txtAjusteMotivo").val('').prop("disabled", false);
             $("#chkNoAjuste").prop("checked", false);
             $("#ddlAjusteInsumo").html(selectOptionsHtml).prop("disabled", true);
             
@@ -1372,8 +1413,8 @@
         selectedNP = np;
         $("#hdnMermaColorPantone").val(pantoneDesc);
         $("#txtMermaColorDesc").val(pantoneDesc);
-        $("#txtMermaColorCantidad").val('');
-        $("#txtMermaColorVencimiento").val('');
+        $("#txtMermaColorCantidad").val('').prop("disabled", false);
+        $("#txtMermaColorVencimiento").val('').prop("disabled", false);
         $("#chkNoMerma").prop("checked", false);
         
         cargarHistoricoMermasColor(np, pantoneDesc);
@@ -1566,7 +1607,9 @@
     function registrarDevolucion() {
         var codInsumo = $("#ddlDevolucionInsumo").val();
         var cant = parseFloat($("#txtDevolucionCantidad").val());
-        var motivo = $("#ddlDevolucionMotivo").val();
+        
+        var tipoDevolucion = $("input[name='optTipoDevolucion']:checked").val();
+        var motivo = tipoDevolucion === "Stock Inicial Almacén Operativo" ? "Retorno a Stock Inicial Almacén Operativo" : $("#ddlDevolucionMotivo").val();
 
         if (isNaN(cant) || cant <= 0) {
             Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0.', icon: 'error', confirmButtonColor: '#002D72' });
