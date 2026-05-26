@@ -445,6 +445,95 @@
         border-color: #cbd5e1;
         font-size: 13px;
     }
+    /* STEPPER DE PROGRESO */
+    .liq-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px 30px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        position: relative;
+    }
+    .liq-stepper-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        flex: 0 0 auto;
+    }
+    .liq-stepper-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 3px solid #cbd5e1;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 800;
+        color: #94a3b8;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        cursor: pointer;
+        position: relative;
+    }
+    .liq-stepper-circle:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 15px rgba(0, 45, 114, 0.25);
+    }
+    .liq-stepper-step.completed .liq-stepper-circle {
+        background: var(--hialpesa-blue, #002D72);
+        border-color: var(--hialpesa-blue, #002D72);
+        color: #fff;
+        box-shadow: 0 3px 10px rgba(0, 45, 114, 0.3);
+    }
+    .liq-stepper-step.current .liq-stepper-circle {
+        background: var(--hialpesa-accent, #f39c12);
+        border-color: var(--hialpesa-accent, #f39c12);
+        color: #fff;
+        box-shadow: 0 3px 12px rgba(243, 156, 18, 0.4);
+        animation: liq-pulse 2s ease-in-out infinite;
+    }
+    @@keyframes liq-pulse {
+        0%, 100% { box-shadow: 0 3px 12px rgba(243, 156, 18, 0.4); }
+        50% { box-shadow: 0 3px 20px rgba(243, 156, 18, 0.7); }
+    }
+    .liq-stepper-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 8px;
+        text-align: center;
+        max-width: 100px;
+        line-height: 1.3;
+        transition: color 0.3s;
+    }
+    .liq-stepper-step.completed .liq-stepper-label {
+        color: var(--hialpesa-blue, #002D72);
+    }
+    .liq-stepper-step.current .liq-stepper-label {
+        color: var(--hialpesa-accent, #f39c12);
+    }
+    .liq-stepper-line {
+        flex: 1;
+        height: 3px;
+        background: #e2e8f0;
+        margin: 0 8px;
+        margin-bottom: 28px;
+        border-radius: 3px;
+        position: relative;
+        z-index: 1;
+        transition: background 0.4s;
+    }
+    .liq-stepper-line.filled {
+        background: var(--hialpesa-blue, #002D72);
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -515,6 +604,29 @@
                 <div id="detailNpState" style="display: none;">
                     <div class="table-title">
                         <h2>Detalle de Liquidación: <span id="lblDetailNP" style="color: var(--hialpesa-accent);"></span></h2>
+                    </div>
+
+                    <!-- STEPPER DE PROGRESO -->
+                    <div class="liq-stepper" id="stepperProgreso">
+                        <div class="liq-stepper-step" id="step-1">
+                            <div class="liq-stepper-circle" data-toggle="tooltip" data-placement="top" title="Activo">1</div>
+                            <div class="liq-stepper-label">Activo</div>
+                        </div>
+                        <div class="liq-stepper-line" id="line-1-2"></div>
+                        <div class="liq-stepper-step" id="step-2">
+                            <div class="liq-stepper-circle" data-toggle="tooltip" data-placement="top" title="En Proceso">2</div>
+                            <div class="liq-stepper-label">En Proceso</div>
+                        </div>
+                        <div class="liq-stepper-line" id="line-2-3"></div>
+                        <div class="liq-stepper-step" id="step-3">
+                            <div class="liq-stepper-circle" data-toggle="tooltip" data-placement="top" title="Pendiente de Liquidación">3</div>
+                            <div class="liq-stepper-label">Pendiente</div>
+                        </div>
+                        <div class="liq-stepper-line" id="line-3-4"></div>
+                        <div class="liq-stepper-step" id="step-4">
+                            <div class="liq-stepper-circle" data-toggle="tooltip" data-placement="top" title="Liquidado">4</div>
+                            <div class="liq-stepper-label">Liquidado</div>
+                        </div>
                     </div>
                     
                     <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; gap: 20px; font-size: 13px;">
@@ -927,6 +1039,9 @@
         renderNPsPendientes();
         cargarDataInicial();
 
+        // Inicializar tooltips Bootstrap para el Stepper
+        $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
+
         // Listeners para bloqueos de inputs
         $("#chkNoMerma").change(function() {
             if($(this).is(":checked")) {
@@ -959,6 +1074,45 @@
             }
         });
     });
+
+    // ── STEPPER: ACTUALIZAR ESTADO VISUAL ──
+    function actualizarStepper(estadoTexto, tipoNP) {
+        // Mapeo de estado textual a numérico
+        var estadoId = 1; // Default: Activo
+        if (tipoNP === 'terminada') {
+            estadoId = 4; // Liquidado / Cerrada
+        } else {
+            var estadoLower = (estadoTexto || '').toLowerCase();
+            if (estadoLower === 'activa' || estadoLower === 'activo') estadoId = 1;
+            else if (estadoLower === 'en proceso') estadoId = 2;
+            else if (estadoLower === 'pendiente' || estadoLower === 'pendiente de liquidación') estadoId = 3;
+            else if (estadoLower === 'cerrada' || estadoLower === 'liquidado') estadoId = 4;
+        }
+
+        // Limpiar clases previas
+        for (var i = 1; i <= 4; i++) {
+            $('#step-' + i).removeClass('completed current');
+        }
+        for (var j = 1; j <= 3; j++) {
+            var nextJ = j + 1;
+            $('#line-' + j + '-' + nextJ).removeClass('filled');
+        }
+
+        // Pintar círculos completados y el actual
+        for (var s = 1; s <= 4; s++) {
+            if (s < estadoId) {
+                $('#step-' + s).addClass('completed');
+            } else if (s === estadoId) {
+                $('#step-' + s).addClass('current');
+            }
+        }
+
+        // Pintar líneas entre pasos completados
+        for (var l = 1; l < estadoId; l++) {
+            var nextL = l + 1;
+            $('#line-' + l + '-' + nextL).addClass('filled');
+        }
+    }
 
     // ── CARGA ASÍNCRONA DESDE EL BACKEND ──
     function cargarDataInicial() {
@@ -1115,6 +1269,9 @@
         $("#lblDetailEstilo").text(item.estilo);
         $("#lblDetailEstiloPropio").text(item.estiloPropio);
         $("#lblDetailEstado").text(item.estado);
+
+        // Actualizar Stepper de Progreso
+        actualizarStepper(item.estado, tipo);
 
         // Dibujar Colores y Tabla interior
         var $coloresContainer = $("#coloresDetailContainer");
