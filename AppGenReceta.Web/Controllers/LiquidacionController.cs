@@ -567,5 +567,69 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        // =======================================================================
+        // MAQUINA DE ESTADOS
+        // =======================================================================
+
+        [HttpPost]
+        public JsonResult AvanzarEstadoNP(string np, string nuevoEstado)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                var resultado = bl.AvanzarEstadoNP(np, nuevoEstado, usuario);
+                return Json(new { success = resultado.Exito, message = resultado.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarNoMermaGlobal(string np)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                bl.RegistrarNoMermaGlobal(np, usuario);
+
+                // Auto-avanzar a Pendiente
+                var resultado = bl.AvanzarEstadoNP(np, "Pendiente", usuario);
+                return Json(new { success = resultado.Exito, message = resultado.Exito ? "Merma global registrada y NP avanzada a Pendiente de Liquidacion." : resultado.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarNoAjusteGlobal(string np)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                bl.RegistrarNoAjusteGlobal(np, usuario);
+
+                // Auto-avanzar a Liquidado
+                var resultado = bl.AvanzarEstadoNP(np, "Liquidado", usuario);
+                return Json(new { success = resultado.Exito, message = resultado.Exito ? "Ajustes globales registrados y NP liquidada exitosamente." : resultado.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

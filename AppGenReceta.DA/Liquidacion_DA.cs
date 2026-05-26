@@ -656,5 +656,60 @@ namespace AppGenReceta.DA
             catch (Exception ex) { throw ex; }
             return lista;
         }
+
+        // =======================================================================
+        // MAQUINA DE ESTADOS
+        // =======================================================================
+
+        public LIQ_TransicionResultadoBE AvanzarEstadoNP(string np, string nuevoEstado, string usuario)
+        {
+            var resultado = new LIQ_TransicionResultadoBE();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_AvanzarEstadoNP", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@NuevoEstado", nuevoEstado);
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                SqlParameter pResultado = new SqlParameter("@Resultado", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                SqlParameter pMensaje = new SqlParameter("@Mensaje", SqlDbType.VarChar, 500) { Direction = ParameterDirection.Output };
+                cmd.Parameters.Add(pResultado);
+                cmd.Parameters.Add(pMensaje);
+
+                cnx.Open();
+                cmd.ExecuteNonQuery();
+
+                resultado.Exito = Convert.ToInt32(pResultado.Value) == 1;
+                resultado.Mensaje = pMensaje.Value.ToString();
+            }
+            return resultado;
+        }
+
+        public void RegistrarNoMermaGlobal(string np, string usuario)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarNoMermaGlobal", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+                cnx.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void RegistrarNoAjusteGlobal(string np, string usuario)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarNoAjusteGlobal", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+                cnx.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }

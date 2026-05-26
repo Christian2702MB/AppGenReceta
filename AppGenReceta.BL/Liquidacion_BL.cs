@@ -149,5 +149,36 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        // =======================================================================
+        // MAQUINA DE ESTADOS
+        // =======================================================================
+
+        public LIQ_TransicionResultadoBE AvanzarEstadoNP(string np, string nuevoEstado, string usuario)
+        {
+            try
+            {
+                return new Liquidacion_DA().AvanzarEstadoNP(np, nuevoEstado, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public void RegistrarNoMermaGlobal(string np, string usuario)
+        {
+            try
+            {
+                new Liquidacion_DA().RegistrarNoMermaGlobal(np, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public void RegistrarNoAjusteGlobal(string np, string usuario)
+        {
+            try
+            {
+                new Liquidacion_DA().RegistrarNoAjusteGlobal(np, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

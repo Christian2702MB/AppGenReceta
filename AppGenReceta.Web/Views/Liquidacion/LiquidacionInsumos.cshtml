@@ -629,12 +629,21 @@
                         </div>
                     </div>
                     
-                    <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; gap: 20px; font-size: 13px;">
-                        <div><strong>Cliente:</strong> <span id="lblDetailCliente"></span></div>
-                        <div><strong>Temporada:</strong> <span id="lblDetailTemporada"></span></div>
-                        <div><strong>Estilo:</strong> <span id="lblDetailEstilo"></span></div>
-                        <div><strong>Estilo Propio:</strong> <span id="lblDetailEstiloPropio"></span></div>
-                        <div><strong>Estado:</strong> <span id="lblDetailEstado" class="badge-status"></span></div>
+                    <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                        <div style="display: flex; gap: 20px;">
+                            <div><strong>Cliente:</strong> <span id="lblDetailCliente"></span></div>
+                            <div><strong>Temporada:</strong> <span id="lblDetailTemporada"></span></div>
+                            <div><strong>Estilo:</strong> <span id="lblDetailEstilo"></span></div>
+                            <div><strong>Estilo Propio:</strong> <span id="lblDetailEstiloPropio"></span></div>
+                            <div><strong>Estado:</strong> <span id="lblDetailEstado" class="badge-status"></span></div>
+                        </div>
+                        <div id="btnAccionFaseContainer" style="display: flex; gap: 10px; align-items: center;">
+                            <!-- Botones inyectados dinámicamente según la fase -->
+                        </div>
+                    </div>
+
+                    <div id="alertaCierreLiquidado" class="alert alert-warning" style="display: none; border-radius: 8px; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> La liquidación ha sido cerrada. Dirígete a la pestaña <strong>Tratamiento Saldos</strong> para las devoluciones correspondientes.
                     </div>
 
                     <div id="coloresDetailContainer">
@@ -1112,6 +1121,113 @@
             var nextL = l + 1;
             $('#line-' + l + '-' + nextL).addClass('filled');
         }
+
+        // Mostrar Alerta de Cierre si es Fase 4
+        if (estadoId === 4) {
+            $("#alertaCierreLiquidado").show();
+        } else {
+            $("#alertaCierreLiquidado").hide();
+        }
+
+        // Renderizar botón de acción de fase
+        renderBotonAccionFase(estadoId, tipoNP);
+    }
+
+    // ── MAQUINA DE ESTADOS: ACCIONES Y AUTO-AVANCE ──
+    function renderBotonAccionFase(estadoId, tipoNP) {
+        var $container = $("#btnAccionFaseContainer");
+        $container.empty();
+
+        if (tipoNP === 'terminada' || estadoId === 4) return;
+
+        if (estadoId === 1) {
+            $container.append(`
+                <button class="btn btn-sm btn-primary" style="background-color: var(--hialpesa-blue); border-color: var(--hialpesa-blue);" onclick="avanzarEstadoNP('En Proceso', '¿Estás seguro de pasar a En Proceso?', 'Asegúrate de haber registrado todos los consumos. Esto bloqueará nuevos ingresos.')">
+                    Avanzar a En Proceso <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            `);
+        } else if (estadoId === 2) {
+            $container.append(`
+                <button class="btn btn-sm btn-outline-secondary" onclick="registrarNoMermaGlobal()" style="border: 1px solid #cbd5e1; color: #475569; font-weight: 600; background: #fff;">No existe merma global</button>
+                <button class="btn btn-sm btn-warning" style="color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="avanzarEstadoNP('Pendiente', '¿Estás seguro de Solicitar Liquidación?', 'Esto bloqueará el registro de mermas.')">
+                    Solicitar Liquidación <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            `);
+        } else if (estadoId === 3) {
+            $container.append(`
+                <button class="btn btn-sm btn-outline-secondary" onclick="registrarNoAjusteGlobal()" style="border: 1px solid #cbd5e1; color: #475569; font-weight: 600; background: #fff;">No existen ajustes globales</button>
+                <button class="btn btn-sm btn-success" onclick="avanzarEstadoNP('Liquidado', '¿Estás seguro de Liquidar NP?', 'Esto cerrará la NP por completo.')">
+                    <i class="fas fa-check-circle mr-1"></i> Finalizar Liquidación
+                </button>
+            `);
+        }
+    }
+
+    function avanzarEstadoNP(nuevoEstado, tituloConfirm, textoConfirm) {
+        Swal.fire({
+            title: tituloConfirm,
+            text: textoConfirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#002D72',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, confirmar'
+        }).then((result) => {
+            if (result.value) {
+                Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
+                $.post('@Url.Action("AvanzarEstadoNP", "Liquidacion")', { np: selectedNP, nuevoEstado: nuevoEstado }, function (res) {
+                    if (res.success) {
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function registrarNoMermaGlobal() {
+        Swal.fire({
+            title: '¿No existe merma global?',
+            text: 'Se registrará 0 gramos para todos los colores restantes y se avanzará de fase.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#002D72',
+            confirmButtonText: 'Sí, registrar'
+        }).then((result) => {
+            if (result.value) {
+                Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
+                $.post('@Url.Action("RegistrarNoMermaGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
+                    if (res.success) {
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function registrarNoAjusteGlobal() {
+        Swal.fire({
+            title: '¿No existen ajustes globales?',
+            text: 'Se registrará que no hay ajuste para los insumos restantes y se liquidará la NP.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#002D72',
+            confirmButtonText: 'Sí, registrar'
+        }).then((result) => {
+            if (result.value) {
+                Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
+                $.post('@Url.Action("RegistrarNoAjusteGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
+                    if (res.success) {
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                });
+            }
+        });
     }
 
     // ── CARGA ASÍNCRONA DESDE EL BACKEND ──
@@ -1295,7 +1411,20 @@
                             <i class="fas fa-chevron-down" style="margin-left: 10px;"></i>
                         </div>
                         <div style="margin-left: auto;">
-                            ${tipo === 'activa' ? `<button class="btn btn-xs btn-warning ${col.bloqueoMerma ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="abrirModalMermaColor('${item.np}', '${col.pantone}')" title="${col.bloqueoMerma ? 'Merma bloqueada (No existe)' : 'Registrar Merma para el Color'}" ${col.bloqueoMerma ? 'disabled' : ''}><i class="fas fa-sync-alt"></i> Merma</button>` : ''}
+                            ${(function() {
+                                if (tipo !== 'activa') return '';
+                                var estadoLower = (item.estado || '').toLowerCase();
+                                var estId = 1;
+                                if (estadoLower === 'en proceso') estId = 2;
+                                else if (estadoLower === 'pendiente' || estadoLower === 'pendiente de liquidación') estId = 3;
+                                else if (estadoLower === 'cerrada' || estadoLower === 'liquidado') estId = 4;
+                                
+                                var disableMerma = (estId !== 2 || col.bloqueoMerma) ? 'disabled="disabled"' : '';
+                                var titleMerma = col.bloqueoMerma ? 'Merma bloqueada (No existe)' : 'Registrar Merma para el Color';
+                                if (estId !== 2) titleMerma = 'Solo permitido en Fase En Proceso';
+
+                                return `<button class="btn btn-xs btn-warning ${disableMerma ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="abrirModalMermaColor('${item.np}', '${col.pantone}')" title="${titleMerma}" ${disableMerma}><i class="fas fa-sync-alt"></i> Merma</button>`;
+                            })()}
                         </div>
                     </div>
                     <div class="color-group-content">
@@ -1323,10 +1452,26 @@
                     // Si la NP no está cerrada, mostrar botones operativos por fila
                     var accionesHtml = "";
                     if (tipo === 'activa') {
+                        // Derivar estadoId localmente para renderizado condicional de botones
+                        var estadoLower = (item.estado || '').toLowerCase();
+                        var estId = 1;
+                        if (estadoLower === 'en proceso') estId = 2;
+                        else if (estadoLower === 'pendiente' || estadoLower === 'pendiente de liquidación') estId = 3;
+                        else if (estadoLower === 'cerrada' || estadoLower === 'liquidado') estId = 4;
+
+                        var disableConsumo = estId !== 1 ? 'disabled="disabled"' : '';
+                        var disableAjuste = (estId !== 3 || ins.bloqueoAjuste) ? 'disabled="disabled"' : '';
+                        var hideIngreso = estId !== 1 ? 'display: none;' : '';
+
+                        var titleAjuste = ins.bloqueoAjuste ? 'Ajuste bloqueado (No existe)' : 'Ajuste de Saldo';
+                        if (estId !== 3) titleAjuste = 'Solo permitido en Fase Pendiente';
+
+                        var titleConsumo = estId !== 1 ? 'Solo permitido en Fase Activa' : 'Registrar Consumo';
+
                         accionesHtml = `
-                            <button class="btn btn-xs btn-primary-hialpesa" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo', '${col.pantone}')" title="Registrar Consumo"><i class="fas fa-tint"></i> Consumo</button>
-                            <button class="btn btn-xs btn-success ${ins.bloqueoAjuste ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ajuste', '${col.pantone}')" title="${ins.bloqueoAjuste ? 'Ajuste bloqueado (No existe)' : 'Ajuste de Saldo'}" ${ins.bloqueoAjuste ? 'disabled' : ''}><i class="fas fa-sliders-h"></i> Ajuste</button>
-                            <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso', '${col.pantone}')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-xs btn-primary-hialpesa ${estId !== 1 ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'consumo', '${col.pantone}')" title="${titleConsumo}" ${disableConsumo}><i class="fas fa-tint"></i> Consumo</button>
+                            <button class="btn btn-xs btn-success ${disableAjuste ? 'disabled' : ''}" style="font-size:11px; padding:4px 8px; margin-right: 4px;" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ajuste', '${col.pantone}')" title="${titleAjuste}" ${disableAjuste}><i class="fas fa-sliders-h"></i> Ajuste</button>
+                            <button class="btn btn-xs btn-info" style="font-size:11px; padding:4px 8px; background-color: #0ea5e9; border-color: #0ea5e9; color: #fff; ${hideIngreso}" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'ingreso', '${col.pantone}')" title="Ingreso Adicional"><i class="fas fa-plus"></i></button>
                         `;
                     }
 

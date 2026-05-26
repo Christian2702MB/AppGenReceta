@@ -148,4 +148,14 @@ namespace AppGenReceta.BE
         public decimal Gramos { get; set; }
         public string FechaVencimiento { get; set; }
     }
+
+    /// <summary>
+    /// Resultado de una transición de estado en la máquina de estados de la NP
+    /// </summary>
+    [Serializable]
+    public class LIQ_TransicionResultadoBE
+    {
+        public bool Exito { get; set; }
+        public string Mensaje { get; set; }
+    }
 }
