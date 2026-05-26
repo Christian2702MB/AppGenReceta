@@ -1,14 +1,14 @@
 -- =======================================================================
--- MÓDULO: LIQUIDACIÓN DE INSUMOS DE ESTAMPADO
--- ACTUALIZACIÓN: REFACTORIZACIÓN BLOQUEOS Y PESTAÑA MERMAS REUTILIZABLES (CORREGIDO)
+-- MODULO: LIQUIDACION DE INSUMOS DE ESTAMPADO
+-- REFACTOR: OBTENER LIQUIDACIONES CON ESTADOS AGRUPADOS
 -- =======================================================================
 
 USE [HIALPESA]
 GO
 
--- 1. ACTUALIZAR SP DE CONSOLIDADOS (Agregando Banderas de Bloqueo)
 IF OBJECT_ID('dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas;
 GO
+
 CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
     @Estado VARCHAR(20) -- 'Activa' o 'Cerrada'
 AS
@@ -71,33 +71,5 @@ BEGIN
           (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
       )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
-END
-GO
-
--- 2. ACTUALIZAR SP DE MERMAS REUTILIZABLES (Cambio de Origen a LIQ_MER_MermasColor)
-IF OBJECT_ID('dbo.LIQ_SP_ObtenerMermasStock', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerMermasStock;
-GO
-CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerMermasStock]
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        CodigoMerma AS Codigo,
-        NombreColor AS Descripcion,
-        '' AS Tecnica, -- Se mantiene por compatibilidad de la clase en C#, aunque se oculte en la UI
-        NP AS NPOrigen,
-        CONVERT(VARCHAR(10), FechaRegistro, 103) AS FechaGeneracion,
-        CONVERT(VARCHAR(10), FechaVencimiento, 103) AS FechaVencimiento,
-        Gramos AS CantidadDisponible,
-        'gr' AS UM,
-        'Disponible' AS Estado
-    FROM 
-        LIQ_MER_MermasColor
-    WHERE 
-        FechaVencimiento IS NOT NULL 
-        AND Gramos > 0
-    ORDER BY 
-        FechaRegistro DESC;
 END
 GO
