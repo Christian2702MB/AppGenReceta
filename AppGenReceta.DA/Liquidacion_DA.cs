@@ -410,7 +410,11 @@ namespace AppGenReceta.DA
                                     var color = cabecera.Colores.Find(c => c.Pantone == pantone);
                                     if (color == null)
                                     {
-                                        color = new LIQ_LiquidacionColorBE { Pantone = pantone, Insumos = new List<LIQ_LiquidacionInsumoBE>() };
+                                        color = new LIQ_LiquidacionColorBE { 
+                                            Pantone = pantone, 
+                                            Insumos = new List<LIQ_LiquidacionInsumoBE>(),
+                                            BloqueoMerma = Convert.ToBoolean(dr["BloqueoMerma"])
+                                        };
                                         cabecera.Colores.Add(color);
                                     }
 
