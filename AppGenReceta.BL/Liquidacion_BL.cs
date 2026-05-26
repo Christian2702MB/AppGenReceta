@@ -180,5 +180,14 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public LIQ_TransicionResultadoBE TerminarNP(string np, string destinoGlobal, string usuario)
+        {
+            try
+            {
+                return new Liquidacion_DA().TerminarNP(np, destinoGlobal, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

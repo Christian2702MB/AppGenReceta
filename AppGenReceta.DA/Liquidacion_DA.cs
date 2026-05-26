@@ -425,7 +425,7 @@ namespace AppGenReceta.DA
                                     decimal merma = Convert.ToDecimal(dr["Merma"]);
                                     decimal ajuste = Convert.ToDecimal(dr["Ajuste"]);
                                     decimal requerido = Convert.ToDecimal(dr["Requerido"]);
-                                    decimal saldo = requerido - consumido - devuelto - merma - ajuste;
+                                    decimal saldo = requerido - consumido - ajuste;
                                     if (saldo < 0) saldo = 0;
 
                                     color.Insumos.Add(new LIQ_LiquidacionInsumoBE
@@ -710,6 +710,30 @@ namespace AppGenReceta.DA
                 cnx.Open();
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        public LIQ_TransicionResultadoBE TerminarNP(string np, string destinoGlobal, string usuario)
+        {
+            var resultado = new LIQ_TransicionResultadoBE();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_TerminarNP_Fase5", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@DestinoGlobal", destinoGlobal);
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        resultado.Exito = Convert.ToInt32(dr["Exito"]) == 1;
+                        resultado.Mensaje = dr["Mensaje"].ToString();
+                    }
+                }
+            }
+            return resultado;
         }
     }
 }

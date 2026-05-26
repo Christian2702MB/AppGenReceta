@@ -631,5 +631,23 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpPost]
+        public JsonResult TerminarNP(string np, string destinoGlobal)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                var resultado = bl.TerminarNP(np, destinoGlobal, usuario);
+                return Json(new { success = resultado.Exito, message = resultado.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
