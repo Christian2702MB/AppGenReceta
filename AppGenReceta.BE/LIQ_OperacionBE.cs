@@ -104,6 +104,8 @@ namespace AppGenReceta.BE
         public decimal ConsumidoInicial { get; set; }
         public decimal ConsumidoSolicitud { get; set; }
         public decimal Devuelto { get; set; }
+        public decimal DevueltoCentral { get; set; }
+        public decimal DevueltoOperativo { get; set; }
         public decimal Merma { get; set; }
         public decimal Ajuste { get; set; }
         public decimal Saldo { get; set; }
