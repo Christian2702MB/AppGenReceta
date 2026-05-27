@@ -6,7 +6,9 @@
 USE [HIALPESA]
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
+IF OBJECT_ID('dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas;
+GO
+CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
     @Estado VARCHAR(20) -- 'Activa' o 'Cerrada'
 AS
 BEGIN

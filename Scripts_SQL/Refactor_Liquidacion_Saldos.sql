@@ -78,16 +78,19 @@ BEGIN
     WHERE CodInsumo = @CodInsumo;
     
     -- Obtener Stock Solicitud sumando desde los detalles de recepción
-    -- Asumiendo estructura estándar de cabecera-detalle o detalle directo con CodOrdPro
-    SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida), 0)
+    -- Convirtiendo de KG a Gramos (x1000)
+    SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida * 1000.00), 0)
     FROM LIQ_REQ_RecepcionesDetalle D
     INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
     WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
 
+    DECLARE @ConsumidoInicial DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @ConsumidoSolicitud DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0);
+
     SELECT 
-        @StockInicial AS StockInicial,
-        @StockSolicitud AS StockSolicitud,
-        (@StockInicial + @StockSolicitud) AS StockTotal;
+        (@StockInicial - @ConsumidoInicial) AS StockInicial,
+        (@StockSolicitud - @ConsumidoSolicitud) AS StockSolicitud,
+        ((@StockInicial - @ConsumidoInicial) + (@StockSolicitud - @ConsumidoSolicitud)) AS StockTotal;
         
     -- Result Set 2: Historial de Consumos
     SELECT 

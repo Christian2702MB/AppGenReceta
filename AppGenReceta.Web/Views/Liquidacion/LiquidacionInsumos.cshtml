@@ -708,13 +708,13 @@
                     <table class="erp-table" id="tablaTratamientoSaldos">
                         <thead>
                             <tr>
-                                <th>Código</th>
-                                <th>Insumo</th>
-                                <th class="text-right">Stock Solicitud (g)</th>
-                                <th class="text-right">Saldo Actual (g)</th>
-                                <th class="text-right">Devolución Alm. Central</th>
-                                <th class="text-right">Devolución Alm. Operativo</th>
-                                <th style="text-align: center;">Acción de Cierre</th>
+                                <th style="min-width: 100px; padding: 12px 15px; vertical-align: middle;">Código</th>
+                                <th style="min-width: 220px; padding: 12px 15px; vertical-align: middle;">Insumo</th>
+                                <th class="text-right" style="min-width: 140px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Stock Solicitud <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 140px; white-space: nowrap; color: #0ea5e9; padding: 12px 15px; vertical-align: middle;">Saldo Actual <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Central</th>
+                                <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Operativo</th>
+                                <th style="text-align: center; min-width: 150px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Acción de Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -749,11 +749,11 @@
                 </div>
                 <div class="row" style="margin-top: 15px; background: #f8fafc; padding: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0; margin-left: 0; margin-right: 0;">
                     <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
-                        <label style="font-size: 10px; color: var(--hialpesa-dark);">Stock Operativo (g)</label>
+                        <label style="font-size: 10px; color: var(--hialpesa-dark); text-transform: uppercase;">STOCK OPERATIVO (g)</label>
                         <input type="text" class="form-control" id="txtSaldoInicial" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
                     </div>
                     <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
-                        <label style="font-size: 10px; color: var(--hialpesa-accent);">Stock Solicitud (g)</label>
+                        <label style="font-size: 10px; color: var(--hialpesa-accent); text-transform: uppercase;">STOCK RECIBIDO (g)</label>
                         <input type="text" class="form-control" id="txtSaldoSolicitud" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
                     </div>
                     <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
@@ -765,10 +765,10 @@
                     <label>Fuente de Consumo</label>
                     <div style="display: flex; gap: 20px; margin-top: 5px;">
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
-                            <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumir de Stock Actual
+                            <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumo Stock Operativo
                         </label>
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
-                            <input type="radio" name="optFuenteConsumo" value="Solicitud Realizada" /> Consumir de Solicitud Realizada
+                            <input type="radio" name="optFuenteConsumo" value="Solicitud Realizada" /> Consumo Stock Recibido
                         </label>
                     </div>
                 </div>
@@ -1384,7 +1384,11 @@
                             requerido: i.Requerido, consumido: i.Consumido,
                             consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud,
                             devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
-                            loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad
+                            loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
+                            stockRecibido: i.StockRecibido,
+                            devueltoCentral: i.DevueltoCentral || 0,
+                            devueltoOperativo: i.DevueltoOperativo || 0,
+                            bloqueoAjuste: i.BloqueoAjuste
                         }))
                     }))
                 };
@@ -2066,7 +2070,7 @@
 
         var insFound = findInsumoInNP(selectedNP, codInsumo);
         if (insFound) {
-            var saldo = insFound.requerido - insFound.consumido - (insFound.ajuste || 0);
+            var saldo = insFound.stockRecibido - insFound.consumidoSolicitud;
             if (cant > saldo) {
                 Swal.fire({ title: 'Sobrepasa Saldo', text: 'La cantidad a devolver no puede exceder el saldo (' + saldo.toFixed(2) + ').', icon: 'error', confirmButtonColor: '#002D72' });
                 return;
