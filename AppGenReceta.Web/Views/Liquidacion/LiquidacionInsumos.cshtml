@@ -1554,7 +1554,14 @@
                             stockOperativo: i.StockOperativo,
                             devueltoCentral: i.DevueltoCentral || 0,
                             devueltoOperativo: i.DevueltoOperativo || 0,
-                            bloqueoAjuste: i.BloqueoAjuste
+                            bloqueoAjuste: i.BloqueoAjuste,
+                            stockTotal: i.StockTotal || 0,
+                            consumidoTotal: i.ConsumidoTotal || 0,
+                            ajusteInicial: i.AjusteInicial || 0,
+                            ajusteTotal: i.AjusteTotal || 0,
+                            saldoInicial: i.SaldoInicial || 0,
+                            saldoSolicitud: i.SaldoSolicitud || 0,
+                            saldoTotal: i.SaldoTotal || 0
                         }))
                     }))
                 };
@@ -1721,13 +1728,13 @@
                                         <th>Código</th>
                                         <th>Insumo</th>
                                         <th>U.M.</th>
-                                        <th class="text-right">Req.</th>
-                                        <th class="text-right">Stock Inicial</th>
-                                        <th class="text-right">Consumido</th>
-                                        <!-- <th class="text-right">Devuelto</th> -->
-                                        <!-- <th class="text-right">Merma</th> -->
-                                        <th class="text-right">Ajuste</th>
-                                        <th class="text-right">Saldo</th>
+                                        <!-- <th class="text-end">Req.</th> -->
+                                        <th class="text-end">Stock Inicial</th>
+                                        <th class="text-end">Consumido</th>
+                                        <!-- <th class="text-end">Devuelto</th> -->
+                                        <!-- <th class="text-end">Merma</th> -->
+                                        <th class="text-end">Ajuste</th>
+                                        <th class="text-end">Saldo</th>
                                         ${(item.estado === 'Terminado') ? '' : '<th style="text-align: center; width: 220px;">Acciones Operativas</th>'}
                                     </tr>
                                 </thead>
@@ -1768,13 +1775,37 @@
                         <td><strong>${ins.codigo}</strong></td>
                         <td>${ins.nombre}</td>
                         <td>${ins.um}</td>
-                        <td class="text-right">${ins.requerido.toFixed(2)}</td>
-                        <td class="text-right text-info"><strong>${((ins.stockOperativo || 0) + (ins.stockRecibido || 0)).toFixed(2)}</strong></td>
-                        <td class="text-right">${ins.consumido.toFixed(2)}</td>
-                        <!-- <td class="text-right">${ins.devuelto.toFixed(2)}</td> -->
-                        <!-- <td class="text-right text-warning"><strong>${ins.merma.toFixed(2)}</strong></td> -->
-                        <td class="text-right"><strong>${(ins.ajuste || 0).toFixed(2)}</strong></td>
-                        <td class="text-right text-primary"><strong>${saldoVal.toFixed(2)}</strong></td>
+                        <!-- <td class="text-right">${ins.requerido.toFixed(2)}</td> -->
+                        <td class="text-info" style="vertical-align: middle;">
+                            <div class="text-end fw-bold mb-1">${ins.stockTotal.toFixed(2)}</div>
+                            <div class="d-flex justify-content-end gap-2 text-muted" style="font-size: 0.70rem;">
+                                <div><span class="opacity-50">Ini:</span> ${(ins.stockOperativo || 0).toFixed(2)}</div>
+                                <div><span class="opacity-50">Rec:</span> ${(ins.stockRecibido || 0).toFixed(2)}</div>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div class="text-end fw-bold mb-1">${ins.consumidoTotal.toFixed(2)}</div>
+                            <div class="d-flex justify-content-end gap-2 text-muted" style="font-size: 0.70rem;">
+                                <div><span class="opacity-50">Ini:</span> ${(ins.consumidoInicial || 0).toFixed(2)}</div>
+                                <div><span class="opacity-50">Rec:</span> ${(ins.consumidoSolicitud || 0).toFixed(2)}</div>
+                            </div>
+                        </td>
+                        <!-- <td class="text-end">${(ins.devuelto || 0).toFixed(2)}</td> -->
+                        <!-- <td class="text-end text-warning"><strong>${(ins.merma || 0).toFixed(2)}</strong></td> -->
+                        <td style="vertical-align: middle;">
+                            <div class="text-end fw-bold mb-1">${ins.ajusteTotal.toFixed(2)}</div>
+                            <div class="d-flex justify-content-end gap-2 text-muted" style="font-size: 0.70rem;">
+                                <div><span class="opacity-50">Ini:</span> ${(ins.ajusteInicial || 0).toFixed(2)}</div>
+                                <div><span class="opacity-50">Rec:</span> ${(ins.ajusteSolicitud || 0).toFixed(2)}</div>
+                            </div>
+                        </td>
+                        <td class="text-primary" style="vertical-align: middle;">
+                            <div class="text-end fw-bold mb-1">${Math.max(0, ins.saldoTotal).toFixed(2)}</div>
+                            <div class="d-flex justify-content-end gap-2 text-muted" style="font-size: 0.70rem;">
+                                <div><span class="opacity-50">Ini:</span> ${Math.max(0, ins.saldoInicial).toFixed(2)}</div>
+                                <div><span class="opacity-50">Rec:</span> ${Math.max(0, ins.saldoSolicitud).toFixed(2)}</div>
+                            </div>
+                        </td>
                         ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center; white-space: nowrap;">${accionesHtml}</td>`}
                     </tr>`;
 

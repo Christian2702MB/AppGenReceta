@@ -427,31 +427,37 @@ namespace AppGenReceta.DA
                                     decimal devueltoOperativo = Convert.ToDecimal(dr["DevueltoOperativo"]);
                                     decimal merma = Convert.ToDecimal(dr["Merma"]);
                                     decimal ajuste = Convert.ToDecimal(dr["Ajuste"]);
-                                    decimal requerido = Convert.ToDecimal(dr["Requerido"]);
-                                    decimal stockRecibido = Convert.ToDecimal(dr["StockRecibido"]);
-                                    decimal stockOperativo = Convert.ToDecimal(dr["StockOperativo"]);
-                                    decimal saldo = (stockOperativo + stockRecibido) - consumido - ajuste;
-                                    if (saldo < 0) saldo = 0;
-
                                     color.Insumos.Add(new LIQ_LiquidacionInsumoBE
                                     {
                                         Codigo = dr["CodigoInsumo"].ToString(),
                                         Nombre = dr["NombreInsumo"].ToString(),
                                         Tecnica = dr["Tecnica"].ToString(),
                                         UM = dr["UM"].ToString(),
-                                        Requerido = requerido,
-                                        StockRecibido = stockRecibido,
-                                        StockOperativo = stockOperativo,
-                                        Consumido = consumido,
-                                        ConsumidoInicial = consumidoInicial,
-                                        ConsumidoSolicitud = consumidoSolicitud,
-                                        AjusteSolicitud = ajusteSolicitud,
-                                        Devuelto = devuelto,
-                                        DevueltoCentral = devueltoCentral,
-                                        DevueltoOperativo = devueltoOperativo,
-                                        Merma = merma,
-                                        Ajuste = ajuste,
-                                        Saldo = saldo,
+                                        Requerido = Convert.ToDecimal(dr["Requerido"]),
+                                        
+                                        StockRecibido = Convert.ToDecimal(dr["StockRecibido"]),
+                                        StockOperativo = Convert.ToDecimal(dr["StockOperativo"]),
+                                        StockTotal = Convert.ToDecimal(dr["StockTotal"]),
+                                        
+                                        ConsumidoInicial = Convert.ToDecimal(dr["ConsumidoInicial"]),
+                                        ConsumidoSolicitud = Convert.ToDecimal(dr["ConsumidoSolicitud"]),
+                                        ConsumidoTotal = Convert.ToDecimal(dr["ConsumidoTotal"]),
+                                        Consumido = Convert.ToDecimal(dr["ConsumidoTotal"]),
+                                        
+                                        AjusteInicial = Convert.ToDecimal(dr["AjusteInicial"]),
+                                        AjusteSolicitud = Convert.ToDecimal(dr["AjusteSolicitud"]),
+                                        AjusteTotal = Convert.ToDecimal(dr["AjusteTotal"]),
+                                        Ajuste = Convert.ToDecimal(dr["AjusteTotal"]),
+                                        
+                                        SaldoInicial = Convert.ToDecimal(dr["SaldoInicial"]),
+                                        SaldoSolicitud = Convert.ToDecimal(dr["SaldoSolicitud"]),
+                                        SaldoTotal = Convert.ToDecimal(dr["SaldoTotal"]),
+                                        Saldo = Convert.ToDecimal(dr["SaldoTotal"]),
+                                        
+                                        Devuelto = Convert.ToDecimal(dr["Devuelto"]),
+                                        DevueltoCentral = Convert.ToDecimal(dr["DevueltoCentral"]),
+                                        DevueltoOperativo = Convert.ToDecimal(dr["DevueltoOperativo"]),
+                                        Merma = Convert.ToDecimal(dr["Merma"]),
                                         LoteVenc = "", // Para implementar si se requiere de lote real
                                         Trazabilidad = dr["Trazabilidad"].ToString(),
                                         BloqueoAjuste = Convert.ToBoolean(dr["BloqueoAjuste"])

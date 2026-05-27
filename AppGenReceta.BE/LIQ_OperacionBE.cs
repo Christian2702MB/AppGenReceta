@@ -104,7 +104,16 @@ namespace AppGenReceta.BE
         public decimal Consumido { get; set; }
         public decimal ConsumidoInicial { get; set; }
         public decimal ConsumidoSolicitud { get; set; }
+        public decimal ConsumidoTotal { get; set; }
+        
+        public decimal AjusteInicial { get; set; }
         public decimal AjusteSolicitud { get; set; }
+        public decimal AjusteTotal { get; set; }
+        
+        public decimal SaldoInicial { get; set; }
+        public decimal SaldoSolicitud { get; set; }
+        public decimal SaldoTotal { get; set; }
+
         public decimal Devuelto { get; set; }
         public decimal DevueltoCentral { get; set; }
         public decimal DevueltoOperativo { get; set; }
@@ -112,8 +121,11 @@ namespace AppGenReceta.BE
         public decimal Ajuste { get; set; }
         public decimal Saldo { get; set; }
         public string LoteVenc { get; set; }
+        
         public decimal StockRecibido { get; set; }
         public decimal StockOperativo { get; set; }
+        public decimal StockTotal { get; set; }
+        
         public string Trazabilidad { get; set; }
         public bool BloqueoAjuste { get; set; }
     }
