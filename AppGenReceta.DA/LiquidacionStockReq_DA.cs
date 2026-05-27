@@ -264,6 +264,21 @@ namespace AppGenReceta.DA
             return mensaje;
         }
 
+        public bool ExisteFormulaParaNP(string codOrdPro)
+        {
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(1) FROM LIQ_Formulas WHERE NP = @NP AND Estado <> 'Eliminada'", cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@NP", codOrdPro);
+                    cn.Open();
+                    int count = Convert.ToInt32(cmd.ExecuteScalar());
+                    return count > 0;
+                }
+            }
+        }
+
         public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario)
         {
             string mensaje = "";

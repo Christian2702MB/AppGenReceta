@@ -47,7 +47,13 @@ namespace AppGenReceta.BL
 
         public string ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string usuarioRecepcion)
         {
-            // Primero, debemos obtener el detalle real de "ConsumoAdicional" 
+            // 1. Validar que exista la fórmula para esta NP
+            if (!_da.ExisteFormulaParaNP(codOrdPro))
+            {
+                throw new System.Exception("No se puede recepcionar porque no tiene fórmula creada. La fórmula debe aparecer en la pestaña 'Mantenimiento de Fórmulas'.");
+            }
+
+            // 2. Obtener el detalle real de "ConsumoAdicional" 
             // ya que el front no nos manda los insumos, solo confirma la cabecera.
             // Para eso, consultamos el DA de ConsumoAdicional opcion 4 (Detalle)
             
