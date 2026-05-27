@@ -109,6 +109,7 @@ namespace AppGenReceta.BE
         public decimal Saldo { get; set; }
         public string LoteVenc { get; set; }
         public decimal StockRecibido { get; set; }
+        public decimal StockOperativo { get; set; }
         public string Trazabilidad { get; set; }
         public bool BloqueoAjuste { get; set; }
     }

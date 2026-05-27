@@ -426,7 +426,8 @@ namespace AppGenReceta.DA
                                     decimal ajuste = Convert.ToDecimal(dr["Ajuste"]);
                                     decimal requerido = Convert.ToDecimal(dr["Requerido"]);
                                     decimal stockRecibido = Convert.ToDecimal(dr["StockRecibido"]);
-                                    decimal saldo = requerido - consumido - ajuste;
+                                    decimal stockOperativo = Convert.ToDecimal(dr["StockOperativo"]);
+                                    decimal saldo = (stockOperativo + stockRecibido) - consumido - ajuste;
                                     if (saldo < 0) saldo = 0;
 
                                     color.Insumos.Add(new LIQ_LiquidacionInsumoBE
@@ -437,6 +438,7 @@ namespace AppGenReceta.DA
                                         UM = dr["UM"].ToString(),
                                         Requerido = requerido,
                                         StockRecibido = stockRecibido,
+                                        StockOperativo = stockOperativo,
                                         Consumido = consumido,
                                         ConsumidoInicial = consumidoInicial,
                                         ConsumidoSolicitud = consumidoSolicitud,

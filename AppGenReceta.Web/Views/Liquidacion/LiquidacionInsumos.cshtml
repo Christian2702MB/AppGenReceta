@@ -1386,6 +1386,7 @@
                             devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
                             loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
                             stockRecibido: i.StockRecibido,
+                            stockOperativo: i.StockOperativo,
                             devueltoCentral: i.DevueltoCentral || 0,
                             devueltoOperativo: i.DevueltoOperativo || 0,
                             bloqueoAjuste: i.BloqueoAjuste
@@ -1550,6 +1551,7 @@
                                         <th>Insumo</th>
                                         <th>U.M.</th>
                                         <th class="text-right">Req.</th>
+                                        <th class="text-right">Stock Inicial</th>
                                         <th class="text-right">Consumido</th>
                                         <!-- <th class="text-right">Devuelto</th> -->
                                         <!-- <th class="text-right">Merma</th> -->
@@ -1561,7 +1563,8 @@
                                 <tbody>`;
                 
                 col.insumos.forEach(function(ins) {
-                    var saldoVal = ins.requerido - ins.consumido - (ins.ajuste || 0);
+                    var stockInicialTotal = (ins.stockOperativo || 0) + (ins.stockRecibido || 0);
+                    var saldoVal = stockInicialTotal - ins.consumido - (ins.ajuste || 0);
                     if (saldoVal < 0) saldoVal = 0;
 
                     // Si la NP no está cerrada, mostrar botones operativos por fila
@@ -1595,6 +1598,7 @@
                         <td>${ins.nombre}</td>
                         <td>${ins.um}</td>
                         <td class="text-right">${ins.requerido.toFixed(2)}</td>
+                        <td class="text-right text-info"><strong>${((ins.stockOperativo || 0) + (ins.stockRecibido || 0)).toFixed(2)}</strong></td>
                         <td class="text-right">${ins.consumido.toFixed(2)}</td>
                         <!-- <td class="text-right">${ins.devuelto.toFixed(2)}</td> -->
                         <!-- <td class="text-right text-warning"><strong>${ins.merma.toFixed(2)}</strong></td> -->

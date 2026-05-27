@@ -53,6 +53,16 @@ BEGIN
             INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
             WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
         ), 0) AS StockRecibido,
+        
+        -- Stock Operativo: Inventario real de almacén (Convertido de KG a Gramos si aplica)
+        ISNULL((
+            SELECT TOP 1 CASE 
+                WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
+                ELSE ISNULL(StockActual, 0)
+            END
+            FROM LIQ_STK_StockInsumos
+            WHERE CodInsumo = I.CodigoInsumo
+        ), 0) AS StockOperativo,
 			        
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
