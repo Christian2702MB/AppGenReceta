@@ -568,6 +568,20 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public JsonResult ObtenerDevolucionesPorInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                var data = bl.ObtenerDevolucionesPorInsumo(np, codInsumo);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         // =======================================================================
         // MAQUINA DE ESTADOS
         // =======================================================================

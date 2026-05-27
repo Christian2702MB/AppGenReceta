@@ -978,6 +978,24 @@
                     <label>Cantidad a retornar</label>
                     <input type="number" class="form-control" id="txtDevolucionCantidad" placeholder="No mayor al saldo disponible" step="0.01" />
                 </div>
+                
+                <hr style="margin-top:20px; margin-bottom:15px;" />
+                <h5 style="color:#002D72; font-weight:bold; margin-bottom:10px;"><i class="fas fa-history"></i> Historial de Devoluciones</h5>
+                <div class="table-responsive" style="max-height: 150px; overflow-y:auto; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    <table class="table table-bordered table-condensed" style="margin-bottom:0; font-size:12px;" id="tablaHistoricoDevoluciones">
+                        <thead style="background-color:#f1f5f9;">
+                            <tr>
+                                <th style="width: 25%; text-align:right;">Cantidad Devuelta</th>
+                                <th style="width: 25%;">Almacén</th>
+                                <th style="width: 25%;">Fecha</th>
+                                <th style="width: 25%;">Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Llenado dinámico -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
@@ -1270,7 +1288,7 @@
         var haySaldos = false;
         liq.colores.forEach(function(col) {
             col.insumos.forEach(function(ins) {
-                var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud;
+                var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
                 if (saldoLiquidar > 0) {
                     haySaldos = true;
                 }
@@ -1608,7 +1626,7 @@
                     </tr>`;
 
                     // Llenar tabla de Tratamiento de Saldos
-                    var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud;
+                    var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
                     if (saldoLiquidar > 0 || (ins.devueltoCentral || 0) > 0 || (ins.devueltoOperativo || 0) > 0) {
                         haySaldos = true;
                         var accionSaldo = `<button class="btn-action-pill btn-dev" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion', '${col.pantone}', ${saldoLiquidar})"><i class="fas fa-exchange-alt"></i> Devolver Saldo</button>`;
@@ -1850,6 +1868,9 @@
             $("#txtDevolucionCantidad").val(saldoDevolucion !== null ? saldoDevolucion.toFixed(2) : '');
             $("#ddlTipoDevolucion").prop("disabled", false).val($("#ddlTipoDevolucion option:first").val());
             $("#ddlDevolucionInsumo").html(selectOptionsHtml).prop("disabled", true);
+            
+            cargarHistoricoDevoluciones(np, codInsumo);
+
             $("#devolucionModal").modal("show");
             setTimeout(function() { $("#txtDevolucionCantidad").focus(); }, 400);
         } else if (tipo === "ajuste") {
@@ -1927,6 +1948,34 @@
                     var stLabel = isNoAjuste ? '<span class="label label-default" style="background-color:#94a3b8;">Sin Ajuste</span>' : '<span class="label label-success" style="background-color:#10b981;">Ajustado</span>';
                     var row = `<tr>
                         <td class="text-right">${item.Cantidad.toFixed(2)}</td>
+                        <td>${item.Motivo || '-'}</td>
+                        <td>${item.FechaRegistro}</td>
+                        <td>${item.UsuarioRegistro}</td>
+                    </tr>`;
+                    $tbody.append(row);
+                });
+            }
+        }).fail(function() {
+            $tbody.empty();
+            $tbody.append(`<tr><td colspan="4" class="text-center text-danger">Fallo de conexión al cargar el historial.</td></tr>`);
+        });
+    }
+
+    function cargarHistoricoDevoluciones(np, codInsumo) {
+        var $tbody = $("#tablaHistoricoDevoluciones tbody");
+        $tbody.empty();
+        $tbody.append(`<tr><td colspan="4" class="text-center text-muted" style="padding: 15px;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>`);
+
+        $.get('@Url.Action("ObtenerDevolucionesPorInsumo", "Liquidacion")', { np: np, codInsumo: codInsumo }, function(data) {
+            $tbody.empty();
+            if(data.error) {
+                $tbody.append(`<tr><td colspan="4" class="text-center text-danger">Error al cargar historial.</td></tr>`);
+            } else if (!data || data.length === 0) {
+                $tbody.append(`<tr><td colspan="4" class="text-center text-muted" style="padding: 15px;">No hay devoluciones registradas previamente.</td></tr>`);
+            } else {
+                data.forEach(function(item) {
+                    var row = `<tr>
+                        <td class="text-right text-primary"><strong>${item.Cantidad.toFixed(2)}</strong></td>
                         <td>${item.Motivo || '-'}</td>
                         <td>${item.FechaRegistro}</td>
                         <td>${item.UsuarioRegistro}</td>

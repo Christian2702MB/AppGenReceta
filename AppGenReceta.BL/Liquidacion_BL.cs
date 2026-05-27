@@ -150,6 +150,15 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public List<LIQ_AjusteHistoricoBE> ObtenerDevolucionesPorInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerDevolucionesPorInsumo(np, codInsumo);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
         // =======================================================================
         // MAQUINA DE ESTADOS
         // =======================================================================

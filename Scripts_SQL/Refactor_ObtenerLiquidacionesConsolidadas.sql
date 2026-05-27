@@ -99,3 +99,30 @@ BEGIN
       )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
 END
+GO
+
+-- =======================================================================
+-- NUEVO SP: Obtener Historial de Devoluciones por Insumo
+-- =======================================================================
+IF OBJECT_ID('dbo.LIQ_SP_ObtenerDevolucionesPorInsumo', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerDevolucionesPorInsumo;
+GO
+CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerDevolucionesPorInsumo]
+    @NP VARCHAR(20),
+    @CodInsumo VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        IdOperacion AS IdAjuste,
+        Cantidad,
+        ISNULL(Motivo, 'Sin especificar') AS Motivo,
+        FechaRegistro,
+        UsuarioRegistro
+    FROM LIQ_OperacionesDetalle
+    WHERE NP = @NP 
+      AND CodInsumo = @CodInsumo 
+      AND TipoOperacion = 'Devolucion'
+    ORDER BY IdOperacion DESC;
+END
+GO
