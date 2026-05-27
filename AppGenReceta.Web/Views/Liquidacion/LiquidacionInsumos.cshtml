@@ -712,11 +712,13 @@
                             <tr>
                                 <th style="min-width: 100px; padding: 12px 15px; vertical-align: middle;">Código</th>
                                 <th style="min-width: 220px; padding: 12px 15px; vertical-align: middle;">Insumo</th>
-                                <th class="text-right" style="min-width: 140px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Stock Solicitud <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-right" style="min-width: 140px; white-space: nowrap; color: #0ea5e9; padding: 12px 15px; vertical-align: middle;">Saldo Actual <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Central</th>
-                                <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Operativo</th>
-                                <th id="thAccionCierre" style="text-align: center; min-width: 150px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Acción de Cierre</th>
+                                <th class="text-right" style="min-width: 120px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Stock Solicitud <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 120px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Consumo <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 120px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Ajuste <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 120px; white-space: nowrap; color: #0ea5e9; padding: 12px 15px; vertical-align: middle;">Saldo Actual <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 140px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Central</th>
+                                <th class="text-right" style="min-width: 140px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Operativo</th>
+                                <th id="thAccionCierre" style="text-align: center; min-width: 140px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Acción de Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1823,6 +1825,8 @@
                                 <td><strong>${ins.codigo}</strong></td>
                                 <td>${ins.nombre}</td>
                                 <td class="text-right">${(ins.stockRecibido || 0).toFixed(2)}</td>
+                                <td class="text-right">${(ins.consumidoSolicitud || 0).toFixed(2)}</td>
+                                <td class="text-right">${(ins.ajusteSolicitud || 0).toFixed(2)}</td>
                                 <td class="text-right text-primary" style="font-size:14px;"><strong>${saldoLiquidar.toFixed(2)}</strong></td>
                                 <td class="text-right">${(ins.devueltoCentral || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.devueltoOperativo || 0).toFixed(2)}</td>
