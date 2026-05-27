@@ -689,9 +689,14 @@
 
             <!-- CONTENIDO TAB 3: TRATAMIENTO SALDOS -->
             <div id="panelTratamiento" class="tab-content-panel" style="display: none;">
-                <div class="table-title">
-                    <h2>Tratamiento de Saldos - <span id="lblSaldosNP" style="color: var(--hialpesa-accent);"></span></h2>
-                    <div id="headerCierreGlobal" style="display: flex; gap: 20px; align-items: center; display: none;">
+                <div class="table-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                    <h2 style="margin: 0; font-size: 18px; white-space: nowrap;">Tratamiento de Saldos - <span id="lblSaldosNP" style="color: var(--hialpesa-accent);"></span></h2>
+                    <div id="headerCierreGlobal" style="display: flex; gap: 15px; align-items: center; display: none; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Devolución Global:</span>
+                            <label style="font-weight: normal; font-size: 13px; cursor: pointer; margin: 0;"><input type="radio" name="optDevolucionGlobal" value="Almacén Central" checked /> Almacén Central</label>
+                            <label style="font-weight: normal; font-size: 13px; cursor: pointer; margin: 0;"><input type="radio" name="optDevolucionGlobal" value="Almacén Operativo" /> Almacén Operativo</label>
+                        </div>
                         <button class="btn btn-sm btn-danger" onclick="terminarNPGlobal()" style="font-weight: 700; background-color: #dc2626; border-color: #dc2626; color: white;"><i class="fas fa-arrow-right"></i> Cerrar y Terminar NP</button>
                     </div>
                 </div>
@@ -746,7 +751,7 @@
                 </div>
                 <div class="row" style="margin-top: 15px; background: #f8fafc; padding: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0; margin-left: 0; margin-right: 0;">
                     <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
-                        <label style="font-size: 10px; color: var(--hialpesa-dark);">Stock Inicial (g)</label>
+                        <label style="font-size: 10px; color: var(--hialpesa-dark);">Stock (g)</label>
                         <input type="text" class="form-control" id="txtSaldoInicial" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
                     </div>
                     <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
@@ -762,7 +767,7 @@
                     <label>Fuente de Consumo</label>
                     <div style="display: flex; gap: 20px; margin-top: 5px;">
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
-                            <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumir de Stock Inicial
+                            <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumir de Stock Actual
                         </label>
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
                             <input type="radio" name="optFuenteConsumo" value="Solicitud Realizada" /> Consumir de Solicitud Realizada
@@ -964,7 +969,7 @@
                     <label>Tipo de Devolución</label>
                     <select class="form-control" id="ddlTipoDevolucion">
                         <option value="Almacén Central">Almacén Central</option>
-                        <option value="Stock Inicial Almacén Operativo">Stock Inicial Almacén Operativo</option>
+                        <option value="Almacén Operativo">Almacén Operativo</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1261,25 +1266,15 @@
     }
 
     function terminarNPGlobal() {
-        var liq = activeLiquidations[selectedNP];
-        if (!liq) return;
-        
-        var allZero = true;
-        liq.colores.forEach(function(col) {
-            col.insumos.forEach(function(ins) {
-                var sVal = ins.requerido - ins.consumido - (ins.ajuste || 0);
-                if (sVal > 0.001) allZero = false;
-            });
-        });
-        
-        if (!allZero) {
-            Swal.fire('Atención', 'Aún existen saldos pendientes por tratar. Debe registrar la devolución o destino de todos los insumos antes de terminar la NP.', 'error');
+        var destinoGlobal = $("input[name='optDevolucionGlobal']:checked").val();
+        if (!destinoGlobal) {
+            Swal.fire('Advertencia', 'Debe seleccionar un destino global para la devolución de saldos.', 'warning');
             return;
         }
 
         Swal.fire({
             title: '¿Estás seguro de Terminar la NP?',
-            text: 'Esta acción es irreversible.',
+            text: 'Esto procesará los saldos pendientes según la opción global seleccionada y bloqueará permanentemente la liquidación.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#002D72',
@@ -1288,7 +1283,7 @@
         }).then((result) => {
             if (result.value) {
                 Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
-                $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: "Cierre por Ítems Confirmado" }, function (res) {
+                $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: destinoGlobal }, function (res) {
                     if (res.success) {
                         Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
                     } else {
