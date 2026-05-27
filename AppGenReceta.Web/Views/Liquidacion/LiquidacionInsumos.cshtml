@@ -863,13 +863,41 @@
         <div class="modal-content">
             <div class="modal-header" style="background-color: #10b981;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><i class="fas fa-sliders-h"></i> Ajuste de Inventario</h4>
+                <h4 class="modal-title"><i class="fas fa-sliders-h"></i> Ajuste de Saldos</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label>Insumo a Ajustar</label>
                     <select class="form-control" id="ddlAjusteInsumo" disabled></select>
                 </div>
+                
+                <div class="row" style="margin-top: 15px; background: #f8fafc; padding: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0; margin-left: 0; margin-right: 0;">
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: var(--hialpesa-dark); text-transform: uppercase;">SALDO OPERATIVO (g)</label>
+                        <input type="text" class="form-control" id="txtAjusteSaldoInicial" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: var(--hialpesa-accent); text-transform: uppercase;">SALDO RECIBIDO (g)</label>
+                        <input type="text" class="form-control" id="txtAjusteSaldoSolicitud" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                    <div class="col-xs-4" style="padding-left: 10px; padding-right: 10px;">
+                        <label style="font-size: 10px; color: #0ea5e9; text-transform: uppercase;">SALDO TOTAL (g)</label>
+                        <input type="text" class="form-control" id="txtAjusteSaldoTotal" readonly style="background: transparent; border: none; font-weight: bold; padding: 0; height: auto; box-shadow: none;" />
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Fuente de Ajuste</label>
+                    <div style="display: flex; gap: 20px; margin-top: 5px;">
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteAjuste" value="Stock Inicial" checked /> Ajuste Saldo Operativo
+                        </label>
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteAjuste" value="Solicitud Realizada" /> Ajuste Saldo Recibido
+                        </label>
+                    </div>
+                </div>
+
                 <div class="form-group" style="margin-top: 15px;">
                     <label>Cantidad a ajustar (gr)</label>
                     <input type="number" class="form-control" id="txtAjusteCantidad" placeholder="0.00" step="0.01" />
@@ -1889,11 +1917,29 @@
             $("#devolucionModal").modal("show");
             setTimeout(function() { $("#txtDevolucionCantidad").focus(); }, 400);
         } else if (tipo === "ajuste") {
+            $("#txtAjusteSaldoInicial").val("Cargando...");
+            $("#txtAjusteSaldoSolicitud").val("Cargando...");
+            $("#txtAjusteSaldoTotal").val("Cargando...");
+            $("input[name='optFuenteAjuste'][value='Stock Inicial']").prop("checked", true);
+
             $("#txtAjusteCantidad").val('').prop("disabled", false);
             $("#txtAjusteMotivo").val('').prop("disabled", false);
             $("#chkNoAjuste").prop("checked", false);
             $("#ddlAjusteInsumo").html(selectOptionsHtml).prop("disabled", true);
             
+            $.get('@Url.Action("ObtenerSaldosInsumo", "Liquidacion")?np=' + np + '&codInsumo=' + codInsumo, function(response) {
+                if (response && !response.error) {
+                    $("#txtAjusteSaldoInicial").val(response.StockInicial.toFixed(2));
+                    $("#txtAjusteSaldoSolicitud").val(response.StockSolicitud.toFixed(2));
+                    $("#txtAjusteSaldoTotal").val(response.StockTotal.toFixed(2));
+                } else {
+                    $("#txtAjusteSaldoInicial").val("0.00");
+                    $("#txtAjusteSaldoSolicitud").val("0.00");
+                    $("#txtAjusteSaldoTotal").val("0.00");
+                    console.error("Error obteniendo stock ajuste:", response.error);
+                }
+            });
+
             cargarHistoricoAjustes(np, codInsumo);
             
             $("#ajusteModal").modal("show");
@@ -2089,6 +2135,7 @@
         var cant = parseFloat($("#txtAjusteCantidad").val());
         var motivo = $("#txtAjusteMotivo").val().trim();
         var pantone = $("#ajusteModal").data("color");
+        var fuenteAjuste = $("input[name='optFuenteAjuste']:checked").val();
 
         if (!isNoAjuste) {
             if (isNaN(cant) || cant <= 0) {
@@ -2099,10 +2146,16 @@
                 Swal.fire({ title: 'Atención', text: 'El motivo del ajuste es obligatorio.', icon: 'warning', confirmButtonColor: '#10b981' });
                 return;
             }
+
+            var saldoReferencia = fuenteAjuste === "Stock Inicial" ? parseFloat($("#txtAjusteSaldoInicial").val()) : parseFloat($("#txtAjusteSaldoSolicitud").val());
+            if (cant > saldoReferencia) {
+                Swal.fire({ title: 'Sobrepasa Saldo', text: 'La cantidad a ajustar no puede exceder el saldo disponible de la fuente seleccionada (' + saldoReferencia.toFixed(2) + ').', icon: 'error', confirmButtonColor: '#10b981' });
+                return;
+            }
         }
         
         var cantFinal = isNoAjuste ? 0 : cant;
-        enviarOperacion(selectedNP, codInsumo, "Ajuste", cantFinal, isNoAjuste ? "No existe ajuste" : motivo, null, "#ajusteModal", null, pantone);
+        enviarOperacion(selectedNP, codInsumo, "Ajuste", cantFinal, isNoAjuste ? "No existe ajuste" : motivo, null, "#ajusteModal", fuenteAjuste, pantone);
     }
 
     // ── REGISTRO DE ACCIÓN: INGRESO ADICIONAL ──
