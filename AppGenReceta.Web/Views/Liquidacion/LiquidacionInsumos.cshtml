@@ -692,11 +692,6 @@
                 <div class="table-title">
                     <h2>Tratamiento de Saldos - <span id="lblSaldosNP" style="color: var(--hialpesa-accent);"></span></h2>
                     <div id="headerCierreGlobal" style="display: flex; gap: 20px; align-items: center; display: none;">
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <span style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Devolución Global:</span>
-                            <label style="font-weight: normal; font-size: 13px; cursor: pointer; margin: 0;"><input type="radio" name="optDevolucionGlobal" value="Almacén Central" checked /> Almacén Central</label>
-                            <label style="font-weight: normal; font-size: 13px; cursor: pointer; margin: 0;"><input type="radio" name="optDevolucionGlobal" value="Stock Inicial Almacén Operativo" /> Stock Inicial</label>
-                        </div>
                         <button class="btn btn-sm btn-danger" onclick="terminarNPGlobal()" style="font-weight: 700; background-color: #dc2626; border-color: #dc2626; color: white;"><i class="fas fa-arrow-right"></i> Cerrar y Terminar NP</button>
                     </div>
                 </div>
@@ -967,14 +962,10 @@
             <div class="modal-body">
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label>Tipo de Devolución</label>
-                    <div style="display: flex; gap: 15px; margin-top: 5px;">
-                        <label style="font-weight: normal; font-size: 13px; cursor: pointer;">
-                            <input type="radio" name="optTipoDevolucion" value="Almacén Central" checked /> Almacén Central
-                        </label>
-                        <label style="font-weight: normal; font-size: 13px; cursor: pointer;">
-                            <input type="radio" name="optTipoDevolucion" value="Stock Inicial Almacén Operativo" /> Stock Inicial Almacén Operativo
-                        </label>
-                    </div>
+                    <select class="form-control" id="ddlTipoDevolucion">
+                        <option value="Almacén Central">Almacén Central</option>
+                        <option value="Stock Inicial Almacén Operativo">Stock Inicial Almacén Operativo</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Insumo a Devolver</label>
@@ -1155,11 +1146,17 @@
             $("#headerCierreGlobal").hide();
             $("#alertaTerminadoFase5").show();
             $(".btn-dev").prop("disabled", true).css({"opacity": "0.5", "pointer-events": "none"});
+            
+            // Modo Solo Lectura Fase 5
+            $("#detailNpState").find("input, select, button").not(".tab-item, .btn-collapse").prop("disabled", true).addClass("disabled-phase5");
         } else {
             $("#alertaCierreLiquidado").hide();
             $("#headerCierreGlobal").hide();
             $("#alertaTerminadoFase5").hide();
             $(".btn-dev").prop("disabled", false).css({"opacity": "1", "pointer-events": "auto"});
+            
+            // Restaurar Controles
+            $(".disabled-phase5").prop("disabled", false).removeClass("disabled-phase5");
         }
 
         // Renderizar botón de acción de fase
@@ -1264,15 +1261,25 @@
     }
 
     function terminarNPGlobal() {
-        var destinoGlobal = $("input[name='optDevolucionGlobal']:checked").val();
-        if (!destinoGlobal) {
-            Swal.fire('Advertencia', 'Debe seleccionar un destino global para la devolución de saldos.', 'warning');
+        var liq = activeLiquidations[selectedNP];
+        if (!liq) return;
+        
+        var allZero = true;
+        liq.colores.forEach(function(col) {
+            col.insumos.forEach(function(ins) {
+                var sVal = ins.requerido - ins.consumido - (ins.ajuste || 0);
+                if (sVal > 0.001) allZero = false;
+            });
+        });
+        
+        if (!allZero) {
+            Swal.fire('Atención', 'Aún existen saldos pendientes por tratar. Debe registrar la devolución o destino de todos los insumos antes de terminar la NP.', 'error');
             return;
         }
 
         Swal.fire({
             title: '¿Estás seguro de Terminar la NP?',
-            text: 'Esto procesará los saldos pendientes hacia el destino seleccionado y bloqueará la liquidación de forma irreversible.',
+            text: 'Esta acción es irreversible.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#002D72',
@@ -1281,7 +1288,7 @@
         }).then((result) => {
             if (result.value) {
                 Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
-                $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: destinoGlobal }, function (res) {
+                $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: "Cierre por Ítems Confirmado" }, function (res) {
                     if (res.success) {
                         Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
                     } else {
@@ -1555,7 +1562,7 @@
                     // Llenar tabla de Tratamiento de Saldos
                     if (saldoVal > 0) {
                         haySaldos = true;
-                        var accionSaldo = `<button class="btn-action-pill btn-dev" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion')"><i class="fas fa-exchange-alt"></i> Devolver Saldo</button>`;
+                        var accionSaldo = `<button class="btn-action-pill btn-dev" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion', '${col.pantone}', ${saldoVal})"><i class="fas fa-exchange-alt"></i> Devolver Saldo</button>`;
 
                         $saldosTbody.append(`
                             <tr>
@@ -1751,10 +1758,9 @@
             $("#ingresoModal").modal("show");
             setTimeout(function() { $("#txtIngresoCantidad").focus(); }, 400);
         } else if (tipo === "devolucion") {
-            $("#txtDevolucionCantidad").val('');
-            $("input[name='optTipoDevolucion'][value='Almacén Central']").prop("checked", true);
-            $("#divDevolucionMotivo").show();
-            $("#ddlDevolucionMotivo").prop("disabled", false).val($("#ddlDevolucionMotivo option:first").val());
+            var saldoDevolucion = arguments.length > 4 ? arguments[4] : null;
+            $("#txtDevolucionCantidad").val(saldoDevolucion !== null ? saldoDevolucion.toFixed(2) : '');
+            $("#ddlTipoDevolucion").prop("disabled", false).val($("#ddlTipoDevolucion option:first").val());
             $("#ddlDevolucionInsumo").html(selectOptionsHtml).prop("disabled", true);
             $("#devolucionModal").modal("show");
             setTimeout(function() { $("#txtDevolucionCantidad").focus(); }, 400);
@@ -1969,15 +1975,15 @@
     function registrarDevolucion() {
         var codInsumo = $("#ddlDevolucionInsumo").val();
         var cant = parseFloat($("#txtDevolucionCantidad").val());
-        
-        var tipoDevolucion = $("input[name='optTipoDevolucion']:checked").val();
-        var motivo = tipoDevolucion === "Stock Inicial Almacén Operativo" ? "Retorno a Stock Inicial Almacén Operativo" : $("#ddlDevolucionMotivo").val();
+        var motivo = $("#ddlTipoDevolucion").val();
 
         if (isNaN(cant) || cant <= 0) {
             Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0.', icon: 'error', confirmButtonColor: '#002D72' });
             return;
         }
         
+        var pantone = $("#devolucionModal").data("color");
+
         var insFound = findInsumoInNP(selectedNP, codInsumo);
         if (insFound) {
             var saldo = insFound.requerido - insFound.consumido - (insFound.ajuste || 0);
@@ -1986,7 +1992,7 @@
                 return;
             }
         }
-        enviarOperacion(selectedNP, codInsumo, "Devolucion", cant, motivo, null, "#devolucionModal");
+        enviarOperacion(selectedNP, codInsumo, "Devolucion", cant, motivo, null, "#devolucionModal", null, pantone);
     }
 
     // ── ABRIR MODAL NUEVA LIQUIDACIÓN ──

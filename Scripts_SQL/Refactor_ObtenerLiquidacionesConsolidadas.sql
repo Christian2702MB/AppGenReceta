@@ -6,10 +6,7 @@
 USE [HIALPESA]
 GO
 
-IF OBJECT_ID('dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas;
-GO
-
-CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
+CREATE OR ALTER PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
     @Estado VARCHAR(20) -- 'Activa' o 'Cerrada'
 AS
 BEGIN
@@ -23,8 +20,8 @@ BEGIN
     FROM LIQ_Formulas F
     WHERE F.Eliminado = 0 
       AND (
-          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente')) OR
-          (@Estado = 'Cerrada' AND F.Estado IN ('Cerrada', 'Liquidado')) OR
+          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente', 'Liquidado')) OR
+          (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
           (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
       )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
@@ -37,12 +34,20 @@ BEGIN
         I.Descripcion AS NombreInsumo,
         F.Tecnica,
         'gr' AS UM,
-        ISNULL(I.Cantidad, 0) AS Requerido,
-        
-        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo'), 0) AS Consumido,
+        -- Requerido: Extraer el valor de LIQ_FormulaInsumosPrueba (EsPrincipal = 1) por Prendas
+            ISNULL((
+                SELECT TOP 1 GramosUDP 
+                FROM LIQ_FormulaInsumosPrueba 
+                WHERE IdFormula = F.IdFormula 
+                  AND NombreColor = C.NombreColor 
+                  AND CodigoInsumo = I.CodigoInsumo 
+                  AND EsPrincipal = 1
+            ), 0) * ISNULL(TRY_CAST(F.Prendas AS DECIMAL(18,2)), 1) AS Requerido,
+			        
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Merma'), 0) AS Merma,
-        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste'), 0) AS Ajuste,
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor), 0) AS Ajuste,
         
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) AS ConsumidoInicial,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitud,
@@ -66,10 +71,9 @@ BEGIN
     INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
     WHERE F.Eliminado = 0 
       AND (
-          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente')) OR
-          (@Estado = 'Cerrada' AND F.Estado IN ('Cerrada', 'Liquidado')) OR
+          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente', 'Liquidado')) OR
+          (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
           (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
       )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
 END
-GO
