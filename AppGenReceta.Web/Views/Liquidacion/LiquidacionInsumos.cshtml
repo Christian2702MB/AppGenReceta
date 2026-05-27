@@ -1317,7 +1317,7 @@
         var haySaldos = false;
         liq.colores.forEach(function(col) {
             col.insumos.forEach(function(ins) {
-                var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
+                var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.ajusteSolicitud || 0) - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
                 if (saldoLiquidar > 0) {
                     haySaldos = true;
                 }
@@ -1429,7 +1429,7 @@
                         insumos: c.Insumos.map(i => ({
                             codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
                             requerido: i.Requerido, consumido: i.Consumido,
-                            consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud,
+                            consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud, ajusteSolicitud: i.AjusteSolicitud,
                             devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
                             loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
                             stockRecibido: i.StockRecibido,
@@ -1661,7 +1661,7 @@
                     </tr>`;
 
                     // Llenar tabla de Tratamiento de Saldos
-                    var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
+                    var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.ajusteSolicitud || 0) - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
                     if (saldoLiquidar > 0 || (ins.devueltoCentral || 0) > 0 || (ins.devueltoOperativo || 0) > 0) {
                         haySaldos = true;
                         var accionSaldo = `<button class="btn-action-pill btn-dev" onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion', '${col.pantone}', ${saldoLiquidar})"><i class="fas fa-exchange-alt"></i> Devolver Saldo</button>`;

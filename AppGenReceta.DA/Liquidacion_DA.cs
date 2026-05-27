@@ -421,6 +421,7 @@ namespace AppGenReceta.DA
                                     decimal consumido = Convert.ToDecimal(dr["Consumido"]);
                                     decimal consumidoInicial = Convert.ToDecimal(dr["ConsumidoInicial"]);
                                     decimal consumidoSolicitud = Convert.ToDecimal(dr["ConsumidoSolicitud"]);
+                                    decimal ajusteSolicitud = Convert.ToDecimal(dr["AjusteSolicitud"]);
                                     decimal devuelto = Convert.ToDecimal(dr["Devuelto"]);
                                     decimal devueltoCentral = Convert.ToDecimal(dr["DevueltoCentral"]);
                                     decimal devueltoOperativo = Convert.ToDecimal(dr["DevueltoOperativo"]);
@@ -444,6 +445,7 @@ namespace AppGenReceta.DA
                                         Consumido = consumido,
                                         ConsumidoInicial = consumidoInicial,
                                         ConsumidoSolicitud = consumidoSolicitud,
+                                        AjusteSolicitud = ajusteSolicitud,
                                         Devuelto = devuelto,
                                         DevueltoCentral = devueltoCentral,
                                         DevueltoOperativo = devueltoOperativo,

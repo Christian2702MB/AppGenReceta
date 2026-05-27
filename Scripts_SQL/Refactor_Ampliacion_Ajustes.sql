@@ -18,7 +18,7 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        IdOperacionDetalle AS IdAjuste,
+        IdOperacion AS IdAjuste,
         Cantidad,
         Motivo,
         ISNULL(FuenteConsumo, 'Sin especificar') AS Fuente,
