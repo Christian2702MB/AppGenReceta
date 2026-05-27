@@ -1228,8 +1228,7 @@
             `);
         } else if (estadoId === 2) {
             $container.append(`
-                <button class="btn btn-sm btn-outline-secondary" onclick="registrarNoMermaGlobal()" style="border: 1px solid #cbd5e1; color: #475569; font-weight: 600; background: #fff;">No existe merma global</button>
-                <button class="btn btn-sm btn-warning" style="color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="avanzarEstadoNP('Pendiente', '¿Estás seguro de Solicitar Liquidación?', 'Esto bloqueará el registro de mermas.')">
+                <button class="btn btn-sm btn-warning" style="color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="solicitarLiquidacion()">
                     Solicitar Liquidación <i class="fas fa-arrow-right ml-1"></i>
                 </button>
             `);
@@ -1266,26 +1265,85 @@
         });
     }
 
-    function registrarNoMermaGlobal() {
-        Swal.fire({
-            title: '¿No existe merma global?',
-            text: 'Se registrará 0 gramos para todos los colores restantes y se avanzará de fase.',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#002D72',
-            confirmButtonText: 'Sí, registrar'
-        }).then((result) => {
-            if (result.value) {
-                Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
-                $.post('@Url.Action("RegistrarNoMermaGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
-                    if (res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
+    function solicitarLiquidacion() {
+        var item = activeLiquidations[selectedNP];
+        if (!item || !item.colores || item.colores.length === 0) {
+            ejecutarAvanceFase3(false);
+            return;
+        }
+
+        var totalColores = item.colores.length;
+        var coloresConMerma = 0;
+
+        item.colores.forEach(function(col) {
+            var tieneMerma = false;
+            if (col.bloqueoMerma) {
+                tieneMerma = true;
+            } else if (col.insumos) {
+                col.insumos.forEach(function(ins) {
+                    if (ins.merma > 0) tieneMerma = true;
                 });
             }
+            if (tieneMerma) coloresConMerma++;
         });
+
+        if (coloresConMerma === totalColores) {
+            Swal.fire({
+                title: '¿Solicitar Liquidación?',
+                text: 'Se procederá a cambiar el estado de la NP para el registro de ajustes.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase3(false);
+                }
+            });
+        } else if (coloresConMerma === 0) {
+            Swal.fire({
+                title: 'No se detectaron mermas',
+                text: 'No ha registrado ninguna merma para los colores de esta NP. ¿Desea declarar que NO EXISTE MERMA GLOBAL y solicitar la liquidación de todos modos?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, declarar sin merma',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase3(true);
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'Mermas incompletas',
+                text: `Faltan ${totalColores - coloresConMerma} color(es) sin registrar mermas. ¿Desea declarar que no existen mermas para los colores restantes y solicitar la liquidación?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, autocompletar sin merma',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase3(true);
+                }
+            });
+        }
+    }
+
+    function ejecutarAvanceFase3(hasNoMermaGlobal) {
+        Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
+        $.post('@Url.Action("AvanzarEstadoNP", "Liquidacion")', { np: selectedNP, nuevoEstado: 'Pendiente', hasNoMermaGlobal: hasNoMermaGlobal }, function (res) {
+            if (res.success) {
+                Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        }).fail(function() { Swal.fire('Error', 'Fallo en la conexión.', 'error'); });
     }
 
     function registrarNoAjusteGlobal() {
@@ -1426,6 +1484,7 @@
                     estado: item.Estado, creacion: item.Creacion, cierre: item.Cierre,
                     colores: item.Colores.map(c => ({
                         pantone: c.Pantone,
+                        bloqueoMerma: c.BloqueoMerma,
                         insumos: c.Insumos.map(i => ({
                             codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
                             requerido: i.Requerido, consumido: i.Consumido,

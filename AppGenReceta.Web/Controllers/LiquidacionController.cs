@@ -587,7 +587,7 @@ namespace AppGenReceta.Web.Controllers
         // =======================================================================
 
         [HttpPost]
-        public JsonResult AvanzarEstadoNP(string np, string nuevoEstado)
+        public JsonResult AvanzarEstadoNP(string np, string nuevoEstado, bool hasNoMermaGlobal = false)
         {
             try
             {
@@ -595,6 +595,12 @@ namespace AppGenReceta.Web.Controllers
                     return Json(new { success = false, message = "Sesion expirada" });
 
                 string usuario = Session["NombreUsuario"].ToString();
+                
+                if (hasNoMermaGlobal && nuevoEstado == "Pendiente")
+                {
+                    bl.RegistrarNoMermaGlobal(np, usuario);
+                }
+
                 var resultado = bl.AvanzarEstadoNP(np, nuevoEstado, usuario);
                 return Json(new { success = resultado.Exito, message = resultado.Mensaje });
             }
