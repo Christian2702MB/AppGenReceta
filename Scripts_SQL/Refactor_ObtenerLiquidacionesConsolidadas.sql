@@ -42,7 +42,15 @@ BEGIN
                   AND NombreColor = C.NombreColor 
                   AND CodigoInsumo = I.CodigoInsumo 
                   AND EsPrincipal = 1
-            ), 0) * ISNULL(TRY_CAST(F.Prendas AS DECIMAL(18,2)), 1) AS Requerido,
+            ), 0) * CASE WHEN ISNUMERIC(F.Prendas) = 1 THEN CAST(F.Prendas AS DECIMAL(18,2)) ELSE 1 END AS Requerido,
+			        
+        -- Stock Recibido: Cruce con Liquidacion Recepciones (Convertido de KG a Gramos)
+        ISNULL((
+            SELECT SUM(D.CantidadRecibida * 1000.00) 
+            FROM LIQ_REQ_Recepciones R
+            INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
+            WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
+        ), 0) AS StockRecibido,
 			        
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,

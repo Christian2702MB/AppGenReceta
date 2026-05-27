@@ -425,6 +425,7 @@ namespace AppGenReceta.DA
                                     decimal merma = Convert.ToDecimal(dr["Merma"]);
                                     decimal ajuste = Convert.ToDecimal(dr["Ajuste"]);
                                     decimal requerido = Convert.ToDecimal(dr["Requerido"]);
+                                    decimal stockRecibido = Convert.ToDecimal(dr["StockRecibido"]);
                                     decimal saldo = requerido - consumido - ajuste;
                                     if (saldo < 0) saldo = 0;
 
@@ -435,6 +436,7 @@ namespace AppGenReceta.DA
                                         Tecnica = dr["Tecnica"].ToString(),
                                         UM = dr["UM"].ToString(),
                                         Requerido = requerido,
+                                        StockRecibido = stockRecibido,
                                         Consumido = consumido,
                                         ConsumidoInicial = consumidoInicial,
                                         ConsumidoSolicitud = consumidoSolicitud,
