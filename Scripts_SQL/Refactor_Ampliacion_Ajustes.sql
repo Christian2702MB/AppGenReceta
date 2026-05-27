@@ -21,6 +21,7 @@ BEGIN
         IdOperacionDetalle AS IdAjuste,
         Cantidad,
         Motivo,
+        ISNULL(FuenteConsumo, 'Sin especificar') AS Fuente,
         FechaRegistro,
         UsuarioRegistro
     FROM 

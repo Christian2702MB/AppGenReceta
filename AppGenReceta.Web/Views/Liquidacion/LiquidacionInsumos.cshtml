@@ -917,10 +917,11 @@
                     <table class="table table-bordered table-hover" id="tablaHistoricoAjustes" style="font-size: 12px; margin-bottom: 0;">
                         <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 1;">
                             <tr>
-                                <th>Cant. (g)</th>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Fuente</th>
                                 <th>Motivo</th>
-                                <th>Registro</th>
-                                <th>Responsable</th>
+                                <th class="text-right">Cant. (g)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1995,30 +1996,30 @@
     function cargarHistoricoAjustes(np, codInsumo) {
         var $tbody = $("#tablaHistoricoAjustes tbody");
         $tbody.empty();
-        $tbody.append(`<tr><td colspan="4" class="text-center text-muted" style="padding: 15px;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>`);
+        $tbody.append(`<tr><td colspan="5" class="text-center text-muted" style="padding: 15px;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>`);
 
         $.get('@Url.Action("ObtenerAjustesPorInsumo", "Liquidacion")', { np: np, codInsumo: codInsumo }, function(data) {
             $tbody.empty();
             if(data.error) {
-                $tbody.append(`<tr><td colspan="4" class="text-center text-danger">Error al cargar historial.</td></tr>`);
+                $tbody.append(`<tr><td colspan="5" class="text-center text-danger">Error al cargar historial.</td></tr>`);
             } else if (!data || data.length === 0) {
-                $tbody.append(`<tr><td colspan="4" class="text-center text-muted" style="padding: 15px;">No hay ajustes registrados previamente.</td></tr>`);
+                $tbody.append(`<tr><td colspan="5" class="text-center text-muted" style="padding: 15px;">No hay ajustes registrados previamente.</td></tr>`);
             } else {
                 data.forEach(function(item) {
                     var isNoAjuste = item.Cantidad === 0 && item.Motivo === 'No existe ajuste';
-                    var stLabel = isNoAjuste ? '<span class="label label-default" style="background-color:#94a3b8;">Sin Ajuste</span>' : '<span class="label label-success" style="background-color:#10b981;">Ajustado</span>';
                     var row = `<tr>
-                        <td class="text-right">${item.Cantidad.toFixed(2)}</td>
-                        <td>${item.Motivo || '-'}</td>
                         <td>${item.FechaRegistro}</td>
                         <td>${item.UsuarioRegistro}</td>
+                        <td>${item.Fuente || '-'}</td>
+                        <td>${item.Motivo || '-'}</td>
+                        <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
                     </tr>`;
                     $tbody.append(row);
                 });
             }
         }).fail(function() {
             $tbody.empty();
-            $tbody.append(`<tr><td colspan="4" class="text-center text-danger">Fallo de conexión al cargar el historial.</td></tr>`);
+            $tbody.append(`<tr><td colspan="5" class="text-center text-danger">Fallo de conexión al cargar el historial.</td></tr>`);
         });
     }
 

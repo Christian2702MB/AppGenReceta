@@ -53,6 +53,7 @@ namespace AppGenReceta.BE
         public int IdAjuste { get; set; }
         public decimal Cantidad { get; set; }
         public string Motivo { get; set; }
+        public string Fuente { get; set; }
         public string FechaRegistro { get; set; }
         public string UsuarioRegistro { get; set; }
     }

@@ -654,6 +654,7 @@ namespace AppGenReceta.DA
                                 IdAjuste = Convert.ToInt32(dr["IdAjuste"]),
                                 Cantidad = Convert.ToDecimal(dr["Cantidad"]),
                                 Motivo = dr["Motivo"].ToString(),
+                                Fuente = dr["Fuente"].ToString(),
                                 FechaRegistro = dr["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "",
                                 UsuarioRegistro = dr["UsuarioRegistro"].ToString()
                             });

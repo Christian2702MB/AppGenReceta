@@ -15,13 +15,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Resultado 1: Cabeceras (Solo fórmulas con Recepción en LIQ_REQ_Recepciones)
+    -- Resultado 1: Cabeceras
     SELECT 
-        F.IdFormula, F.NP, F.Cliente, F.Estilo, F.Combo, F.Estado, 
+        F.IdFormula, F.NP, F.Cliente, F.Estilo, F.Temporada, F.EstiloPropio, F.Estado, 
         CONVERT(VARCHAR(10), F.FechaCreacion, 103) AS FechaCreacion,
         ISNULL(F.FechaCierre, '--') AS FechaCierre
     FROM LIQ_Formulas F
-    WHERE F.Eliminado = 0 AND F.Estado = @Estado
+    WHERE F.Eliminado = 0 
+      AND (
+          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente', 'Liquidado')) OR
+          (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
+          (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
+      )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
 
     -- Resultado 2: Colores e Insumos con Saldos Consolidados
@@ -32,24 +37,67 @@ BEGIN
         I.Descripcion AS NombreInsumo,
         F.Tecnica,
         'gr' AS UM,
-        ISNULL(I.Cantidad, 0) AS Requerido,
+        -- Requerido: Extraer el valor de LIQ_FormulaInsumosPrueba (EsPrincipal = 1) por Prendas
+            ISNULL((
+                SELECT TOP 1 GramosUDP 
+                FROM LIQ_FormulaInsumosPrueba 
+                WHERE IdFormula = F.IdFormula 
+                  AND NombreColor = C.NombreColor 
+                  AND CodigoInsumo = I.CodigoInsumo 
+                  AND EsPrincipal = 1
+            ), 0) * CASE WHEN ISNUMERIC(F.Prendas) = 1 THEN CAST(F.Prendas AS DECIMAL(18,2)) ELSE 1 END AS Requerido,
+			        
+        -- Stock Recibido: Cruce con Liquidacion Recepciones (Convertido de KG a Gramos)
+        ISNULL((
+            SELECT SUM(D.CantidadRecibida * 1000.00) 
+            FROM LIQ_REQ_Recepciones R
+            INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
+            WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
+        ), 0) AS StockRecibido,
         
-        -- SE ELIMINÓ LA COLUMNA Y CÁLCULO DE 'Entregado'
-        
-        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo'), 0) AS Consumido,
+        -- Stock Operativo: Inventario real de almacén (Convertido de KG a Gramos si aplica)
+        ISNULL((
+            SELECT TOP 1 CASE 
+                WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
+                ELSE ISNULL(StockActual, 0)
+            END
+            FROM LIQ_STK_StockInsumos
+            WHERE CodInsumo = I.CodigoInsumo
+        ), 0) AS StockOperativo,
+			        
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo = 'Almacén Central'), 0) AS DevueltoCentral,
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo = 'Almacén Operativo'), 0) AS DevueltoOperativo,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Merma'), 0) AS Merma,
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor), 0) AS Ajuste,
         
-        -- Consumos Segregados
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) AS ConsumidoInicial,
         ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitud,
 
-        -- Trazabilidad
-        ISNULL((SELECT TOP 1 Motivo FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo ORDER BY IdOperacion DESC), 'Entrega Inicial') AS Trazabilidad
+        ISNULL((SELECT TOP 1 Motivo FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo ORDER BY IdOperacion DESC), 'Entrega Inicial') AS Trazabilidad,
+        
+        -- Bandera de Bloqueo Merma
+        CAST(CASE WHEN EXISTS (
+            SELECT 1 FROM LIQ_MER_MermasColor 
+            WHERE NP = F.NP AND NombreColor = C.NombreColor AND Gramos = 0 AND CodigoMerma = 'NO_MERMA'
+        ) THEN 1 ELSE 0 END AS BIT) AS BloqueoMerma,
+        
+        -- Bandera de Bloqueo Ajuste
+        CAST(CASE WHEN EXISTS (
+            SELECT 1 FROM LIQ_OperacionesDetalle 
+            WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND Cantidad = 0 AND Motivo = 'No existe ajuste'
+        ) THEN 1 ELSE 0 END AS BIT) AS BloqueoAjuste
+        
     FROM LIQ_Formulas F
     INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
     INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-    WHERE F.Eliminado = 0 AND F.Estado = @Estado
+    WHERE F.Eliminado = 0 
+      AND (
+          (@Estado = 'Activa' AND F.Estado IN ('Activa', 'En Proceso', 'Pendiente', 'Liquidado')) OR
+          (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
+          (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
+      )
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
 END
 GO
@@ -87,10 +135,13 @@ BEGIN
     DECLARE @ConsumidoInicial DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @ConsumidoSolicitud DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0);
 
+    DECLARE @AjustadoInicial DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjustadoSolicitud DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0);
+
     SELECT 
-        (@StockInicial - @ConsumidoInicial) AS StockInicial,
-        (@StockSolicitud - @ConsumidoSolicitud) AS StockSolicitud,
-        ((@StockInicial - @ConsumidoInicial) + (@StockSolicitud - @ConsumidoSolicitud)) AS StockTotal;
+        (@StockInicial - @ConsumidoInicial - @AjustadoInicial) AS StockInicial,
+        (@StockSolicitud - @ConsumidoSolicitud - @AjustadoSolicitud) AS StockSolicitud,
+        ((@StockInicial - @ConsumidoInicial - @AjustadoInicial) + (@StockSolicitud - @ConsumidoSolicitud - @AjustadoSolicitud)) AS StockTotal;
         
     -- Result Set 2: Historial de Consumos
     SELECT 
