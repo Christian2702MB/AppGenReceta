@@ -681,7 +681,7 @@
                                 <th class="text-right">Cant. Disponible</th>
                                 <th>U.M.</th>
                                 <th>Estado</th>
-                                <th style="text-align: center;">Acción</th>
+                                <th id="thAccionMerma" style="text-align: center;">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -714,7 +714,7 @@
                                 <th class="text-right" style="min-width: 140px; white-space: nowrap; color: #0ea5e9; padding: 12px 15px; vertical-align: middle;">Saldo Actual <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
                                 <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Central</th>
                                 <th class="text-right" style="min-width: 160px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Devolución Alm.<br>Operativo</th>
-                                <th style="text-align: center; min-width: 150px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Acción de Cierre</th>
+                                <th id="thAccionCierre" style="text-align: center; min-width: 150px; white-space: nowrap; padding: 12px 15px; vertical-align: middle;">Acción de Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1516,6 +1516,12 @@
         $("#lblDetailEstiloPropio").text(item.estiloPropio);
         $("#lblDetailEstado").text(item.estado);
 
+        if (item.estado === 'Terminado') {
+            $("#thAccionCierre").hide();
+        } else {
+            $("#thAccionCierre").show();
+        }
+
         // Actualizar Stepper de Progreso
         actualizarStepper(item.estado, tipo);
 
@@ -1575,7 +1581,7 @@
                                         <!-- <th class="text-right">Merma</th> -->
                                         <th class="text-right">Ajuste</th>
                                         <th class="text-right">Saldo</th>
-                                        <th style="text-align: center; width: 220px;">Acciones Operativas</th>
+                                        ${(item.estado === 'Terminado') ? '' : '<th style="text-align: center; width: 220px;">Acciones Operativas</th>'}
                                     </tr>
                                 </thead>
                                 <tbody>`;
@@ -1622,7 +1628,7 @@
                         <!-- <td class="text-right text-warning"><strong>${ins.merma.toFixed(2)}</strong></td> -->
                         <td class="text-right"><strong>${(ins.ajuste || 0).toFixed(2)}</strong></td>
                         <td class="text-right text-primary"><strong>${saldoVal.toFixed(2)}</strong></td>
-                        <td style="text-align: center; white-space: nowrap;">${accionesHtml}</td>
+                        ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center; white-space: nowrap;">${accionesHtml}</td>`}
                     </tr>`;
 
                     // Llenar tabla de Tratamiento de Saldos
@@ -1639,7 +1645,7 @@
                                 <td class="text-right text-primary" style="font-size:14px;"><strong>${saldoLiquidar.toFixed(2)}</strong></td>
                                 <td class="text-right">${(ins.devueltoCentral || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.devueltoOperativo || 0).toFixed(2)}</td>
-                                <td style="text-align: center;">${accionSaldo}</td>
+                                ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center;">${accionSaldo}</td>`}
                             </tr>
                         `);
                     }
@@ -1672,13 +1678,22 @@
             return;
         }
 
-        // Lógica de Estado Global (Bloqueo por Fase 1)
+        // Lógica de Estado Global (Bloqueo por Fase 1 y ocultamiento por Fase 5)
         var faseInvalida = true;
+        var estadoLower = '';
         if (selectedNP && activeLiquidations[selectedNP]) {
-            var estadoLower = (activeLiquidations[selectedNP].estado || '').toLowerCase();
+            estadoLower = (activeLiquidations[selectedNP].estado || '').toLowerCase();
             if (estadoLower === 'activa' || estadoLower === 'activo') {
                 faseInvalida = false;
             }
+        } else if (selectedNP && finishedLiquidations[selectedNP]) {
+            estadoLower = (finishedLiquidations[selectedNP].estado || '').toLowerCase();
+        }
+
+        if (estadoLower === 'terminado') {
+            $("#thAccionMerma").hide();
+        } else {
+            $("#thAccionMerma").show();
         }
 
         // Obtener fecha actual sin horas para comparar
@@ -1722,9 +1737,9 @@
                 <td class="text-right"><strong>${item.cantDisponible.toFixed(2)}</strong></td>
                 <td>${item.um}</td>
                 <td><span class="badge-status ${badgeClass}">${badgeText}</span></td>
-                <td style="text-align: center;">
+                ${(estadoLower === 'terminado') ? '' : `<td style="text-align: center;">
                     <button class="btn btn-xs btn-outline-hialpesa" onclick="usarMermaEnTaller('${item.codigo}')" style="${btnStyle}" ${isDisabled}>${btnText}</button>
-                </td>
+                </td>`}
             </tr>`;
             $tbody.append(row);
         });
