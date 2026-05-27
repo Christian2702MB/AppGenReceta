@@ -304,6 +304,8 @@
         border-radius: 20px; 
         background: #fef08a; 
         color: #854d0e; 
+        white-space: nowrap;
+        display: inline-block;
     }
     .badge-status.disponible { 
         background: #dcfce7; 
@@ -546,7 +548,7 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #002D72; padding-left: 15px; letter-spacing: -0.5px;">
-                Liquidación de Insumos de Estampado
+                Proceso Operativo Insumos de Estampado
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Control operativo de consumos, mermas, devoluciones y tratamiento de saldos.</p>
         </div>
@@ -640,8 +642,8 @@
                         <h2>Detalle de Liquidación: <span id="lblDetailNP" style="color: var(--hialpesa-accent);"></span></h2>
                     </div>
                     
-                    <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                        <div style="display: flex; gap: 20px;">
+                    <div style="margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                             <div><strong>Cliente:</strong> <span id="lblDetailCliente"></span></div>
                             <div><strong>Temporada:</strong> <span id="lblDetailTemporada"></span></div>
                             <div><strong>Estilo:</strong> <span id="lblDetailEstilo"></span></div>
@@ -1234,8 +1236,7 @@
             `);
         } else if (estadoId === 3) {
             $container.append(`
-                <button class="btn btn-sm btn-outline-secondary" onclick="registrarNoAjusteGlobal()" style="border: 1px solid #cbd5e1; color: #475569; font-weight: 600; background: #fff;">No existen ajustes globales</button>
-                <button class="btn btn-sm btn-success" onclick="avanzarEstadoNP('Liquidado', '¿Estás seguro de Liquidar NP?', 'Esto cerrará la NP por completo.')">
+                <button class="btn btn-sm btn-success" onclick="finalizarLiquidacion()">
                     <i class="fas fa-check-circle mr-1"></i> Finalizar Liquidación
                 </button>
             `);
@@ -1346,26 +1347,84 @@
         }).fail(function() { Swal.fire('Error', 'Fallo en la conexión.', 'error'); });
     }
 
-    function registrarNoAjusteGlobal() {
-        Swal.fire({
-            title: '¿No existen ajustes globales?',
-            text: 'Se registrará que no hay ajuste para los insumos restantes y se liquidará la NP.',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#002D72',
-            confirmButtonText: 'Sí, registrar'
-        }).then((result) => {
-            if (result.value) {
-                Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
-                $.post('@Url.Action("RegistrarNoAjusteGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
-                    if (res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
+    function finalizarLiquidacion() {
+        var item = activeLiquidations[selectedNP];
+        if (!item || !item.colores || item.colores.length === 0) {
+            ejecutarAvanceFase4(false);
+            return;
+        }
+
+        var totalInsumos = 0;
+        var insumosConAjuste = 0;
+
+        item.colores.forEach(function(col) {
+            if (col.insumos) {
+                col.insumos.forEach(function(ins) {
+                    totalInsumos++;
+                    if (ins.ajuste !== 0 || ins.bloqueoAjuste) {
+                        insumosConAjuste++;
                     }
                 });
             }
         });
+
+        if (insumosConAjuste === totalInsumos) {
+            Swal.fire({
+                title: '¿Finalizar Liquidación?',
+                text: 'Esto cerrará la NP por completo y la pasará a estado Liquidado.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase4(false);
+                }
+            });
+        } else if (insumosConAjuste === 0) {
+            Swal.fire({
+                title: 'No se detectaron ajustes',
+                text: 'No ha registrado ningún ajuste para los insumos de esta NP. ¿Desea declarar que NO EXISTEN AJUSTES GLOBALES y finalizar la liquidación de todos modos?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, declarar sin ajustes',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase4(true);
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'Ajustes incompletos',
+                text: `Faltan ${totalInsumos - insumosConAjuste} insumo(s) sin registrar ajustes. ¿Desea declarar que no existen ajustes para los restantes y finalizar la liquidación?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#002D72',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, autocompletar sin ajustes',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.value) {
+                    ejecutarAvanceFase4(true);
+                }
+            });
+        }
+    }
+
+    function ejecutarAvanceFase4(hasNoAjusteGlobal) {
+        Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
+        $.post('@Url.Action("AvanzarEstadoNP", "Liquidacion")', { np: selectedNP, nuevoEstado: 'Liquidado', hasNoAjusteGlobal: hasNoAjusteGlobal }, function (res) {
+            if (res.success) {
+                Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        }).fail(function() { Swal.fire('Error', 'Fallo en la conexión.', 'error'); });
     }
 
     function terminarNPGlobal() {

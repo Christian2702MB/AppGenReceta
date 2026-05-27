@@ -568,31 +568,63 @@ namespace AppGenReceta.DA
         {
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
-                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarMermaColor", cnx);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NP", merma.NP);
-                cmd.Parameters.AddWithValue("@NombreColor", merma.NombreColor);
-                cmd.Parameters.AddWithValue("@Gramos", merma.Gramos);
-                
-                if (string.IsNullOrEmpty(merma.FechaVencimiento))
-                    cmd.Parameters.AddWithValue("@FechaVencimiento", DBNull.Value);
+                if (merma.Gramos <= 0)
+                {
+                    string query = @"
+                        -- Auto-sanear registros anteriores erróneos
+                        UPDATE LIQ_MER_MermasColor 
+                        SET CodigoMerma = 'NO_MERMA' 
+                        WHERE Gramos <= 0 AND CodigoMerma <> 'NO_MERMA';
+
+                        DECLARE @IdFormulaColor INT = NULL;
+                        SELECT TOP 1 @IdFormulaColor = C.IdFormulaColor 
+                        FROM LIQ_FormulaColores C
+                        INNER JOIN LIQ_Formulas F ON C.IdFormula = F.IdFormula
+                        WHERE F.NP = @NP AND C.NombreColor = @NombreColor;
+
+                        IF NOT EXISTS (SELECT 1 FROM LIQ_MER_MermasColor WHERE NP = @NP AND NombreColor = @NombreColor)
+                        BEGIN
+                            INSERT INTO LIQ_MER_MermasColor (IdFormulaColor, NP, NombreColor, Gramos, CodigoMerma, FechaRegistro, UsuarioRegistro)
+                            VALUES (@IdFormulaColor, @NP, @NombreColor, 0, 'NO_MERMA', GETDATE(), @Usuario);
+                        END
+                    ";
+                    SqlCommand cmd = new SqlCommand(query, cnx);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@NP", merma.NP);
+                    cmd.Parameters.AddWithValue("@NombreColor", merma.NombreColor);
+                    cmd.Parameters.AddWithValue("@Usuario", usuario);
+                    cnx.Open();
+                    cmd.ExecuteNonQuery();
+                    return true;
+                }
                 else
                 {
-                    DateTime fechaParsed;
-                    if (DateTime.TryParse(merma.FechaVencimiento, out fechaParsed))
-                        cmd.Parameters.AddWithValue("@FechaVencimiento", fechaParsed);
-                    else
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarMermaColor", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", merma.NP);
+                    cmd.Parameters.AddWithValue("@NombreColor", merma.NombreColor);
+                    cmd.Parameters.AddWithValue("@Gramos", merma.Gramos);
+                    
+                    if (string.IsNullOrEmpty(merma.FechaVencimiento))
                         cmd.Parameters.AddWithValue("@FechaVencimiento", DBNull.Value);
-                }
-
-                cmd.Parameters.AddWithValue("@Usuario", usuario);
-
-                cnx.Open();
-                using (SqlDataReader dr = cmd.ExecuteReader())
-                {
-                    if (dr.Read())
+                    else
                     {
-                        return Convert.ToInt32(dr["Resultado"]) > 0;
+                        DateTime fechaParsed;
+                        if (DateTime.TryParse(merma.FechaVencimiento, out fechaParsed))
+                            cmd.Parameters.AddWithValue("@FechaVencimiento", fechaParsed);
+                        else
+                            cmd.Parameters.AddWithValue("@FechaVencimiento", DBNull.Value);
+                    }
+
+                    cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            return Convert.ToInt32(dr["Resultado"]) > 0;
+                        }
                     }
                 }
             }

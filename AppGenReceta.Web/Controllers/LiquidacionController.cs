@@ -587,7 +587,7 @@ namespace AppGenReceta.Web.Controllers
         // =======================================================================
 
         [HttpPost]
-        public JsonResult AvanzarEstadoNP(string np, string nuevoEstado, bool hasNoMermaGlobal = false)
+        public JsonResult AvanzarEstadoNP(string np, string nuevoEstado, bool hasNoMermaGlobal = false, bool hasNoAjusteGlobal = false)
         {
             try
             {
@@ -599,6 +599,11 @@ namespace AppGenReceta.Web.Controllers
                 if (hasNoMermaGlobal && nuevoEstado == "Pendiente")
                 {
                     bl.RegistrarNoMermaGlobal(np, usuario);
+                }
+
+                if (hasNoAjusteGlobal && nuevoEstado == "Liquidado")
+                {
+                    bl.RegistrarNoAjusteGlobal(np, usuario);
                 }
 
                 var resultado = bl.AvanzarEstadoNP(np, nuevoEstado, usuario);

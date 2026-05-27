@@ -152,7 +152,7 @@ BEGIN
         F.Estilo, 
         F.EstiloPropio
     FROM LIQ_Formulas F
-    WHERE F.Eliminado = 0 AND F.Estado <> 'Terminado'
+    WHERE F.Eliminado = 0 AND F.Estado = 'Terminado'
       AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
 END
 GO
