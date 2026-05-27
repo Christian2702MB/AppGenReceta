@@ -1257,7 +1257,7 @@
                 Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                 $.post('@Url.Action("AvanzarEstadoNP", "Liquidacion")', { np: selectedNP, nuevoEstado: nuevoEstado }, function (res) {
                     if (res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
                     } else {
                         Swal.fire('Error', res.message, 'error');
                     }
@@ -1279,7 +1279,7 @@
                 Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                 $.post('@Url.Action("RegistrarNoMermaGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
                     if (res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
                     } else {
                         Swal.fire('Error', res.message, 'error');
                     }
@@ -1301,7 +1301,7 @@
                 Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                 $.post('@Url.Action("RegistrarNoAjusteGlobal", "Liquidacion")', { np: selectedNP }, function (res) {
                     if (res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                        Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
                     } else {
                         Swal.fire('Error', res.message, 'error');
                     }
@@ -1339,7 +1339,7 @@
                     Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                     $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: "" }, function (res) {
                         if (res.success) {
-                            Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                            Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
@@ -1373,7 +1373,7 @@
                     Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                     $.post('@Url.Action("TerminarNP", "Liquidacion")', { np: selectedNP, destinoGlobal: destinoGlobal }, function (res) {
                         if (res.success) {
-                            Swal.fire('¡Éxito!', res.message, 'success').then(() => { location.reload(); });
+                            Swal.fire('¡Éxito!', res.message, 'success').then(() => { cargarDataInicial(); });
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
