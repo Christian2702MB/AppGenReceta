@@ -6,9 +6,7 @@
 USE [HIALPESA]
 GO
 
-IF OBJECT_ID('dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerLiquidacionesConsolidadas;
-GO
-CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
+ALTER PROCEDURE [dbo].[LIQ_SP_ObtenerLiquidacionesConsolidadas]
     @Estado VARCHAR(20) -- 'Activa' o 'Cerrada'
 AS
 BEGIN
@@ -67,8 +65,8 @@ BEGIN
 			        
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo = 'Almacén Central'), 0) AS DevueltoCentral,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo = 'Almacén Operativo'), 0) AS DevueltoOperativo,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Central%'), 0) AS DevueltoCentral,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Operativo%'), 0) AS DevueltoOperativo,
             ISNULL((SELECT SUM(Gramos) FROM LIQ_MER_MermasColor WHERE NP = F.NP AND NombreColor = C.NombreColor), 0) AS Merma,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor), 0) AS Ajuste,
             
@@ -132,9 +130,7 @@ GO
 -- =======================================================================
 -- NUEVO SP: Obtener Historial de Devoluciones por Insumo
 -- =======================================================================
-IF OBJECT_ID('dbo.LIQ_SP_ObtenerDevolucionesPorInsumo', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_ObtenerDevolucionesPorInsumo;
-GO
-CREATE PROCEDURE [dbo].[LIQ_SP_ObtenerDevolucionesPorInsumo]
+ALTER PROCEDURE [dbo].[LIQ_SP_ObtenerDevolucionesPorInsumo]
     @NP VARCHAR(20),
     @CodInsumo VARCHAR(50)
 AS

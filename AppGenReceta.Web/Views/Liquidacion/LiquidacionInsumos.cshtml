@@ -283,12 +283,13 @@
     .erp-table thead th { 
         background-color: var(--hialpesa-dark); 
         color: #fff; 
-        font-size: 11px; 
+        font-size: 10.5px; 
         font-weight: 600; 
         text-transform: uppercase; 
         padding: 12px 15px; 
         border: none; 
         letter-spacing: 0.5px; 
+        text-align: center;
     }
     .erp-table tbody td { 
         font-size: 13px; 
@@ -399,11 +400,12 @@
     .inner-table thead th { 
         background: #f8fafc; 
         color: #64748b; 
-        font-size: 11px; 
+        font-size: 10.5px; 
         font-weight: 700; 
         border-bottom: 1px solid #e2e8f0; 
         padding: 12px 15px; 
         text-transform: uppercase;
+        text-align: center;
     }
     .inner-table tbody td { 
         font-size: 13px; 
@@ -680,7 +682,7 @@
                                 <th>NP Origen</th>
                                 <th>F. Generación</th>
                                 <th>F. Vencimiento</th>
-                                <th class="text-right">Cant. Disponible</th>
+                                <th class="text-center">Cant. Disponible</th>
                                 <th>U.M.</th>
                                 <th>Estado</th>
                                 <th id="thAccionMerma" style="text-align: center;">Acción</th>
@@ -1741,13 +1743,13 @@
                                         <th>Código</th>
                                         <th>Insumo</th>
                                         <th>U.M.</th>
-                                        <!-- <th class="text-end">Req.</th> -->
-                                        <th class="text-end">Stock Inicial</th>
-                                        <th class="text-end">Consumido</th>
-                                        <!-- <th class="text-end">Devuelto</th> -->
-                                        <!-- <th class="text-end">Merma</th> -->
-                                        <th class="text-end">Ajuste</th>
-                                        <th class="text-end">Saldo</th>
+                                        <!-- <th class="text-center">Req.</th> -->
+                                        <th class="text-center">Stock Inicial</th>
+                                        <th class="text-center">Consumido</th>
+                                        <!-- <th class="text-center">Devuelto</th> -->
+                                        <!-- <th class="text-center">Merma</th> -->
+                                        <th class="text-center">Ajuste</th>
+                                        <th class="text-center">Saldo</th>
                                         ${(item.estado === 'Terminado') ? '' : '<th style="text-align: center; width: 220px;">Acciones Operativas</th>'}
                                     </tr>
                                 </thead>
