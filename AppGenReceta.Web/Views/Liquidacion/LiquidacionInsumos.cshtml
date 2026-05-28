@@ -1003,6 +1003,13 @@
                         <option value="Almacén Operativo">Almacén Operativo</option>
                     </select>
                 </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Motivo o Destino</label>
+                    <select class="form-control" id="ddlMotivoDevolucion">
+                        <option value="Venta: saldo disponible para venta externa">Venta: saldo disponible para venta externa</option>
+                        <option value="Desecho: saldo no utilizable por contaminación">Desecho: saldo no utilizable por contaminación</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Insumo a Devolver</label>
                     <select class="form-control" id="ddlDevolucionInsumo"></select>
@@ -1018,10 +1025,10 @@
                     <table class="table table-bordered table-condensed" style="margin-bottom:0; font-size:12px;" id="tablaHistoricoDevoluciones">
                         <thead style="background-color:#f1f5f9;">
                             <tr>
-                                <th style="width: 25%; text-align:right;">Cantidad Devuelta</th>
-                                <th style="width: 25%;">Almacén</th>
-                                <th style="width: 25%;">Fecha</th>
-                                <th style="width: 25%;">Usuario</th>
+                                <th style="width: 20%; text-align:right;">Cantidad</th>
+                                <th style="width: 40%;">Motivo / Destino</th>
+                                <th style="width: 20%;">Fecha</th>
+                                <th style="width: 20%;">Usuario</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1139,13 +1146,17 @@
         });
 
         // Listener para popup Devolucion
-        $("input[name='optTipoDevolucion']").change(function() {
-            if($(this).val() === "Stock Inicial Almacén Operativo") {
-                $("#divDevolucionMotivo").hide();
-                $("#ddlDevolucionMotivo").prop("disabled", true);
-            } else {
-                $("#divDevolucionMotivo").show();
-                $("#ddlDevolucionMotivo").prop("disabled", false);
+        // Listener para popup Devolucion
+        $("#ddlTipoDevolucion").change(function() {
+            var tipo = $(this).val();
+            var $motivo = $("#ddlMotivoDevolucion");
+            $motivo.empty();
+            if (tipo === "Almacén Central") {
+                $motivo.append('<option value="Venta: saldo disponible para venta externa">Venta: saldo disponible para venta externa</option>');
+                $motivo.append('<option value="Desecho: saldo no utilizable por contaminación">Desecho: saldo no utilizable por contaminación</option>');
+            } else if (tipo === "Almacén Operativo") {
+                $motivo.append('<option value="Reasignación: saldo destinado a otra NP o requerimiento">Reasignación: saldo destinado a otra NP o requerimiento</option>');
+                $motivo.append('<option value="Uso para muestras: saldo destinado a pruebas o desarrollos">Uso para muestras: saldo destinado a pruebas o desarrollos</option>');
             }
         });
     });
@@ -2337,7 +2348,9 @@
     function registrarDevolucion() {
         var codInsumo = $("#ddlDevolucionInsumo").val();
         var cant = parseFloat($("#txtDevolucionCantidad").val());
-        var motivo = $("#ddlTipoDevolucion").val();
+        var tipoDevolucion = $("#ddlTipoDevolucion").val();
+        var motivoDestino = $("#ddlMotivoDevolucion").val();
+        var motivo = tipoDevolucion + ' - ' + motivoDestino;
 
         if (isNaN(cant) || cant <= 0) {
             Swal.fire({ title: 'Error', text: 'Ingrese una cantidad válida mayor a 0.', icon: 'error', confirmButtonColor: '#002D72' });
