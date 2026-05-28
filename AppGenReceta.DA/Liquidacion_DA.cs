@@ -477,8 +477,32 @@ namespace AppGenReceta.DA
             List<LIQ_MermaStockBE> lista = new List<LIQ_MermaStockBE>();
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
-                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerMermasStock", cnx);
-                cmd.CommandType = CommandType.StoredProcedure;
+                string query = @"
+                    SELECT 
+                        M.CodigoMerma AS Codigo,
+                        M.NombreColor AS Descripcion,
+                        '' AS Tecnica,
+                        M.NP AS NPOrigen,
+                        CONVERT(VARCHAR(10), M.FechaRegistro, 103) AS FechaGeneracion,
+                        CONVERT(VARCHAR(10), M.FechaVencimiento, 103) AS FechaVencimiento,
+                        CAST(M.Gramos - ISNULL(
+                            (SELECT SUM(Cantidad) 
+                             FROM LIQ_OperacionesDetalle OD 
+                             WHERE OD.MermaReutilizada = M.CodigoMerma 
+                               AND (OD.TipoOperacion = 'Consumo' OR OD.TipoOperacion = 'Ajuste')
+                            ), 0) AS DECIMAL(18,2)) AS CantidadDisponible,
+                        'gr' AS UM,
+                        'Disponible' AS Estado
+                    FROM 
+                        LIQ_MER_MermasColor M
+                    WHERE 
+                        M.FechaVencimiento IS NOT NULL 
+                        AND M.Gramos > 0
+                    ORDER BY 
+                        M.FechaRegistro DESC;
+                ";
+                SqlCommand cmd = new SqlCommand(query, cnx);
+                cmd.CommandType = CommandType.Text;
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
                 {
@@ -635,6 +659,52 @@ namespace AppGenReceta.DA
                 }
             }
             return false;
+        }
+
+        public List<LIQ_HistorialUsoMermaBE> ObtenerHistorialUsoMerma(string codigoMerma)
+        {
+            List<LIQ_HistorialUsoMermaBE> lista = new List<LIQ_HistorialUsoMermaBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    string query = @"
+                        SELECT 
+                            FechaRegistro, 
+                            UsuarioRegistro, 
+                            FuenteConsumo, 
+                            Cantidad, 
+                            Motivo,
+                            TipoOperacion
+                        FROM LIQ_OperacionesDetalle 
+                        WHERE MermaReutilizada = @CodigoMerma 
+                          AND (TipoOperacion = 'Consumo' OR TipoOperacion = 'Ajuste')
+                        ORDER BY FechaRegistro DESC";
+                    
+                    SqlCommand cmd = new SqlCommand(query, cnx);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@CodigoMerma", codigoMerma);
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_HistorialUsoMermaBE
+                            {
+                                Fecha = dr["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "",
+                                Usuario = dr["UsuarioRegistro"].ToString(),
+                                Fuente = dr["FuenteConsumo"].ToString(),
+                                Cantidad = Convert.ToDecimal(dr["Cantidad"]),
+                                Motivo = dr["Motivo"].ToString(),
+                                TipoOperacion = dr["TipoOperacion"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
         }
 
         public List<LIQ_MermaHistoricoBE> ObtenerMermasPorColor(string np, string nombreColor)

@@ -555,6 +555,20 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpGet]
+        public JsonResult ObtenerHistorialUsoMerma(string codigoMerma)
+        {
+            try
+            {
+                var data = bl.ObtenerHistorialUsoMerma(codigoMerma);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
         public JsonResult ObtenerAjustesPorInsumo(string np, string codInsumo)
         {
             try

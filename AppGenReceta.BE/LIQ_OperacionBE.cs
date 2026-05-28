@@ -149,6 +149,17 @@ namespace AppGenReceta.BE
     }
 
     [Serializable]
+    public class LIQ_HistorialUsoMermaBE
+    {
+        public string Fecha { get; set; }
+        public string Usuario { get; set; }
+        public string Fuente { get; set; }
+        public decimal Cantidad { get; set; }
+        public string Motivo { get; set; }
+        public string TipoOperacion { get; set; }
+    }
+
+    [Serializable]
     public class LIQ_NPPendienteBE
     {
         public string NP { get; set; }

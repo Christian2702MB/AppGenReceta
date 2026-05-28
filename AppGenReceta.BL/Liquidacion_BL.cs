@@ -132,6 +132,18 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public List<LIQ_HistorialUsoMermaBE> ObtenerHistorialUsoMerma(string codigoMerma)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerHistorialUsoMerma(codigoMerma);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public List<LIQ_MermaHistoricoBE> ObtenerMermasPorColor(string np, string color)
         {
             try

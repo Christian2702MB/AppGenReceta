@@ -967,6 +967,58 @@
     </div>
 </div>
 
+<!-- 2.6 MODAL HISTORIAL USO MERMA -->
+<div class="modal fade modal-custom" id="historialUsoMermaModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #002D72;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><i class="fas fa-history"></i> Histórico de Uso de Merma: <span id="lblHistorialUsoMermaCodigo"></span></h4>
+            </div>
+            <div class="modal-body">
+                <h5 style="color: #002D72; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Historial de Consumos</h5>
+                <div class="table-responsive" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+                    <table class="table table-bordered table-hover" style="font-size: 12px; margin-bottom: 0;">
+                        <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th style="font-size: 11px;">Fecha</th>
+                                <th style="font-size: 11px;">Usuario</th>
+                                <th style="font-size: 11px;">Fuente</th>
+                                <th style="font-size: 11px;">Motivo</th>
+                                <th class="text-right" style="font-size: 11px;">Cantidad (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorialUsoMermaConsumo">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <h5 style="color: #10b981; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Histórico de Ajustes</h5>
+                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover" style="font-size: 12px; margin-bottom: 0;">
+                        <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th style="font-size: 11px;">Fecha</th>
+                                <th style="font-size: 11px;">Usuario</th>
+                                <th style="font-size: 11px;">Fuente</th>
+                                <th style="font-size: 11px;">Motivo</th>
+                                <th class="text-right" style="font-size: 11px;">Cantidad (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorialUsoMermaAjuste">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 3. MODAL INGRESO -->
 <div class="modal fade modal-custom" id="ingresoModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -1945,7 +1997,7 @@
                 <td class="text-center">${item.um}</td>
                 <td class="text-center"><span class="badge-status ${badgeClass}">${badgeText}</span></td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-info" title="Ver movimientos" data-idmerma="${item.codigo}">
+                    <button class="btn btn-sm btn-outline-info" title="Ver movimientos" onclick="abrirHistorialMerma('${item.codigo}')">
                         <i class="fas fa-eye"></i>
                     </button>
                 </td>
@@ -2571,6 +2623,52 @@
             }
         });
     });
+
+    function abrirHistorialMerma(codigoMerma) {
+        $("#lblHistorialUsoMermaCodigo").text(codigoMerma);
+        $("#tbodyHistorialUsoMermaConsumo").html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+        $("#tbodyHistorialUsoMermaAjuste").html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+        
+        $("#historialUsoMermaModal").modal("show");
+
+        $.get('@Url.Action("ObtenerHistorialUsoMerma", "Liquidacion")?codigoMerma=' + codigoMerma, function(response) {
+            if (response && !response.error) {
+                var consumosHtml = '';
+                var ajustesHtml = '';
+
+                response.forEach(function(item) {
+                    var row = `<tr>
+                        <td>${item.Fecha}</td>
+                        <td>${item.Usuario}</td>
+                        <td>${item.Fuente}</td>
+                        <td>${item.Motivo}</td>
+                        <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
+                    </tr>`;
+
+                    if (item.TipoOperacion === 'Consumo') {
+                        consumosHtml += row;
+                    } else if (item.TipoOperacion === 'Ajuste') {
+                        ajustesHtml += row;
+                    }
+                });
+
+                if (consumosHtml === '') {
+                    consumosHtml = '<tr><td colspan="5" class="text-center text-muted">No hay consumos registrados para esta merma.</td></tr>';
+                }
+                if (ajustesHtml === '') {
+                    ajustesHtml = '<tr><td colspan="5" class="text-center text-muted">No hay ajustes registrados para esta merma.</td></tr>';
+                }
+
+                $("#tbodyHistorialUsoMermaConsumo").html(consumosHtml);
+                $("#tbodyHistorialUsoMermaAjuste").html(ajustesHtml);
+            } else {
+                var errRow = '<tr><td colspan="5" class="text-center text-danger">Error al cargar historial</td></tr>';
+                $("#tbodyHistorialUsoMermaConsumo").html(errRow);
+                $("#tbodyHistorialUsoMermaAjuste").html(errRow);
+                console.error("Error obteniendo historial de merma:", response.error);
+            }
+        });
+    }
 
 </script>
 }
