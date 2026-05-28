@@ -677,15 +677,15 @@
                     <table class="erp-table" id="tablaMermasStock">
                         <thead>
                             <tr>
-                                <th>Código</th>
-                                <th>Descripción / Color</th>
-                                <th>NP Origen</th>
-                                <th>F. Generación</th>
-                                <th>F. Vencimiento</th>
-                                <th class="text-center">Cant. Disponible</th>
-                                <th>U.M.</th>
-                                <th>Estado</th>
-                                <th id="thAccionMerma" style="text-align: center;">Acción</th>
+                                <th class="text-center" style="font-size: 10.5px;">Código</th>
+                                <th class="text-center" style="font-size: 10.5px;">Descripción / Color</th>
+                                <th class="text-center" style="font-size: 10.5px;">NP Origen</th>
+                                <th class="text-center" style="font-size: 10.5px;">F. Generación</th>
+                                <th class="text-center" style="font-size: 10.5px;">F. Vencimiento</th>
+                                <th class="text-center" style="font-size: 10.5px;">Cant. Disponible</th>
+                                <th class="text-center" style="font-size: 10.5px;">U.M.</th>
+                                <th class="text-center" style="font-size: 10.5px;">Estado</th>
+                                <th id="thAccionMerma" class="text-center" style="font-size: 10.5px;">AUDITORÍA</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -769,13 +769,26 @@
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
                     <label>Fuente de Consumo</label>
-                    <div style="display: flex; gap: 20px; margin-top: 5px;">
+                    <div style="display: flex; gap: 20px; margin-top: 5px; flex-wrap: wrap;">
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
                             <input type="radio" name="optFuenteConsumo" value="Stock Inicial" checked /> Consumo Stock Operativo
                         </label>
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
                             <input type="radio" name="optFuenteConsumo" value="Solicitud Realizada" /> Consumo Stock Recibido
                         </label>
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteConsumo" value="Stock Merma" /> Consumo Stock Merma
+                        </label>
+                    </div>
+                </div>
+                <div id="contenedor-merma" style="display: none; background: #fff7ed; border: 1px solid #fed7aa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="color: #c2410c; font-size: 12px;"><i class="fas fa-sync-alt"></i> ¿Reutilizar merma existente?</label>
+                        <select class="form-control" id="ddlMermaReutilizar" style="border-color: #fdba74;"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #c2410c; font-size: 12px;">Motivo obligatorio</label>
+                        <textarea class="form-control" id="txtMotivoMerma" rows="2" placeholder="Ej. Daño en mezcla, reimpresión..." style="border-color: #fdba74; resize: vertical;"></textarea>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
@@ -894,13 +907,23 @@
 
                 <div class="form-group" style="margin-top: 15px;">
                     <label>Fuente de Ajuste</label>
-                    <div style="display: flex; gap: 20px; margin-top: 5px;">
+                    <div style="display: flex; gap: 20px; margin-top: 5px; flex-wrap: wrap;">
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
                             <input type="radio" name="optFuenteAjuste" value="Stock Inicial" checked /> Ajuste Saldo Operativo
                         </label>
                         <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
                             <input type="radio" name="optFuenteAjuste" value="Solicitud Realizada" /> Ajuste Saldo Recibido
                         </label>
+                        <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none;">
+                            <input type="radio" name="optFuenteAjuste" value="Stock Merma" /> Ajuste Saldo Merma
+                        </label>
+                    </div>
+                </div>
+
+                <div id="contenedor-merma-ajuste" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #047857; font-size: 12px;"><i class="fas fa-sync-alt"></i> ¿Ajustar sobre merma existente?</label>
+                        <select class="form-control" id="ddlMermaReutilizarAjuste" style="border-color: #6ee7b7;"></select>
                     </div>
                 </div>
 
@@ -1888,11 +1911,8 @@
             estadoLower = (finishedLiquidations[selectedNP].estado || '').toLowerCase();
         }
 
-        if (estadoLower === 'terminado') {
-            $("#thAccionMerma").hide();
-        } else {
-            $("#thAccionMerma").show();
-        }
+        // La cabecera AUDITORÍA siempre debe ser visible
+        $("#thAccionMerma").show();
 
         // Obtener fecha actual sin horas para comparar
         var hoy = new Date();
@@ -1914,30 +1934,21 @@
 
             var badgeClass = estaVencida ? "vencida" : "disponible";
             var badgeText = estaVencida ? "Vencida" : "Disponible";
-            var btnText = estaVencida ? "No disponible" : "Usar";
-            var isDisabled = (estaVencida || faseInvalida) ? 'disabled="disabled"' : '';
-            
-            var btnStyle = "font-weight: 700;";
-            if (estaVencida) {
-                btnStyle += " border-color: #fca5a5; color: #ef4444; opacity: 0.6; cursor: not-allowed;";
-            } else if (faseInvalida) {
-                btnStyle += " border-color: #94a3b8; color: #94a3b8; opacity: 0.6; cursor: not-allowed;";
-            } else {
-                btnStyle += " border-color: #0ea5e9; color: #0ea5e9;";
-            }
 
             var row = `<tr>
-                <td><strong>${item.codigo}</strong></td>
+                <td class="text-center"><strong>${item.codigo}</strong></td>
                 <td>${item.descripcion}</td>
-                <td>${item.npOrigen}</td>
-                <td>${item.fGeneracion}</td>
-                <td>${item.fVencimiento}</td>
+                <td class="text-center">${item.npOrigen}</td>
+                <td class="text-center">${item.fGeneracion}</td>
+                <td class="text-center">${item.fVencimiento}</td>
                 <td class="text-right"><strong>${item.cantDisponible.toFixed(2)}</strong></td>
-                <td>${item.um}</td>
-                <td><span class="badge-status ${badgeClass}">${badgeText}</span></td>
-                ${(estadoLower === 'terminado') ? '' : `<td style="text-align: center;">
-                    <button class="btn btn-xs btn-outline-hialpesa" onclick="usarMermaEnTaller('${item.codigo}')" style="${btnStyle}" ${isDisabled}>${btnText}</button>
-                </td>`}
+                <td class="text-center">${item.um}</td>
+                <td class="text-center"><span class="badge-status ${badgeClass}">${badgeText}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-info" title="Ver movimientos" data-idmerma="${item.codigo}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
             </tr>`;
             $tbody.append(row);
         });
@@ -2032,7 +2043,30 @@
             $("#txtSaldoInicial").val("Cargando...");
             $("#txtSaldoSolicitud").val("Cargando...");
             $("#txtSaldoTotal").val("Cargando...");
-            $("input[name='optFuenteConsumo'][value='Stock Inicial']").prop("checked", true);
+            
+            // Poblar mermas disponibles
+            var mermaOptions = '<option value="">Seleccione una merma...</option>';
+            if (typeof mermasStock !== 'undefined') {
+                var hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                mermasStock.forEach(function(m) {
+                    var partes = m.fVencimiento ? m.fVencimiento.split('/') : [];
+                    var fVencDate = null;
+                    if (partes.length === 3) {
+                        fVencDate = new Date(partes[2], partes[1] - 1, partes[0]);
+                        fVencDate.setHours(0, 0, 0, 0);
+                    }
+                    var estaVencida = (fVencDate && fVencDate < hoy);
+                    
+                    if (m.cantDisponible > 0 && !estaVencida) {
+                        mermaOptions += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo} - ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
+                    }
+                });
+            }
+            $("#ddlMermaReutilizar").html(mermaOptions);
+            $("#txtMotivoMerma").val("");
+            $("input[name='optFuenteConsumo'][value='Stock Inicial']").prop("checked", true).trigger('change');
             
             $("#tbodyHistorialConsumo").html('<tr><td colspan="4" class="text-center">Cargando historial...</td></tr>');
             
@@ -2090,7 +2124,29 @@
             $("#txtAjusteSaldoInicial").val("Cargando...");
             $("#txtAjusteSaldoSolicitud").val("Cargando...");
             $("#txtAjusteSaldoTotal").val("Cargando...");
-            $("input[name='optFuenteAjuste'][value='Stock Inicial']").prop("checked", true);
+            
+            // Poblar mermas disponibles para ajuste
+            var mermaOptionsAjuste = '<option value="">Seleccione una merma...</option>';
+            if (typeof mermasStock !== 'undefined') {
+                var hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                mermasStock.forEach(function(m) {
+                    var partes = m.fVencimiento ? m.fVencimiento.split('/') : [];
+                    var fVencDate = null;
+                    if (partes.length === 3) {
+                        fVencDate = new Date(partes[2], partes[1] - 1, partes[0]);
+                        fVencDate.setHours(0, 0, 0, 0);
+                    }
+                    var estaVencida = (fVencDate && fVencDate < hoy);
+                    
+                    if (m.cantDisponible > 0 && !estaVencida) {
+                        mermaOptionsAjuste += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo} - ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
+                    }
+                });
+            }
+            $("#ddlMermaReutilizarAjuste").html(mermaOptionsAjuste);
+            $("input[name='optFuenteAjuste'][value='Stock Inicial']").prop("checked", true).trigger('change');
 
             $("#txtAjusteCantidad").val('').prop("disabled", false);
             $("#txtAjusteMotivo").val('').prop("disabled", false);
@@ -2255,14 +2311,36 @@
             return;
         }
 
-        var saldoDisp = fuente === 'Stock Inicial' ? parseFloat($("#txtSaldoInicial").val()) : parseFloat($("#txtSaldoSolicitud").val());
+        var mermaRef = null;
+        var motivo = "Consumo registrado";
+        var saldoDisp = 0;
+
+        if (fuente === 'Stock Inicial') {
+            saldoDisp = parseFloat($("#txtSaldoInicial").val());
+        } else if (fuente === 'Solicitud Realizada') {
+            saldoDisp = parseFloat($("#txtSaldoSolicitud").val());
+        } else if (fuente === 'Stock Merma') {
+            var ddlMerma = $("#ddlMermaReutilizar option:selected");
+            if (!ddlMerma.val()) {
+                Swal.fire({ title: 'Error', text: 'Debe seleccionar una merma existente a reutilizar.', icon: 'error', confirmButtonColor: '#002D72' });
+                return;
+            }
+            mermaRef = ddlMerma.val();
+            motivo = $("#txtMotivoMerma").val().trim();
+            if (!motivo) {
+                Swal.fire({ title: 'Error', text: 'El motivo es obligatorio al consumir merma.', icon: 'error', confirmButtonColor: '#002D72' });
+                return;
+            }
+            saldoDisp = parseFloat(ddlMerma.data("stock"));
+        }
+
         if (cant > saldoDisp) {
             Swal.fire({ title: 'Saldo Insuficiente', text: 'La cantidad a consumir supera el saldo disponible de la fuente seleccionada (' + fuente + ': ' + saldoDisp.toFixed(2) + ' gr).', icon: 'warning', confirmButtonColor: '#f39c12' });
             return;
         }
 
         var pantone = $("#consumoModal").data("color");
-        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, "Consumo registrado", null, "#consumoModal", fuente, pantone);
+        enviarOperacion(selectedNP, codInsumo, "Consumo", cant, motivo, mermaRef, "#consumoModal", fuente, pantone);
     }
 
     // ── REGISTRO DE ACCIÓN: MERMA POR COLOR ──
@@ -2317,7 +2395,23 @@
                 return;
             }
 
-            var saldoReferencia = fuenteAjuste === "Stock Inicial" ? parseFloat($("#txtAjusteSaldoInicial").val()) : parseFloat($("#txtAjusteSaldoSolicitud").val());
+            var saldoReferencia = 0;
+            var mermaRef = null;
+
+            if (fuenteAjuste === "Stock Inicial") {
+                saldoReferencia = parseFloat($("#txtAjusteSaldoInicial").val());
+            } else if (fuenteAjuste === "Solicitud Realizada") {
+                saldoReferencia = parseFloat($("#txtAjusteSaldoSolicitud").val());
+            } else if (fuenteAjuste === "Stock Merma") {
+                var ddlMermaAjuste = $("#ddlMermaReutilizarAjuste option:selected");
+                if (!ddlMermaAjuste.val()) {
+                    Swal.fire({ title: 'Error', text: 'Debe seleccionar una merma existente a ajustar.', icon: 'error', confirmButtonColor: '#10b981' });
+                    return;
+                }
+                mermaRef = ddlMermaAjuste.val();
+                saldoReferencia = parseFloat(ddlMermaAjuste.data("stock"));
+            }
+
             if (cant > saldoReferencia) {
                 Swal.fire({ title: 'Sobrepasa Saldo', text: 'La cantidad a ajustar no puede exceder el saldo disponible de la fuente seleccionada (' + saldoReferencia.toFixed(2) + ').', icon: 'error', confirmButtonColor: '#10b981' });
                 return;
@@ -2325,7 +2419,7 @@
         }
         
         var cantFinal = isNoAjuste ? 0 : cant;
-        enviarOperacion(selectedNP, codInsumo, "Ajuste", cantFinal, isNoAjuste ? "No existe ajuste" : motivo, null, "#ajusteModal", fuenteAjuste, pantone);
+        enviarOperacion(selectedNP, codInsumo, "Ajuste", cantFinal, isNoAjuste ? "No existe ajuste" : motivo, mermaRef, "#ajusteModal", fuenteAjuste, pantone);
     }
 
     // ── REGISTRO DE ACCIÓN: INGRESO ADICIONAL ──
@@ -2453,6 +2547,30 @@
         });
         return insumoEncontrado;
     }
+
+    $(document).ready(function() {
+        $("input[name='optFuenteConsumo']").change(function() {
+            if ($(this).val() === 'Stock Merma') {
+                $("#contenedor-merma").slideDown(250);
+                $("#ddlMermaReutilizar").prop('required', true);
+                $("#txtMotivoMerma").prop('required', true);
+            } else {
+                $("#contenedor-merma").slideUp(250);
+                $("#ddlMermaReutilizar").prop('required', false).val("");
+                $("#txtMotivoMerma").prop('required', false).val("");
+            }
+        });
+
+        $("input[name='optFuenteAjuste']").change(function() {
+            if ($(this).val() === 'Stock Merma') {
+                $("#contenedor-merma-ajuste").slideDown(250);
+                $("#ddlMermaReutilizarAjuste").prop('required', true);
+            } else {
+                $("#contenedor-merma-ajuste").slideUp(250);
+                $("#ddlMermaReutilizarAjuste").prop('required', false).val("");
+            }
+        });
+    });
 
 </script>
 }
