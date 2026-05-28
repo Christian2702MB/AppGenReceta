@@ -1,6 +1,7 @@
 using AppGenReceta.BE;
 using AppGenReceta.DA;
 using System.Collections.Generic;
+using System.Data;
 
 namespace AppGenReceta.BL
 {
@@ -18,6 +19,11 @@ namespace AppGenReceta.BL
         public List<LIQ_StockInsumoBE> ListarStockActual()
         {
             return _da.ListarStockActual();
+        }
+
+        public DataTable ObtenerMatrizCruzadaConsumos()
+        {
+            return _da.ObtenerMatrizCruzadaConsumos();
         }
 
         public List<LIQ_RequerimientoBE> ListarRequerimientosPendientes()

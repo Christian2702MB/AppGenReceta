@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.Mvc;
 using AppGenReceta.BE;
 using AppGenReceta.BL;
@@ -295,6 +296,30 @@ namespace AppGenReceta.Web.Controllers
             catch (Exception)
             {
                 return View(new List<LIQ_StockInsumoBE>());
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerMatrizCruzada()
+        {
+            try
+            {
+                var dt = _stockReqBl.ObtenerMatrizCruzadaConsumos();
+                var list = new List<Dictionary<string, object>>();
+                foreach (System.Data.DataRow row in dt.Rows)
+                {
+                    var dict = new Dictionary<string, object>();
+                    foreach (System.Data.DataColumn col in dt.Columns)
+                    {
+                        dict[col.ColumnName] = row[col];
+                    }
+                    list.Add(dict);
+                }
+                return Json(new { success = true, data = list, columns = dt.Columns.Cast<System.Data.DataColumn>().Select(c => c.ColumnName).ToList() }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 

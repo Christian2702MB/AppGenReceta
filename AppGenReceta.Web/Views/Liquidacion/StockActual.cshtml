@@ -104,9 +104,9 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px; letter-spacing: -0.5px;">
-                Stock Actual de Insumos
+                Gestión de Stock
             </h1>
-            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Inventario en tiempo real del almacén operativo de insumos para liquidación.</p>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Visualice saldos en tiempo real y analice la matriz cruzada de consumos por NP.</p>
         </div>
 
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
@@ -119,34 +119,96 @@
         </div>
     </div>
 
-    <!-- Tabla de Contenido -->
-    <div class="table-container">
-        <div class="table-responsive">
-            <table id="tblStockActual" class="table table-hover table-striped table-bordered" style="width:100%">
-                <thead>
-                    <tr>
-                        <th class="text-center">Código Insumo</th>
-                        <th>Descripción</th>
-                        <th class="text-center">U.M.</th>
-                        <th class="text-right">Stock Actual</th>
-                        <th class="text-center">Última Modificación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td class="text-center font-weight-bold text-primary">@item.CodInsumo</td>
-                            <td>@item.Descripcion</td>
-                            <td class="text-center">@item.UnidadMedida</td>
-                            <td class="text-right font-weight-bold @(item.StockActual <= 0 ? "text-danger" : "text-success")">
-                                @item.StockActual.ToString("N2")
-                            </td>
-                            <td class="text-center text-muted">@item.FechaModificacion</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Pestañas (Tabs) -->
+    <ul class="nav nav-tabs" id="stockTabs" role="tablist" style="margin-bottom: 20px; border-bottom: 2px solid #dee2e6;">
+        <li role="presentation" class="active">
+            <a href="#balance" aria-controls="balance" role="tab" data-toggle="tab" style="font-weight: 600; color: var(--hialpesa-blue); border-bottom: 3px solid transparent; padding: 10px 20px;">Balance General</a>
+        </li>
+        <li role="presentation">
+            <a href="#matriz" aria-controls="matriz" role="tab" data-toggle="tab" style="font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; padding: 10px 20px;">Matriz de Consumos</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="stockTabsContent">
+        <!-- Tab 1: Balance General -->
+        <div role="tabpanel" class="tab-pane active" id="balance">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table id="tblStockActual" class="table table-hover table-striped table-bordered" style="width:100%; font-size: 1.05rem;">
+                        <thead>
+                            <tr>
+                                <th colspan="3" class="text-center" style="background-color: #f8f9fa;">DATOS BASE</th>
+                                <th class="text-center" style="background-color: #e8f5e9;">INGRESOS (+)</th>
+                                <th class="text-center" style="background-color: #ffebee;">SALIDAS (-)</th>
+                                <th class="text-center" style="background-color: #e3f2fd;">BALANCE FINAL</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center">Código Insumo</th>
+                                <th>Descripción</th>
+                                <th class="text-center">U.M.</th>
+                                <th class="text-end">Stock Inicial / Entradas</th>
+                                <th class="text-end">Consumido / Ajustado</th>
+                                <th class="text-end">Stock Actual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        <div style="font-weight: 800; font-size: 1.2rem;" class="text-primary">
+                                            @item.CodInsumo
+                                        </div>
+                                    </td>
+                                    <td class="align-middle" style="font-size: 1.2rem;">@item.Descripcion</td>
+                                    <td class="text-center align-middle" style="font-size: 1.05rem;">@item.UnidadMedida</td>
+                                    <td class="text-end align-middle">
+                                        <div style="font-weight: 700; font-size: 1.25rem;">@((item.StockInicial + item.StockRecibido).ToString("N2"))</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.StockInicial.ToString("N2") | Recibido: @item.StockRecibido.ToString("N2")</div>
+                                        <div style="font-size: 0.95rem; color: #8a9096;">Dev. Operativo: @item.DevolucionesOperativo.ToString("N2")</div>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <div style="font-weight: 700; font-size: 1.25rem; color: #d32f2f;">@((item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral).ToString("N2"))</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">Consumos: @item.ConsumosTotales.ToString("N2") | Ajustes: @item.AjustesTotales.ToString("N2")</div>
+                                        <div style="font-size: 0.95rem; color: #8a9096;">Dev. Central: @item.DevolucionesCentral.ToString("N2")</div>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <div style="font-weight: 800; font-size: 1.2rem; color: #2e7d32;">
+                                            @item.StockActual.ToString("N2")
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Matriz Cruzada -->
+        <div role="tabpanel" class="tab-pane" id="matriz">
+            <div class="table-container" style="overflow-x: auto;">
+                <div style="display:flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <button class="btn btn-sm btn-outline-primary" id="btnRecargarMatriz">
+                        <i class="fas fa-sync-alt"></i> Recargar Matriz
+                    </button>
+                </div>
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                    <table id="tblMatrizCruzada" class="table table-hover table-bordered" style="width: 100%; white-space: nowrap; font-size: 0.9rem;">
+                        <thead style="position: sticky; top: 0; z-index: 3; background-color: #f4f8fa;">
+                            <tr id="trMatrizHeaders">
+                                <th style="position: sticky; left: 0; z-index: 4; background-color: #f4f8fa; width: 120px;">Código</th>
+                                <th style="position: sticky; left: 120px; z-index: 4; background-color: #f4f8fa; width: 250px;">Insumo</th>
+                                <th style="position: sticky; left: 370px; z-index: 4; background-color: #f4f8fa; width: 100px;" class="text-end">Stock Real</th>
+                                <!-- Dynamic columns will be rendered here -->
+                            </tr>
+                        </thead>
+                        <tbody id="tbMatrizBody">
+                            <tr><td colspan="4" class="text-center">Cargando matriz...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>

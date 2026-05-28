@@ -16,9 +16,45 @@ namespace AppGenReceta.DA
             var lista = new List<LIQ_StockInsumoBE>();
             using (SqlConnection cn = new SqlConnection(ConnectionString))
             {
-                using (SqlCommand cmd = new SqlCommand("LIQ_STK_SP_ListarStockActual", cn))
+                string sql = @"
+                    SET ARITHABORT ON;
+                    SELECT 
+                        I.CodInsumo,
+                        I.Descripcion,
+                        I.UnidadMedida,
+                        CONVERT(VARCHAR(10), I.FechaUltimaActualizacion, 103) + ' ' + CONVERT(VARCHAR(8), I.FechaUltimaActualizacion, 108) AS FechaModificacion,
+                        ISNULL(I.StockActual, 0) AS StockInicial,
+                        ISNULL(R.StockRecibido, 0) AS StockRecibido,
+                        ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosTotales,
+                        ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
+                        ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
+                        ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
+                        (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
+                        (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                        (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
+                        (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual
+                    FROM LIQ_STK_StockInsumos I
+                    LEFT JOIN (
+                        SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
+                        FROM LIQ_REQ_RecepcionesDetalle
+                        GROUP BY CodInsumo
+                    ) R ON I.CodInsumo = R.CodInsumo
+                    LEFT JOIN (
+                        SELECT CodInsumo,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                        FROM LIQ_OperacionesDetalle
+                        GROUP BY CodInsumo
+                    ) O ON I.CodInsumo = O.CodInsumo
+                    ORDER BY I.Descripcion ASC;
+                ";
+
+                using (SqlCommand cmd = new SqlCommand(sql, cn))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandType = CommandType.Text;
                     cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
@@ -29,6 +65,12 @@ namespace AppGenReceta.DA
                                 CodInsumo = dr["CodInsumo"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 UnidadMedida = dr["UnidadMedida"].ToString(),
+                                StockInicial = Convert.ToDecimal(dr["StockInicial"]),
+                                StockRecibido = Convert.ToDecimal(dr["StockRecibido"]),
+                                ConsumosTotales = Convert.ToDecimal(dr["ConsumosTotales"]),
+                                AjustesTotales = Convert.ToDecimal(dr["AjustesTotales"]),
+                                DevolucionesCentral = Convert.ToDecimal(dr["DevolucionesCentral"]),
+                                DevolucionesOperativo = Convert.ToDecimal(dr["DevolucionesOperativo"]),
                                 StockActual = Convert.ToDecimal(dr["StockActual"]),
                                 FechaModificacion = dr["FechaModificacion"].ToString()
                             });
@@ -337,6 +379,92 @@ namespace AppGenReceta.DA
                 }
             }
             return lista;
+        }
+        public DataTable ObtenerMatrizCruzadaConsumos()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Código", typeof(string));
+            dt.Columns.Add("Insumo", typeof(string));
+            dt.Columns.Add("Stock Real", typeof(decimal));
+
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                string sql = @"
+                    SET ARITHABORT ON;
+                    SELECT 
+                        I.CodInsumo AS [Código],
+                        I.Descripcion AS [Insumo],
+                        (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
+                        (ISNULL(Op.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                        (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                        (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
+                        (ISNULL(Op.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
+                        ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP AS PivotCol,
+                        (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
+                    FROM LIQ_STK_StockInsumos I
+                    LEFT JOIN (
+                        SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
+                        FROM LIQ_REQ_RecepcionesDetalle GROUP BY CodInsumo
+                    ) R ON I.CodInsumo = R.CodInsumo
+                    LEFT JOIN (
+                        SELECT CodInsumo,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                        FROM LIQ_OperacionesDetalle GROUP BY CodInsumo
+                    ) Op ON I.CodInsumo = Op.CodInsumo
+                    INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
+                    LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
+                    WHERE O.TipoOperacion = 'Consumo' AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado')
+                    ORDER BY I.Descripcion ASC, PivotCol ASC
+                ";
+
+                using (SqlCommand cmd = new SqlCommand(sql, cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        var rowDict = new Dictionary<string, DataRow>();
+                        var pivotCols = new HashSet<string>();
+
+                        while (dr.Read())
+                        {
+                            string codInsumo = dr["Código"].ToString();
+                            if (!rowDict.ContainsKey(codInsumo))
+                            {
+                                DataRow newRow = dt.NewRow();
+                                newRow["Código"] = codInsumo;
+                                newRow["Insumo"] = dr["Insumo"].ToString();
+                                newRow["Stock Real"] = Convert.ToDecimal(dr["Stock Real"]);
+                                rowDict[codInsumo] = newRow;
+                                dt.Rows.Add(newRow);
+                            }
+
+                            string pivotCol = dr["PivotCol"].ToString();
+                            decimal cantidad = Convert.ToDecimal(dr["Cantidad"]);
+
+                            if (!pivotCols.Contains(pivotCol))
+                            {
+                                pivotCols.Add(pivotCol);
+                                dt.Columns.Add(pivotCol, typeof(decimal));
+                            }
+
+                            DataRow row = rowDict[codInsumo];
+                            if (row.IsNull(pivotCol))
+                            {
+                                row[pivotCol] = cantidad;
+                            }
+                            else
+                            {
+                                row[pivotCol] = Convert.ToDecimal(row[pivotCol]) + cantidad;
+                            }
+                        }
+                    }
+                }
+            }
+            return dt;
         }
     }
 }
