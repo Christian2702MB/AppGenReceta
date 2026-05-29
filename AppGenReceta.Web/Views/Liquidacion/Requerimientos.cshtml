@@ -1,6 +1,6 @@
 @inherits System.Web.Mvc.WebViewPage<System.Collections.Generic.List<AppGenReceta.BE.LIQ_RequerimientoBE>>
 @{
-    ViewBag.Title = "Requerimientos Pendientes";
+    ViewBag.Title = "Requerimientos Pendientes de Ingreso";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -62,7 +62,7 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #f39c12; padding-left: 15px; letter-spacing: -0.5px;">
-                Requerimientos Pendientes
+                Requerimientos Pendientes de Ingreso
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Lista de requerimientos de insumos pendientes de confirmación y recepción.</p>
         </div>
@@ -141,7 +141,7 @@
     <div class="modal-dialog modal-lg" role="document" style="max-width: 900px;">
         <div class="modal-content">
             <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white;">
-                <h5 class="modal-title" id="modalVistaPreviaLabel"><i class="fas fa-box-open mr-2"></i> Vista Previa del Requerimiento <span id="spanNumReq"></span></h5>
+                <h5 class="modal-title" id="modalVistaPreviaLabel"><i class="fas fa-box-open mr-2"></i> Confirmar Recepción Física - Req. N° <span id="spanNumReq"></span></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -174,7 +174,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Cancelar</button>
-                <button type="button" class="btn btn-success" id="btnConfirmarRecepcion"><i class="fas fa-check-double"></i> Confirmar y recibir requerimiento</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarRecepcion"><i class="fas fa-check mr-1"></i> Registrar Recepción</button>
             </div>
         </div>
     </div>

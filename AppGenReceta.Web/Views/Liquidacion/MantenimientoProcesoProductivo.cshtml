@@ -1,6 +1,6 @@
 @inherits System.Web.Mvc.WebViewPage<List<AppGenReceta.BE.LIQ_REQ_RecepcionBE>>
 @{
-    ViewBag.Title = "Mantenimiento de Requerimientos Recepcionados";
+    ViewBag.Title = "Mantener Requerimientos Recepcionados";
     Layout = "~/Views/Shared/_Layout.cshtml";
     string rolActual = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "Visualizador";
 }
@@ -116,7 +116,7 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #17a2b8; padding-left: 15px; letter-spacing: -0.5px;">
-                Requerimientos Recepcionados
+                Mantener Requerimientos Recepcionados
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Historial de recepciones de insumos para estampado.</p>
         </div>
@@ -129,7 +129,7 @@
             @if (rolActual == "Administrador" || rolActual == "Liquidador")
             {
                 <a href="@Url.Action("Requerimientos", "Liquidacion")" class="btn-header-new">
-                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Nuevo Registro
+                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Recibir Requerimiento
                 </a>
             }
         </div>

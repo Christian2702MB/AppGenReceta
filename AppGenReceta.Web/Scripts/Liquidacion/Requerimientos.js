@@ -66,7 +66,7 @@ function cargarTabla() {
                 "className": "text-center",
                 "render": function (data, type, row) {
                     return `<button class="btn btn-warning btn-sm text-white" onclick="abrirVistaPrevia(${row.NumRequerimiento}, '${row.CodOrdPro}', '${row.Motivo}', '${row.Observaciones}')">
-                                <i class="fas fa-eye"></i> Recepcionar
+                                <i class="fas fa-clipboard-list mr-1"></i> Revisar y Recibir
                             </button>`;
                 }
             }
