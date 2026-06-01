@@ -887,5 +887,35 @@ namespace AppGenReceta.DA
             }
             return resultado;
         }
+
+        public List<LIQ_AuditoriaDevolucionBE> ObtenerAuditoriaDevolucionesCentral(string np)
+        {
+            List<LIQ_AuditoriaDevolucionBE> lista = new List<LIQ_AuditoriaDevolucionBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_AuditoriaDevolucionCentral", cnx);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", np);
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_AuditoriaDevolucionBE
+                            {
+                                CodigoInsumo = dr["CodigoInsumo"].ToString(),
+                                Descripcion = dr["Descripcion"].ToString(),
+                                Cantidad = Convert.ToDecimal(dr["Cantidad"])
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
     }
 }

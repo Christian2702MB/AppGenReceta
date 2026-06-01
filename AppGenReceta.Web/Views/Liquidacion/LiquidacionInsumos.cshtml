@@ -1131,17 +1131,7 @@
                 <h4 class="modal-title"><i class="fas fa-file-alt"></i> Nuevo Movimiento de Gestión de Pedidos</h4>
             </div>
             <div class="modal-body">
-                <div class="row" style="margin-bottom: 20px;">
-                    <div class="col-md-12 form-group">
-                        <label>MOTIVO O DESTINO</label>
-                        <select class="form-control" id="ddlNuevaMotivoDestino">
-                            <option value="Reasignacion">Reasignación: saldo destinado a otra NP o requerimiento</option>
-                            <option value="Venta">Venta: saldo disponible para venta externa</option>
-                            <option value="Desecho">Desecho: saldo no utilizable por contaminación</option>
-                            <option value="UsoMuestras">Uso para muestras: saldo destinado a pruebas o desarrollos</option>
-                        </select>
-                    </div>
-                </div>
+
                 <div class="row" style="margin-bottom: 20px; display:flex; align-items: flex-end;">
                     <div class="col-md-4 form-group">
                         <label>Desde</label>
@@ -1165,6 +1155,7 @@
                             <th>Temporada</th>
                             <th>Estilo</th>
                             <th>Estilo Propio</th>
+                            <th style="width: 70px; text-align: center;">Auditoría</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1175,6 +1166,34 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn-primary-hialpesa" onclick="generarLiquidacion()" style="padding: 6px 18px;"><i class="fas fa-cogs"></i> Generar Movimiento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL AUDITORIA DEVOLUCIONES CENTRAL -->
+<div class="modal fade modal-custom" id="auditoriaDevolucionesModal" tabindex="-1" role="dialog" style="z-index: 1060;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><i class="fas fa-search-dollar"></i> Devoluciones al Almacén Central - <span id="lblAuditoriaNP"></span></h4>
+            </div>
+            <div class="modal-body">
+                <table class="erp-table" id="tablaAuditoriaDevoluciones">
+                    <thead>
+                        <tr>
+                            <th>CÓDIGO</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th style="text-align: right;">CANTIDAD (G)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -2026,8 +2045,41 @@
                 <td>${item.Temporada}</td>
                 <td>${item.Estilo}</td>
                 <td>${item.EstiloPropio}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-sm btn-outline-info" title="Auditoría Devoluciones Central" onclick="abrirAuditoriaDevoluciones('${item.NP}')">
+                        <i class="fas fa-search-dollar"></i>
+                    </button>
+                </td>
             </tr>`;
             $tbody.append(row);
+        });
+    }
+
+    function abrirAuditoriaDevoluciones(np) {
+        $("#lblAuditoriaNP").text(np);
+        var $tbody = $("#tablaAuditoriaDevoluciones tbody");
+        $tbody.html('<tr><td colspan="3" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando auditoría...</td></tr>');
+        $("#auditoriaDevolucionesModal").modal("show");
+
+        $.get('@Url.Action("ObtenerAuditoriaDevolucionesCentral", "Liquidacion")', { np: np }, function(res) {
+            $tbody.empty();
+            if (res.success) {
+                if (!res.data || res.data.length === 0) {
+                    $tbody.html('<tr><td colspan="3" class="text-center text-muted">No hay devoluciones a reportar para esta NP.</td></tr>');
+                } else {
+                    res.data.forEach(function(item) {
+                        $tbody.append(`<tr>
+                            <td><strong>${item.CodigoInsumo}</strong></td>
+                            <td>${item.Descripcion || '-'}</td>
+                            <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
+                        </tr>`);
+                    });
+                }
+            } else {
+                $tbody.html(`<tr><td colspan="3" class="text-center text-danger">${res.message || 'Error al cargar'}</td></tr>`);
+            }
+        }).fail(function() {
+            $tbody.html('<tr><td colspan="3" class="text-center text-danger">Fallo de conexión.</td></tr>');
         });
     }
 

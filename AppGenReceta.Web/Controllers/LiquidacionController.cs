@@ -713,5 +713,22 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet]
+        public JsonResult ObtenerAuditoriaDevolucionesCentral(string np)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" }, JsonRequestBehavior.AllowGet);
+
+                var data = bl.ObtenerAuditoriaDevolucionesCentral(np);
+                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }

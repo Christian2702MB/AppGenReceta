@@ -61,6 +61,7 @@
     <Compile Include="LIQ_FormulaBE.cs" />
     <Compile Include="LIQ_StockReqBE.cs" />
     <Compile Include="LIQ_OperacionBE.cs" />
+    <Compile Include="LIQ_AuditoriaDevolucionBE.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

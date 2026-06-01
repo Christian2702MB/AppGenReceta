@@ -210,5 +210,14 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public List<LIQ_AuditoriaDevolucionBE> ObtenerAuditoriaDevolucionesCentral(string np)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerAuditoriaDevolucionesCentral(np);
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }
