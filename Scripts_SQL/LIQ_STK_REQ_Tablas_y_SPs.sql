@@ -144,11 +144,12 @@ BEGIN
         BEGIN
             IF ISNULL(@UM, '') = '' SET @UM = 'KG'; -- Default
             
-            -- Si el insumo no existe en el stock local, lo creamos
+            -- Si el insumo no existe en el stock local, lo creamos pero con StockActual = 0 
+            -- (el stock recibido se suma dinámicamente desde LIQ_REQ_RecepcionesDetalle)
             IF NOT EXISTS (SELECT 1 FROM LIQ_STK_StockInsumos WHERE CodInsumo = @CodInsumo)
             BEGIN
                 INSERT INTO LIQ_STK_StockInsumos (CodInsumo, Descripcion, UnidadMedida, StockActual, FechaUltimaActualizacion, UsuarioUltimaActualizacion)
-                VALUES (@CodInsumo, @Descripcion, @UM, @Cantidad, GETDATE(), @UsuarioRecepcion);
+                VALUES (@CodInsumo, @Descripcion, @UM, 0.00, GETDATE(), @UsuarioRecepcion);
 
                 -- Registrar en Kardex
                 INSERT INTO LIQ_STK_Kardex (CodInsumo, TipoMovimiento, Concepto, Cantidad, StockResultante, ReferenciaID, FechaMovimiento, Usuario)
@@ -156,21 +157,16 @@ BEGIN
             END
             ELSE
             BEGIN
-                -- Si ya existe, actualizamos el stock
-                DECLARE @StockAnterior DECIMAL(18,2);
-                SELECT @StockAnterior = StockActual FROM LIQ_STK_StockInsumos WHERE CodInsumo = @CodInsumo;
-                
-                DECLARE @NuevoStock DECIMAL(18,2) = @StockAnterior + @Cantidad;
-
+                -- Si ya existe, NO actualizamos el StockActual porque esto solo guarda la Carga Inicial.
+                -- Solo actualizamos la fecha de última modificación.
                 UPDATE LIQ_STK_StockInsumos SET 
-                    StockActual = @NuevoStock,
                     FechaUltimaActualizacion = GETDATE(),
                     UsuarioUltimaActualizacion = @UsuarioRecepcion
                 WHERE CodInsumo = @CodInsumo;
 
                 -- Registrar en Kardex
                 INSERT INTO LIQ_STK_Kardex (CodInsumo, TipoMovimiento, Concepto, Cantidad, StockResultante, ReferenciaID, FechaMovimiento, Usuario)
-                VALUES (@CodInsumo, 'Entrada', 'Recepción Requerimiento', @Cantidad, @NuevoStock, CAST(@NumRequerimiento AS VARCHAR), GETDATE(), @UsuarioRecepcion);
+                VALUES (@CodInsumo, 'Entrada', 'Recepción Requerimiento', @Cantidad, 0, CAST(@NumRequerimiento AS VARCHAR), GETDATE(), @UsuarioRecepcion);
             END
 
             FETCH NEXT FROM curDetalle INTO @CodInsumo, @Descripcion, @Cantidad, @UM;

@@ -42,8 +42,8 @@ namespace AppGenReceta.DA
                     ) R ON I.CodInsumo = R.CodInsumo
                     LEFT JOIN (
                         SELECT CodInsumo,
-                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
                         FROM LIQ_OperacionesDetalle
@@ -408,15 +408,15 @@ namespace AppGenReceta.DA
                     ) R ON I.CodInsumo = R.CodInsumo
                     LEFT JOIN (
                         SELECT CodInsumo,
-                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
                         FROM LIQ_OperacionesDetalle GROUP BY CodInsumo
                     ) Op ON I.CodInsumo = Op.CodInsumo
                     INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
                     LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
-                    WHERE O.TipoOperacion = 'Consumo' AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado')
+                    WHERE O.TipoOperacion = 'Consumo' AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')
                     ORDER BY I.Descripcion ASC, PivotCol ASC
                 ";
 
