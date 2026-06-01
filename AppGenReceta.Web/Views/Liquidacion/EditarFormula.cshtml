@@ -27,18 +27,21 @@
 
 <div class="panel-body">
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div style="flex: 1 1 auto;">
+        <div style="flex: 1 1 auto; margin-bottom: 5px;">
             <h1 style="margin: 0; color: #002D72; font-weight: 800; font-size: 26px; border-left: 6px solid #27ae60; padding-left: 15px;">
                 Editar Fórmula #@Model.IdFormula
                 @if (Model.Estado == "Cerrada")
                 {
-                    <span class="label label-danger ml-2" style="font-size: 14px;">Cerrada</span>
+                    <span class="label label-danger ml-2" style="font-size: 14px; position: relative; top: -2px;">Cerrada</span>
                 }
                 else
                 {
-                    <span class="label label-success ml-2" style="font-size: 14px;">Activa</span>
+                    <span class="label label-success ml-2" style="font-size: 14px; position: relative; top: -2px;">Activa</span>
                 }
             </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
+                Ajuste las cantidades de los insumos y configure las mezclas químicas según los requerimientos de planta.
+            </p>
         </div>
         <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
             <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
