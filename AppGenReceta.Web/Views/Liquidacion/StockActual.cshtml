@@ -148,7 +148,14 @@
                                 <th class="text-center">U.M.</th>
                                 <th class="text-end">Stock Inicial / Entradas</th>
                                 <th class="text-end">Consumido / Ajustado</th>
-                                <th class="text-end">Stock Actual</th>
+                                <th class="text-end">
+                                    Stock Actual 
+                                    <i class="fas fa-info-circle text-primary" style="margin-left: 5px; cursor: help; font-size: 0.9em;"
+                                       data-toggle="tooltip" 
+                                       data-placement="top" 
+                                       title="Fórmula: StockInicial + StockRecibido - ConsumosTotales(Ini+Sol) - AjustesTotales(Ini+Sol) - DevolucionesCentral + DevolucionesOperativo">
+                                    </i>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -285,6 +292,9 @@
                 "order": [[1, "asc"]],
                 "pageLength": 25
             });
+
+            // Inicializar Tooltips de Bootstrap
+            $('[data-toggle="tooltip"]').tooltip();
         });
     </script>
 }

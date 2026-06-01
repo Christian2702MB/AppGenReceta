@@ -25,7 +25,7 @@ BEGIN
             IdRecetas, NP, Cliente, Temporada, Estilo, EstiloPropio,
             Item, Combo, Ubicacion, Tecnica, OperarioUDP,
             CONVERT(VARCHAR, FechaUDP, 103),
-            Prendas, Arte, @UsuarioCreacion, GETDATE(), 'Activa'
+            Prendas, Arte, @UsuarioCreacion, GETDATE(), 'Creada'
         FROM AGR_Recetas
         WHERE IdRecetas = @IdRecetaOrigen;
 

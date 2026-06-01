@@ -131,6 +131,7 @@
 
     .badge-activa { background: #d4edda; color: #155724; }
     .badge-cerrada { background: #f8d7da; color: #721c24; }
+    .badge-creada { background: #cce5ff; color: #004085; }
 </style>
 
 <div class="container-fluid py-4">
@@ -238,6 +239,10 @@
                                     @if (item.Estado == "Activa")
                                     {
                                         <span class="badge-estado badge-activa">Activa</span>
+                                    }
+                                    else if (item.Estado == "Creada")
+                                    {
+                                        <span class="badge-estado badge-creada">Creada</span>
                                     }
                                     else
                                     {

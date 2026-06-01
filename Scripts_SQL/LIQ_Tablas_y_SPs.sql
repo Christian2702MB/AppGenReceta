@@ -243,7 +243,7 @@ BEGIN
             IdRecetas, NP, Cliente, Temporada, Estilo, EstiloPropio,
             Item, Combo, Ubicacion, Tecnica, OperarioUDP,
             CONVERT(VARCHAR, FechaUDP, 103),
-            Prendas, Arte, @UsuarioCreacion, GETDATE(), 'Activa'
+            Prendas, Arte, @UsuarioCreacion, GETDATE(), 'Creada'
         FROM AGR_Recetas
         WHERE IdRecetas = @IdRecetaOrigen;
 
@@ -375,6 +375,17 @@ BEGIN
             FROM @XML_DATA.nodes('//FormulaBE/Colores/ColorBE') AS C(Color)
             CROSS APPLY Color.nodes('Insumos/InsumoBE') AS I(Insumo)
             CROSS APPLY Insumo.nodes('PruebasUDP/PruebaUDPBE') AS P(Prueba);
+
+            -- Si se agregaron pruebas (fórmulas), pasa a estado 'Activa'
+            -- Si se agregaron pruebas (fórmulas), pasa a estado 'Activa'
+            IF EXISTS (SELECT 1 FROM LIQ_FormulaInsumosPrueba WHERE IdFormula = @IdFormula)
+            BEGIN
+                UPDATE LIQ_Formulas SET Estado = 'Activa' WHERE IdFormula = @IdFormula AND Estado = 'Creada';
+            END
+            ELSE
+            BEGIN
+                UPDATE LIQ_Formulas SET Estado = 'Creada' WHERE IdFormula = @IdFormula AND Estado = 'Activa';
+            END
 
             SELECT 1 AS Resultado;
         COMMIT TRANSACTION

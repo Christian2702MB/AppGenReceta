@@ -567,7 +567,7 @@ function guardarFormulaCompleta() {
     let hasPruebas = recetaMaster.PruebasGlobales && recetaMaster.PruebasGlobales.length > 0;
     let msjTexto = hasPruebas 
         ? "Se actualizarán las cantidades y pruebas de la fórmula" 
-        : "Si desea proceder a retirarse sin agregar ninguna formula entonces no se podrá ingresar dicha NP al Proceso Productivo.";
+        : "No se está realizando ningún cambio para actualizar.";
 
     Swal.fire({
         title: '¿Guardar Cambios?',
@@ -603,4 +603,25 @@ function guardarFormulaCompleta() {
             });
         }
     });
+}
+
+function confirmarCancelacion() {
+    let hasPruebas = recetaMaster.PruebasGlobales && recetaMaster.PruebasGlobales.length > 0;
+    
+    if (!hasPruebas) {
+        Swal.fire({
+            title: '¿Desea salir?',
+            text: 'Si desea proceder a retirarse sin agregar ninguna formula entonces no se podrá ingresar dicha NP al Proceso Productivo.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, salir',
+            cancelButtonText: 'No, quedarme'
+        }).then((result) => {
+            if (result.value) {
+                window.location.href = window.urlMantenimiento;
+            }
+        });
+    } else {
+        window.location.href = window.urlMantenimiento;
+    }
 }
