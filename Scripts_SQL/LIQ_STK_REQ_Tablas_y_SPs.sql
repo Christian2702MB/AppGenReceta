@@ -210,12 +210,8 @@ BEGIN
         -- Validar Unidad de Medida por defecto
         IF ISNULL(@UnidadMedida, '') = '' SET @UnidadMedida = 'KG';
 
-        -- Convertir gramos a kilogramos (si la unidad de medida es KG)
+        -- El peso ya viene en la unidad correcta según la UI (KG o gr), no se convierte
         DECLARE @StockIncremento DECIMAL(18,2) = @PesoGramos;
-        IF @UnidadMedida = 'KG'
-        BEGIN
-            SET @StockIncremento = @PesoGramos / 1000.00;
-        END
 
         DECLARE @NuevoStock DECIMAL(18,2) = 0.00;
 

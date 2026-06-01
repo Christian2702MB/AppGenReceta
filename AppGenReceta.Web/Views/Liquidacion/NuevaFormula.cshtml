@@ -213,10 +213,10 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 10px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px;">
-                Asignar Fórmula
+                Estructurar Mezcla desde Receta
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
-                Recetas disponibles para formular. Solo se muestran recetas con NP de 5 dígitos que aún no tengan fórmula asignada.
+                Seleccione una receta base para importar sus componentes e iniciar la dosificación de planta.
             </p>
         </div>
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
@@ -230,7 +230,7 @@
     <div class="results-panel">
         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h4 style="color: var(--hialpesa-blue); font-weight: 700; margin: 0;">
-                <i class="fas fa-clipboard-list mr-2"></i> Recetas Disponibles
+                <i class="fas fa-clipboard-list mr-2"></i> Recetas Base de Laboratorio
                 <span class="text-muted" style="font-size: 0.85rem;">(@Model.Count registros)</span>
             </h4>
         </div>
@@ -280,7 +280,7 @@
                                 <td class="text-center font-weight-bold">@item.NP</td>
                                 <td class="text-center">
                                     <button class="btn-formular" onclick="previsualizarReceta(@item.IdRecetas)">
-                                        <i class="fas fa-flask mr-1"></i> Formular
+                                        <i class="fas fa-flask mr-1"></i> Extraer Componentes
                                     </button>
                                 </td>
                             </tr>
@@ -299,7 +299,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-flask mr-2"></i> Vista Previa de Receta</h4>
+                <h4 class="modal-title"><i class="fas fa-flask mr-2"></i> Desglose de Componentes de Receta</h4>
                 <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9;">
                     <span>&times;</span>
                 </button>
@@ -312,7 +312,7 @@
                     <i class="fas fa-times mr-1"></i> Cancelar
                 </button>
                 <button type="button" class="btn-confirmar-formula" id="btnConfirmarFormula">
-                    <i class="fas fa-check-circle mr-1"></i> Confirmar y Crear Fórmula
+                    <i class="fas fa-check-circle mr-1"></i> Importar e Iniciar Fórmula
                 </button>
             </div>
         </div>

@@ -140,9 +140,9 @@
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #17a2b8; padding-left: 15px; letter-spacing: -0.5px;">
-                Mantenimiento de Fórmulas
+                Control de Fórmulas de Planta
             </h1>
-            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Administre, consulte y edite sus fórmulas de liquidación de estampado.</p>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Monitorear y ajustar las mezclas químicas reales frente a la Nota de Pedido.</p>
         </div>
 
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
@@ -153,7 +153,7 @@
             @if (rolActual == "Administrador" || rolActual == "Liquidador")
             {
                 <a href="@Url.Action("NuevaFormula", "Liquidacion")" class="btn-header-new">
-                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Asignar Fórmula
+                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Construir Fórmula de Producción
                 </a>
             }
         </div>
