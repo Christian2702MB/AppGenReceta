@@ -31,6 +31,12 @@ BEGIN
                     -
                     -- Consumo
                     ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0)
+                    -
+                    -- Ajuste
+                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0)
+                    -
+                    -- Devoluciones Previas
+                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0)
                 ) AS SaldoPendiente,
                 @DestinoGlobal,
                 GETDATE(),
@@ -44,6 +50,8 @@ BEGIN
             HAVING (
                 ISNULL((SELECT SUM(D.CantidadRecibida * 1000.00) FROM LIQ_REQ_Recepciones R INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo), 0)
                 - ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0)
+                - ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0)
+                - ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0)
             ) > 0;
         END
 
