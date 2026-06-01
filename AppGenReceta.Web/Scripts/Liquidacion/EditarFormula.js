@@ -564,9 +564,14 @@ function guardarFormulaCompleta() {
         return;
     }
 
+    let hasPruebas = recetaMaster.PruebasGlobales && recetaMaster.PruebasGlobales.length > 0;
+    let msjTexto = hasPruebas 
+        ? "Se actualizarán las cantidades y pruebas de la fórmula" 
+        : "Si desea proceder a retirarse sin agregar ninguna formula entonces no se podrá ingresar dicha NP al Proceso Productivo.";
+
     Swal.fire({
         title: '¿Guardar Cambios?',
-        text: "Se actualizarán las cantidades y pruebas de la fórmula",
+        text: msjTexto,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Sí, guardar',

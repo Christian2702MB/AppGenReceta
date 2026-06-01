@@ -265,21 +265,30 @@ BEGIN
         INNER JOIN AGR_Colores C ON C.NombreColor = M.NombreColor AND C.IdRecetas = @IdRecetaOrigen;
 
         -- 3. Copiar insumos cruzando con el mapeo de colores
+        -- IMPORTANTE: Solo tomamos la prueba principal (EsPrincipal = 1) para obtener la Cantidad correcta
         INSERT INTO LIQ_FormulaInsumos (IdFormulaColor, CodigoInsumo, Descripcion, Cantidad)
         SELECT
             MC.IdFormulaColorNuevo,
             I.CodigoInsumo,
             I.Descripcion,
-            I.Cantidad
+            ISNULL(P.GramosUDP, 0) -- Usamos los gramos de la prueba principal, si no tiene, es 0
         FROM AGR_Insumos I
-        INNER JOIN @MapColores MC ON MC.IdColorOriginal = I.IdColor;
+        INNER JOIN @MapColores MC ON MC.IdColorOriginal = I.IdColor
+        LEFT JOIN AGR_Insumos_Prueba P 
+               ON P.IdRecetas = @IdRecetaOrigen 
+              AND P.NombreColor = MC.NombreColor 
+              AND P.CodigoInsumo = I.CodigoInsumo 
+              AND P.EsPrincipal = 1;
 
-        -- 4. Copiar pruebas UDP
+        /* 
+        -- 4. Copiar pruebas UDP (A petición del usuario, las pruebas no se arrastran, solo la cantidad a la base)
         INSERT INTO LIQ_FormulaInsumosPrueba (IdFormula, NombreColor, CodigoInsumo, NombrePrueba, GramosUDP, EsPrincipal)
         SELECT
             @IdFormula, P.NombreColor, P.CodigoInsumo, P.NombrePrueba, P.GramosUDP, P.EsPrincipal
         FROM AGR_Insumos_Prueba P
-        WHERE P.IdRecetas = @IdRecetaOrigen;
+        WHERE P.IdRecetas = @IdRecetaOrigen
+          AND P.EsPrincipal = 1;
+        */
 
         COMMIT TRANSACTION;
 
