@@ -138,6 +138,11 @@
         <!-- Tab 1: Balance General -->
         <div role="tabpanel" class="tab-pane active" id="balance">
             <div class="table-container">
+                <div style="display:flex; gap: 10px; margin-bottom: 10px;">
+                    <a href="@Url.Action("ExportarBalanceExcel", "Liquidacion")" class="btn btn-sm btn-success shadow-sm">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </a>
+                </div>
                 <div class="table-responsive">
                     <table id="tblStockActual" class="table table-hover table-striped table-bordered" style="width:100%; font-size: 1.05rem;">
                         <thead>
@@ -200,9 +205,15 @@
         <!-- Tab 2: Matriz Cruzada -->
         <div role="tabpanel" class="tab-pane" id="matriz">
             <div class="table-container" style="overflow-x: auto;">
-                <div style="display:flex; justify-content: flex-end; margin-bottom: 10px;">
+                <div style="display:flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+                    <a href="@Url.Action("ExportarMatrizExcel", "Liquidacion")" class="btn btn-sm btn-success shadow-sm" id="btnExportarMatrizExcel">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </a>
+                    <button class="btn btn-sm btn-danger shadow-sm" id="btnExportarMatrizPdf">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </button>
                     <button class="btn btn-sm btn-outline-primary" id="btnRecargarMatriz">
-                        <i class="fas fa-sync-alt"></i> Recargar Matriz
+                        <i class="fas fa-sync-alt"></i> Recargar
                     </button>
                 </div>
                 <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
@@ -277,7 +288,14 @@
 
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css" />
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -295,7 +313,46 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
                 },
                 "order": [[1, "asc"]],
-                "pageLength": 25
+                "pageLength": 25,
+                "dom": '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "buttons": [
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fas fa-file-pdf mr-1"></i> PDF',
+                        className: 'btn btn-sm btn-danger',
+                        title: 'Balance General de Stock',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        exportOptions: {
+                            format: {
+                                body: function (data, row, column, node) {
+                                    var text = data.replace(/<\/div>/gi, "\n").replace(/<br\s*[\/]?>/gi, "\n");
+                                    text = text.replace(/<[^>]*>?/gm, '');
+                                    return text.replace(/^\s*[\r\n]/gm, '').trim();
+                                }
+                            }
+                        },
+                        customize: function(doc) {
+                            // Ajustes de estilos del PDF generado por pdfmake
+                            doc.styles.tableHeader.fillColor = '#002D72';
+                            doc.styles.tableHeader.color = 'white';
+                            doc.styles.tableHeader.alignment = 'center';
+                            doc.defaultStyle.fontSize = 8;
+                            
+                            // Ajustar anchos de columnas para que encajen mejor
+                            // Código, Descripción, U.M., Entradas, Salidas, Balance Final
+                            doc.content[1].table.widths = ['15%', '25%', '5%', '20%', '20%', '15%'];
+                            
+                            // Centrar columnas específicas
+                            var objLayout = {};
+                            objLayout.hLineWidth = function(i) { return 0.5; };
+                            objLayout.vLineWidth = function(i) { return 0.5; };
+                            objLayout.hLineColor = function(i) { return '#aaa'; };
+                            objLayout.vLineColor = function(i) { return '#aaa'; };
+                            doc.content[1].layout = objLayout;
+                        }
+                    }
+                ]
             });
 
             // Inicializar Tooltips de Bootstrap

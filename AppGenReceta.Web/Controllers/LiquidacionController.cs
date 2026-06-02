@@ -299,6 +299,334 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        // Clase de ayuda temporal para agrupar colores por NP
+        private class NpGroup
+        {
+            public string Cliente { get; set; }
+            public string Estilo { get; set; }
+            public string Np { get; set; }
+            public System.Collections.Generic.List<string> Colores { get; set; } = new System.Collections.Generic.List<string>();
+            public System.Collections.Generic.List<string> DynamicColumnNames { get; set; } = new System.Collections.Generic.List<string>();
+        }
+
+        [HttpGet]
+        public ActionResult ExportarMatrizExcel()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            try
+            {
+                var dt = _stockReqBl.ObtenerMatrizCruzadaConsumos();
+
+                using (var package = new OfficeOpenXml.ExcelPackage())
+                {
+                    var ws = package.Workbook.Worksheets.Add("Matriz Consumos");
+
+                    // Construir cabeceras estáticas
+                    ws.Cells["A1:C1"].Merge = true;
+                    ws.Cells["A1"].Value = "FECHA";
+                    ws.Cells["D1"].Value = DateTime.Now.ToString("dd/MM/yyyy");
+                    ws.Cells["D1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["A1:D1"].Style.Font.Bold = true;
+                    ws.Cells["A1:D1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["A1:D1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0)); // Naranja/Amarillo
+
+                    ws.Cells["A2:B2"].Merge = true;
+                    ws.Cells["A2"].Value = "CLIENTE";
+                    ws.Cells["A3:B3"].Merge = true;
+                    ws.Cells["A3"].Value = "ESTILO";
+                    ws.Cells["A4:B4"].Merge = true;
+                    ws.Cells["A4"].Value = "NP";
+
+                    ws.Cells["A2:B4"].Style.Font.Bold = true;
+                    ws.Cells["A2:B4"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["A2:B4"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
+                    ws.Cells["A2:B4"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                    ws.Cells["A5"].Value = "CÓDIGO";
+                    ws.Cells["B5"].Value = "INSUMO";
+                    ws.Cells["C5"].Value = "STOCK REAL";
+                    
+                    ws.Cells["A5:B5"].Style.Font.Bold = true;
+                    ws.Cells["C1:C5"].Style.Font.Bold = true;
+                    ws.Cells["C1:C5"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["C1:C5"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    ws.Cells["C1:C5"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["C1:C5"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+                    // Procesar columnas dinámicas
+                    var fixedCols = new System.Collections.Generic.List<string> { "Código", "Insumo", "Stock Real" };
+                    var dynamicCols = new System.Collections.Generic.List<string>();
+
+                    foreach (System.Data.DataColumn col in dt.Columns)
+                    {
+                        if (!fixedCols.Contains(col.ColumnName))
+                            dynamicCols.Add(col.ColumnName);
+                    }
+
+                    // Agrupar columnas dinámicas por NP y Color
+                    var npGroups = new System.Collections.Generic.Dictionary<string, NpGroup>();
+
+                    foreach (var dCol in dynamicCols)
+                    {
+                        var parts = dCol.Split('|');
+                        string cliente = parts.Length > 0 ? parts[0].Trim() : "";
+                        string estilo = parts.Length > 1 ? parts[1].Trim() : "";
+                        string np = parts.Length > 2 ? parts[2].Trim() : "";
+                        string color = parts.Length > 3 ? parts[3].Trim() : "SIN COLOR";
+
+                        if (!npGroups.ContainsKey(np)) {
+                            npGroups[np] = new NpGroup { Cliente = cliente, Estilo = estilo, Np = np };
+                        }
+                        npGroups[np].Colores.Add(color);
+                        npGroups[np].DynamicColumnNames.Add(dCol);
+                    }
+
+                    int colIndex = 4;
+                    foreach (var np in npGroups.Values)
+                    {
+                        int startCol = colIndex;
+                        
+                        // Fila 5: Columna Total Consumo
+                        ws.Cells[5, colIndex].Value = "CONSUMO";
+                        ws.Cells[5, colIndex].Style.Font.Bold = true;
+                        ws.Cells[5, colIndex].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        ws.Cells[5, colIndex].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        ws.Cells[5, colIndex].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                        ws.Cells[5, colIndex].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                        colIndex++;
+
+                        // Fila 5: Columnas por Color
+                        foreach (var color in np.Colores)
+                        {
+                            ws.Cells[5, colIndex].Value = color;
+                            ws.Cells[5, colIndex].Style.Font.Bold = true;
+                            ws.Cells[5, colIndex].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                            colIndex++;
+                        }
+
+                        int endCol = colIndex - 1;
+
+                        // Merge para Cabeceras Nivel 1 (Cliente, Estilo, NP)
+                        if (startCol < endCol) {
+                            ws.Cells[2, startCol, 2, endCol].Merge = true;
+                            ws.Cells[3, startCol, 3, endCol].Merge = true;
+                            ws.Cells[4, startCol, 4, endCol].Merge = true;
+                        }
+                        
+                        ws.Cells[2, startCol].Value = np.Cliente;
+                        ws.Cells[3, startCol].Value = np.Estilo;
+                        ws.Cells[4, startCol].Value = np.Np;
+
+                        ws.Cells[2, startCol, 4, endCol].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        ws.Cells[2, startCol, 4, endCol].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    }
+
+                    // Agregar datos
+                    int rowIndex = 6;
+                    foreach (System.Data.DataRow row in dt.Rows)
+                    {
+                        ws.Cells[rowIndex, 1].Value = row["Código"]?.ToString() ?? "";
+                        ws.Cells[rowIndex, 2].Value = row["Insumo"]?.ToString() ?? "";
+                        
+                        double stockReal = 0;
+                        if (row["Stock Real"] != DBNull.Value)
+                            double.TryParse(row["Stock Real"].ToString(), out stockReal);
+                        
+                        ws.Cells[rowIndex, 3].Value = stockReal;
+                        ws.Cells[rowIndex, 3].Style.Numberformat.Format = "#,##0.00";
+                        ws.Cells[rowIndex, 3].Style.Font.Bold = true;
+
+                        int cIdx = 4;
+                        foreach (var np in npGroups.Values)
+                        {
+                            double totalNp = 0;
+                            int totalColIdx = cIdx;
+                            cIdx++; // Avanzar índice para los colores
+
+                            // Escribir datos de colores y sumar el total
+                            foreach (var dCol in np.DynamicColumnNames)
+                            {
+                                double val = 0;
+                                if (row[dCol] != DBNull.Value) double.TryParse(row[dCol].ToString(), out val);
+                                
+                                totalNp += val;
+
+                                if (val > 0)
+                                {
+                                    ws.Cells[rowIndex, cIdx].Value = val;
+                                    ws.Cells[rowIndex, cIdx].Style.Numberformat.Format = "#,##0.00";
+                                }
+                                else
+                                {
+                                    ws.Cells[rowIndex, cIdx].Value = "-";
+                                    ws.Cells[rowIndex, cIdx].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                }
+                                cIdx++;
+                            }
+
+                            // Escribir Total NP
+                            if (totalNp > 0)
+                            {
+                                ws.Cells[rowIndex, totalColIdx].Value = totalNp;
+                                ws.Cells[rowIndex, totalColIdx].Style.Numberformat.Format = "#,##0.00";
+                                ws.Cells[rowIndex, totalColIdx].Style.Font.Bold = true;
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                            }
+                            else
+                            {
+                                ws.Cells[rowIndex, totalColIdx].Value = "-";
+                                ws.Cells[rowIndex, totalColIdx].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                            }
+                        }
+                        rowIndex++;
+                    }
+
+                    // AutoFit columnas
+                    ws.Cells[ws.Dimension.Address].AutoFitColumns();
+
+                    // Formato de bordes
+                    var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Top.Style = borderStyle;
+                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Left.Style = borderStyle;
+                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Right.Style = borderStyle;
+                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Bottom.Style = borderStyle;
+
+                    var stream = new System.IO.MemoryStream(package.GetAsByteArray());
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Matriz_Consumos_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMsg"] = "Error al exportar a Excel: " + ex.Message;
+                return RedirectToAction("StockActual");
+            }
+        }
+
+        [HttpGet]
+        public ActionResult ExportarBalanceExcel()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            try
+            {
+                var lista = _stockReqBl.ListarStockActual();
+
+                using (var package = new OfficeOpenXml.ExcelPackage())
+                {
+                    var ws = package.Workbook.Worksheets.Add("Balance General");
+
+                    // Construir cabeceras de Nivel 1 (Superiores)
+                    ws.Cells["A1:C1"].Merge = true;
+                    ws.Cells["A1"].Value = "DATOS BASE";
+                    ws.Cells["A1:C1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["A1:C1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(244, 248, 250)); // Azul clarito
+
+                    ws.Cells["D1"].Value = "INGRESOS (+)";
+                    ws.Cells["D1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["D1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(232, 245, 233)); // Verde clarito
+
+                    ws.Cells["E1"].Value = "SALIDAS (-)";
+                    ws.Cells["E1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["E1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 235, 238)); // Rojo clarito
+
+                    ws.Cells["F1"].Value = "BALANCE FINAL";
+                    ws.Cells["F1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["F1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(227, 242, 253)); // Azul más oscuro
+
+                    // Construir cabeceras de Nivel 2
+                    ws.Cells["A2"].Value = "CÓDIGO INSUMO";
+                    ws.Cells["B2"].Value = "DESCRIPCIÓN";
+                    ws.Cells["C2"].Value = "U.M.";
+                    ws.Cells["D2"].Value = "STOCK INICIAL / ENTRADAS";
+                    ws.Cells["E2"].Value = "CONSUMIDO / AJUSTADO";
+                    ws.Cells["F2"].Value = "STOCK ACTUAL";
+
+                    // Estilo general cabeceras
+                    ws.Cells["A1:F2"].Style.Font.Bold = true;
+                    ws.Cells["A1:F2"].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(0, 45, 114)); // Azul Corporativo oscuro
+                    ws.Cells["A1:F2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["A1:F2"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    
+                    // Bordes de cabeceras
+                    var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    ws.Cells["A1:F2"].Style.Border.Top.Style = borderStyle;
+                    ws.Cells["A1:F2"].Style.Border.Left.Style = borderStyle;
+                    ws.Cells["A1:F2"].Style.Border.Right.Style = borderStyle;
+                    ws.Cells["A1:F2"].Style.Border.Bottom.Style = borderStyle;
+
+                    // Llenar datos
+                    int rowIndex = 3;
+                    foreach (var item in lista)
+                    {
+                        ws.Cells[rowIndex, 1].Value = item.CodInsumo;
+                        ws.Cells[rowIndex, 1].Style.Font.Bold = true;
+                        ws.Cells[rowIndex, 1].Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(25, 118, 210)); // Azul Link
+                        ws.Cells[rowIndex, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                        ws.Cells[rowIndex, 2].Value = item.Descripcion;
+                        
+                        ws.Cells[rowIndex, 3].Value = item.UnidadMedida;
+                        ws.Cells[rowIndex, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                        // Entradas (Multilínea)
+                        decimal totIngresos = item.StockInicial + item.StockRecibido + item.DevolucionesOperativo;
+                        string ingresosStr = $"{totIngresos.ToString("N2")}\nInicial: {item.StockInicial.ToString("N2")} | Recibido: {item.StockRecibido.ToString("N2")}\nDev. Operativo: {item.DevolucionesOperativo.ToString("N2")}";
+                        ws.Cells[rowIndex, 4].Value = ingresosStr;
+                        ws.Cells[rowIndex, 4].Style.WrapText = true; // IMPORTANTÍSIMO PARA QUE NO SE OCULTE DATA
+                        
+                        // Salidas (Multilínea)
+                        decimal totSalidas = item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral;
+                        string salidasStr = $"{totSalidas.ToString("N2")}\nConsumos: {item.ConsumosTotales.ToString("N2")} | Ajustes: {item.AjustesTotales.ToString("N2")}\nDev. Central: {item.DevolucionesCentral.ToString("N2")}";
+                        ws.Cells[rowIndex, 5].Value = salidasStr;
+                        ws.Cells[rowIndex, 5].Style.WrapText = true;
+                        if (totSalidas > 0) ws.Cells[rowIndex, 5].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+
+                        // Stock Actual
+                        ws.Cells[rowIndex, 6].Value = item.StockActual;
+                        ws.Cells[rowIndex, 6].Style.Numberformat.Format = "#,##0.00";
+                        ws.Cells[rowIndex, 6].Style.Font.Bold = true;
+                        if (item.StockActual > 0)
+                            ws.Cells[rowIndex, 6].Style.Font.Color.SetColor(System.Drawing.Color.Green);
+                        else if (item.StockActual < 0)
+                            ws.Cells[rowIndex, 6].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+
+                        // Alineación vertical de todas las celdas de la fila
+                        ws.Cells[rowIndex, 1, rowIndex, 6].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        
+                        // Bordes
+                        ws.Cells[rowIndex, 1, rowIndex, 6].Style.Border.Top.Style = borderStyle;
+                        ws.Cells[rowIndex, 1, rowIndex, 6].Style.Border.Left.Style = borderStyle;
+                        ws.Cells[rowIndex, 1, rowIndex, 6].Style.Border.Right.Style = borderStyle;
+                        ws.Cells[rowIndex, 1, rowIndex, 6].Style.Border.Bottom.Style = borderStyle;
+
+                        rowIndex++;
+                    }
+
+                    // Ajustar anchos
+                    ws.Column(1).Width = 18;
+                    ws.Column(2).Width = 40;
+                    ws.Column(3).Width = 8;
+                    ws.Column(4).Width = 40;
+                    ws.Column(5).Width = 40;
+                    ws.Column(6).Width = 15;
+
+                    var stream = new System.IO.MemoryStream(package.GetAsByteArray());
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Balance_General_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMsg"] = "Error al exportar a Excel: " + ex.Message;
+                return RedirectToAction("StockActual");
+            }
+        }
+
         [HttpGet]
         public JsonResult ObtenerMatrizCruzada()
         {

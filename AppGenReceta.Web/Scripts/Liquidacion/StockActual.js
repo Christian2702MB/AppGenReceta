@@ -163,6 +163,89 @@ $(document).ready(function () {
         cargarMatrizCruzada();
     });
 
+    $('#btnExportarMatrizPdf').on('click', function() {
+        var tableElement = document.getElementById('tblMatrizCruzada');
+        var $tableContainer = $(tableElement).closest('.table-responsive');
+        var $outerContainer = $(tableElement).closest('.table-container');
+        var $matrizTab = $('#matriz');
+        
+        // 1. Guardar posiciones de scroll
+        var scrollPos = {
+            innerX: $tableContainer.scrollLeft(),
+            innerY: $tableContainer.scrollTop(),
+            outerX: $outerContainer.scrollLeft(),
+            windowX: window.scrollX,
+            windowY: window.scrollY
+        };
+        
+        // Forzar todo el scroll a 0. Esto arregla el bug donde html2canvas recorta la parte izquierda si el usuario había scrolleado
+        $tableContainer.scrollLeft(0).scrollTop(0);
+        $outerContainer.scrollLeft(0).scrollTop(0);
+        window.scrollTo(0, 0);
+
+        // 2. Expandir contenedores para revelar toda el área de dibujo
+        var oldCSS = {
+            innerMaxH: $tableContainer.css('max-height'),
+            innerOverflow: $tableContainer.css('overflow'),
+            outerOverflow: $outerContainer.css('overflow'),
+            tabOverflow: $matrizTab.css('overflow')
+        };
+        
+        $tableContainer.css({ 'max-height': 'none', 'overflow': 'visible' });
+        $outerContainer.css({ 'overflow': 'visible' });
+        $matrizTab.css({ 'overflow': 'visible' });
+        
+        // 3. Remover el comportamiento sticky temporalmente en la tabla
+        var originalStyles = [];
+        $(tableElement).find('thead, th, td').each(function() {
+            if ($(this).css('position') === 'sticky') {
+                originalStyles.push({
+                    el: this,
+                    position: $(this).css('position'),
+                    left: $(this).css('left'),
+                    zIndex: $(this).css('z-index')
+                });
+                $(this).css({
+                    'position': 'static',
+                    'left': 'auto',
+                    'z-index': 'auto',
+                    'background-color': '#fff' // Asegurar fondo blanco
+                });
+            }
+        });
+        
+        var opt = {
+            margin:       0.5,
+            filename:     'Matriz_Consumos.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+        };
+
+        Swal.fire({ title: 'Generando PDF...', didOpen: () => { Swal.showLoading(); }});
+
+        html2pdf().set(opt).from(tableElement).save().then(function() {
+            Swal.close();
+            
+            // 4. Restaurar TODO (Estilos CSS y Posiciones de Scroll)
+            $tableContainer.css({ 'max-height': oldCSS.innerMaxH, 'overflow': oldCSS.innerOverflow });
+            $outerContainer.css({ 'overflow': oldCSS.outerOverflow });
+            $matrizTab.css({ 'overflow': oldCSS.tabOverflow });
+            
+            $tableContainer.scrollLeft(scrollPos.innerX).scrollTop(scrollPos.innerY);
+            $outerContainer.scrollLeft(scrollPos.outerX);
+            window.scrollTo(scrollPos.windowX, scrollPos.windowY);
+
+            originalStyles.forEach(function(item) {
+                $(item.el).css({
+                    'position': item.position,
+                    'left': item.left,
+                    'z-index': item.zIndex
+                });
+            });
+        });
+    });
+
     function cargarMatrizCruzada() {
         $('#tbMatrizBody').html('<tr><td colspan="100%" class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><br>Cargando datos...</td></tr>');
         
