@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
+    /* ESTANDARIZACION GLOBAL DE BOTONES UI/UX */
+    .btn { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1; position: relative; }
+    .table .btn:hover { transform: scale(1.05) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
     :root {
         --hialpesa-blue: #002D72;
         --bg-light: #f8f9fa;

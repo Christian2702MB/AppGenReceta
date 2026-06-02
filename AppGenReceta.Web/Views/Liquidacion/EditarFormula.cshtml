@@ -8,6 +8,11 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
+    /* ESTANDARIZACION GLOBAL DE BOTONES UI/UX */
+    .btn { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1; position: relative; }
+    .table .btn:hover { transform: scale(1.05) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
     .swal2-footer { text-align: center !important; }
     
     .select2-container { width: 100% !important; min-width: 250px; }
@@ -21,8 +26,8 @@
     .th-prueba { background-color: #f8f9fa; min-width: 85px; width: 85px; padding: 6px; }
     .td-prueba { padding: 4px 6px; }
     
-    .btn-header-back { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px; font-weight: 600; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; }
-    .btn-header-back:hover { background-color: #e2e6ea; color: #495057; text-decoration: none; }
+    .btn-header-back { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px; font-weight: 600; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .btn-header-back:hover { background-color: #e2e6ea; color: #495057; text-decoration: none; transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
 </style>
 
 <div class="panel-body">
