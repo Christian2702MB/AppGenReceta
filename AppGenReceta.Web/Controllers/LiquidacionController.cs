@@ -730,5 +730,65 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        // ==========================================
+        // MÉTODOS PARA FÓRMULA EN BLANCO
+        // ==========================================
+
+        [HttpGet]
+        public ActionResult NuevaFormulaBlanco()
+        {
+            if (Session["NombreUsuario"] == null)
+                return RedirectToAction("Index", "Home");
+
+            ViewBag.Usuario = Session["NombreUsuario"];
+            ViewBag.MenuActivo = "FormulaBlanco";
+            return View();
+        }
+
+        [HttpGet]
+        public JsonResult ConsultarDatosNP(string np)
+        {
+            try
+            {
+                var datos = _stockReqBl.ObtenerDatosPorNP(np);
+                if (datos != null)
+                {
+                    return Json(new { success = true, data = datos }, JsonRequestBehavior.AllowGet);
+                }
+                return Json(new { success = false, message = "No se encontraron datos para la NP." }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarFormulaBlanco(VisitaBE recetaMaster)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, result = "error", message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                
+                bool ok = _stockReqBl.InsertarFormulaBlanco(recetaMaster, usuario);
+                if (ok)
+                {
+                    // Devolvemos result = "ok_redirect" para que nuestra vista custom maneje la redirección
+                    return Json(new { success = true, result = "ok_redirect", message = "Fórmula en Blanco generada con éxito." });
+                }
+                else
+                {
+                    return Json(new { success = false, result = "error", message = "Ocurrió un error al guardar la fórmula en base de datos." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, result = "error", message = ex.Message });
+            }
+        }
     }
 }

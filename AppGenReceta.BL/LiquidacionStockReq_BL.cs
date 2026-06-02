@@ -84,5 +84,18 @@ namespace AppGenReceta.BL
         {
             return _da.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario);
         }
+
+        // ==========================================
+        // MÉTODOS PARA FÓRMULA EN BLANCO
+        // ==========================================
+        public ItemDatoBE ObtenerDatosPorNP(string np)
+        {
+            return _da.ObtenerDatosPorNP(np);
+        }
+
+        public bool InsertarFormulaBlanco(VisitaBE receta, string usuario)
+        {
+            return _da.InsertarFormulaBlanco(receta, usuario);
+        }
     }
 }

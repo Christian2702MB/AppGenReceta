@@ -466,5 +466,137 @@ namespace AppGenReceta.DA
             }
             return dt;
         }
+
+        // ==========================================
+        // MÉTODOS PARA FÓRMULA EN BLANCO
+        // ==========================================
+
+        public ItemDatoBE ObtenerDatosPorNP(string np)
+        {
+            ItemDatoBE datos = null;
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("SP_LISTAR_DATOS_POR_NP", cn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", np);
+                    cn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            datos = new ItemDatoBE
+                            {
+                                CodCliente = dr["Cliente"]?.ToString(), 
+                                CodTemcli = dr["Temporada"]?.ToString(),
+                                CodItem = dr["Prendas"]?.ToString(),
+                                CodTecnica = dr["CodEstiloCliente"]?.ToString(),
+                                DescripcionTecnica = dr["CodEstiloPropio"]?.ToString()
+                            };
+                        }
+                    }
+                }
+            }
+            return datos;
+        }
+
+        public bool InsertarFormulaBlanco(VisitaBE receta, string usuario)
+        {
+            bool result = false;
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                cn.Open();
+                using (SqlTransaction tr = cn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Insertar Cabecera (IdRecetaOrigen = 0)
+                        string sqlCabecera = @"
+                            INSERT INTO LIQ_Formulas 
+                            (IdRecetaOrigen, NP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Ubicacion, Tecnica, OperarioUDP, FechaUDP, Prendas, Arte, UsuarioCreacion, Estado)
+                            OUTPUT INSERTED.IdFormula
+                            VALUES 
+                            (0, @NP, @Cliente, @Temporada, @Estilo, @EstiloPropio, @Item, @Combo, @Ubicacion, @Tecnica, @Operario, @FechaUDP, @Prendas, @Arte, @UsuarioCreacion, 'Activa');
+                        ";
+                        
+                        int idFormula = 0;
+                        using (SqlCommand cmd = new SqlCommand(sqlCabecera, cn, tr))
+                        {
+                            cmd.Parameters.AddWithValue("@NP", receta.NP ?? "");
+                            cmd.Parameters.AddWithValue("@Cliente", receta.Cliente ?? "");
+                            cmd.Parameters.AddWithValue("@Temporada", receta.Temporada ?? "");
+                            cmd.Parameters.AddWithValue("@Estilo", receta.Estilo ?? "");
+                            cmd.Parameters.AddWithValue("@EstiloPropio", receta.EstiloPropio ?? "");
+                            cmd.Parameters.AddWithValue("@Item", receta.Item ?? "");
+                            cmd.Parameters.AddWithValue("@Combo", receta.ComboCabecera ?? "");
+                            cmd.Parameters.AddWithValue("@Ubicacion", receta.Ubicacion ?? "");
+                            cmd.Parameters.AddWithValue("@Tecnica", receta.Tecnica ?? "");
+                            cmd.Parameters.AddWithValue("@Operario", receta.Operario ?? "");
+                            cmd.Parameters.AddWithValue("@FechaUDP", receta.FechaUDP ?? "");
+                            cmd.Parameters.AddWithValue("@Prendas", receta.PrendasReq ?? "");
+                            cmd.Parameters.AddWithValue("@Arte", receta.Arte ?? "");
+                            cmd.Parameters.AddWithValue("@UsuarioCreacion", usuario ?? "");
+
+                            idFormula = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        // 2. Insertar Colores e Insumos
+                        if (receta.Colores != null)
+                        {
+                            foreach (var color in receta.Colores)
+                            {
+                                string sqlColor = @"
+                                    INSERT INTO LIQ_FormulaColores (IdFormula, NombreColor, Combo)
+                                    OUTPUT INSERTED.IdFormulaColor
+                                    VALUES (@IdFormula, @NombreColor, @Combo);
+                                ";
+                                int idFormulaColor = 0;
+                                using (SqlCommand cmd = new SqlCommand(sqlColor, cn, tr))
+                                {
+                                    cmd.Parameters.AddWithValue("@IdFormula", idFormula);
+                                    cmd.Parameters.AddWithValue("@NombreColor", color.NombreColor ?? "");
+                                    cmd.Parameters.AddWithValue("@Combo", color.Combo ?? "");
+                                    idFormulaColor = Convert.ToInt32(cmd.ExecuteScalar());
+                                }
+
+                                if (color.Insumos != null)
+                                {
+                                    foreach (var insumo in color.Insumos)
+                                    {
+                                        string sqlInsumo = @"
+                                            INSERT INTO LIQ_FormulaInsumos (IdFormulaColor, CodigoInsumo, Descripcion, Cantidad)
+                                            VALUES (@IdFormulaColor, @CodigoInsumo, @Descripcion, @Cantidad);
+                                            
+                                            INSERT INTO LIQ_FormulaInsumosPrueba (IdFormula, NombreColor, CodigoInsumo, NombrePrueba, GramosUDP, EsPrincipal)
+                                            VALUES (@IdFormula, @NombreColor, @CodigoInsumo, 'FORMULA_INICIAL', @Cantidad, 1);
+                                        ";
+                                        using (SqlCommand cmd = new SqlCommand(sqlInsumo, cn, tr))
+                                        {
+                                            cmd.Parameters.AddWithValue("@IdFormulaColor", idFormulaColor);
+                                            cmd.Parameters.AddWithValue("@IdFormula", idFormula);
+                                            cmd.Parameters.AddWithValue("@NombreColor", color.NombreColor ?? "");
+                                            string codigoFinal = !string.IsNullOrEmpty(insumo.CodigoInsumo) ? insumo.CodigoInsumo : (insumo.Codigo ?? "");
+                                            cmd.Parameters.AddWithValue("@CodigoInsumo", codigoFinal);
+                                            cmd.Parameters.AddWithValue("@Descripcion", insumo.Descripcion ?? "");
+                                            cmd.Parameters.AddWithValue("@Cantidad", insumo.Cantidad);
+                                            cmd.ExecuteNonQuery();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        tr.Commit();
+                        result = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        throw new Exception("Error al insertar Fórmula en Blanco: " + ex.Message);
+                    }
+                }
+            }
+            return result;
+        }
     }
 }

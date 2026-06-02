@@ -747,6 +747,7 @@
     <Content Include="Views\Liquidacion\Index.cshtml" />
     <Content Include="Views\Liquidacion\MantenimientoFormulas.cshtml" />
     <Content Include="Views\Liquidacion\NuevaFormula.cshtml" />
+    <Content Include="Views\Liquidacion\NuevaFormulaBlanco.cshtml" />
     <Content Include="Views\Liquidacion\EditarFormula.cshtml" />
     <Content Include="Views\Liquidacion\StockActual.cshtml" />
     <Content Include="Views\Liquidacion\Requerimientos.cshtml" />

@@ -1,0 +1,465 @@
+@model AppGenReceta.BE.VisitaBE
+@using AppGenReceta.BE;
+@{
+    ViewBag.Title = "Nueva Fórmula en Blanco";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .swal2-footer { text-align: center !important; }
+    .form-group .select2-container, .col-md-8 .select2-container, .col-md-4 .select2-container { width: 100% !important; display: block; }
+    .select2-container .select2-selection--single { height: 34px !important; padding: 3px 6px; border: 1px solid #ccc !important; border-radius: 4px; display: flex; align-items: center; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 32px !important; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 28px !important; color: #555; }
+    .select2-dropdown { border: 1px solid #aaa !important; z-index: 1051; }
+
+    /* Estilos propios de liquidacion */
+    .btn-header-back { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-decoration: none; color: #495057; background-color: #f8f9fa; border: 1px solid #ced4da; transition: all 0.2s ease-in-out; }
+    .btn-header-back:hover { background-color: #e2e6ea; color: #495057; text-decoration: none; transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
+</style>
+
+<div class="container-fluid py-4" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 15px;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="flex: 1 1 auto; margin-bottom: 5px;">
+            <h1 style="margin: 0; color: #002D72; font-weight: 800; font-size: 26px; border-left: 6px solid #17a2b8; padding-left: 15px;">
+                Fórmula en Blanco
+            </h1>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
+                Busque por NP para iniciar la creación de una nueva fórmula sin receta base.
+            </p>
+        </div>
+        <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
+        </a>
+    </div>
+
+    <form id="formLibroVisita">
+        <input type="hidden" id="hdnIdVisita" value="0" />
+        
+        <!-- Compatibilidad JS Oculta -->
+        <input type="hidden" id="dtFechaUDP" value="@DateTime.Now.ToString("dd/MM/yyyy")" />
+        <input type="hidden" id="txtOperario" value="@ViewBag.Usuario" />
+        <input type="checkbox" id="rdoModoNormal" checked style="display:none;" />
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid #07238a;">
+                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Datos de la Cabecera</span>
+                </h2>
+                
+                <div class="row">
+                    <div class="col-xs-12 col-sm-3">
+                        <div class="form-group">
+                            <label for="txtNP">NP - MV</label>
+                            <div class="input-group">
+                                <input type="text" name="txtNP" class="form-control" value="" id="txtNP" placeholder="Escriba la NP..." autofocus />
+                                <span class="input-group-addon" id="np-status" style="background: #eee;"><i class="fa fa-search"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Cliente</label>
+                            <select id="txtCliente" class="form-control select2" disabled>
+                                <option value="">Seleccione un Cliente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Temporada</label>
+                            <select id="txtTemporada" name="txtTemporada" class="form-control select2" disabled>
+                                <option value="">Seleccione una Temporada</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Estilo Cliente</label>
+                            <select id="txtEstilo" name="txtEstilo" class="form-control select2" disabled>
+                                <option value="">Seleccione un estilo Cliente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Estilo Propio</label>
+                            <select id="txtEstiloPropio" name="txtEstiloPropio" class="form-control select2" disabled>
+                                <option value="">Seleccione un estilo Propio</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Combo</label>
+                            <select id="txtCombo" name="txtCombo" class="form-control select2" disabled>
+                                <option value="">Seleccione un Combo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Item</label>
+                            <select id="txtItem" class="form-control select2" disabled>
+                                <option value="">Seleccione un Item</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Ubicación</label>
+                            <select id="txtUbicacion" class="form-control select2" disabled>
+                                <option value="">Seleccione una Ubicación</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Técnica</label>
+                            <select id="txtTecnica" class="form-control select2" disabled>
+                                <option value="">Seleccione una Técnica</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3">
+                        <div class="form-group">
+                            <label>Prendas</label>
+                            <input type="number" name="txtPrendasReq" class="form-control" value="" id="txtPrendasReq" step="1" min="0" disabled />
+                        </div>
+                    </div>
+                    <!-- Arte oculto para compatibilidad -->
+                    <input type="hidden" name="txtArte" id="txtArte" value="" />
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Color Pantone</label>
+                        <input type="text" id="txtNuevoColor" class="form-control" placeholder="Ej: Rojo">
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button type="button" id="btnAgregarColor" class="btn btn-primary btn-block" onclick="agregarColor()">
+                            <i class="fa fa-plus mr-2"></i> Agregar Color
+                        </button>
+                    </div>
+                </div>
+
+                <hr />
+
+                <table id="tablaMaestra" class="table table-bordered">
+                    <thead style="background-color: #07238a; color: white;">
+                        <tr>
+                            <th>Color Pantone (Clic para seleccionar)</th>
+                            <th>Insumos del Color</th>
+                            <th style="width: 100px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaMaestra">
+                    </tbody>
+                </table>
+
+                <div id="panelInsumos" class="panel panel-info" style="display:none; border: 2px solid #07238a;">
+                    <div class="panel-heading">Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label>Descripción Insumo:</label>
+                                    <select id="txtDescInsumo" name="txtDescInsumo" class="form-control" style="background-color: #eee;" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
+                                        <option value="">Seleccione o busque un insumo...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Stock</label>
+                                    <input type="text" name="txtStock" class="form-control" value="" id="txtStock" readonly />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Peso (gr)</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" id="txtCantInsumo" class="form-control" placeholder="0.00" min="0">
+                                        <span class="input-group-btn">
+                                            <button type="button" id="btnAgregarInsumo" class="btn btn-success" onclick="agregarInsumo()" title="Agregar Insumo al Color Seleccionado" style="height: 34px;">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @Html.Hidden("URL_Registrar", Url.Action("RegistrarFormulaBlanco", "Liquidacion"))
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-4" style="text-align: right">
+                        <div class="form-group">
+                            <a id="btnRegistrarFormula" class="btn btn-primary px-4 shadow-sm" onclick="guardarFBlancoPersonalizado()"><i class="fa fa-check mr-2"></i> Generar Fórmula</a>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-4" style="text-align: center">
+                        <div class="form-group">
+                            <a id="btnLimpiar" class="btn btn-warning px-4 shadow-sm text-white" onclick="location.reload();"><i class="fas fa-broom mr-2"></i> Limpiar</a>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-4">
+                        <div class="form-group" style="text-align: left">
+                            <a href="@Url.Action("NuevaFormula", "Liquidacion")" id="btnCancelarVisita" class="btn btn-danger px-4 shadow-sm"><i class="fa fa-times mr-2"></i> Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts{
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4.2.8/dist/es6-promise.auto.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    @Scripts.Render("~/bundles/visita")
+    
+    <script>
+        $(document).ready(function () {
+            // Select2 para detalle (Insumos) - Copiado de Visita
+            $('#txtDescInsumo').select2({
+                placeholder: 'Seleccione o busque un insumo...',
+                ajax: {
+                    url: $('#txtDescInsumo').data('url-busqueda'),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { q: params.term || '' }; },
+                    processResults: function (data) { return { results: data.items }; },
+                    cache: true
+                },
+                minimumInputLength: 3,
+                language: {
+                    inputTooShort: function () { return "Por favor ingrese 3 o más caracteres..."; },
+                    noResults: function () { return "No se encontraron insumos"; },
+                    searching: function () { return "Buscando..."; }
+                }
+            });
+
+            $('#txtCantInsumo').on('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    $('#btnAgregarInsumo').click();
+                }
+            });
+
+            $('#txtNuevoColor').on('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    $('#btnAgregarColor').click();
+                }
+            });
+
+            // ----------------------------------------------------
+            // LOGICA CUSTOM: BUSQUEDA POR NP
+            // ----------------------------------------------------
+            let typingTimer;
+            let doneTypingInterval = 500;
+            let $inputNP = $('#txtNP');
+
+            $inputNP.on('keyup', function () {
+                clearTimeout(typingTimer);
+                if ($inputNP.val().length >= 5) {
+                    typingTimer = setTimeout(buscarDatosNP, doneTypingInterval);
+                } else {
+                    bloquearCamposCabecera();
+                }
+            });
+
+            $inputNP.on('keydown', function () {
+                clearTimeout(typingTimer);
+            });
+        });
+
+        function buscarDatosNP() {
+            var npVal = $('#txtNP').val();
+            $('#np-status').html('<i class="fa fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '@Url.Action("ConsultarDatosNP", "Liquidacion")',
+                type: 'GET',
+                data: { np: npVal },
+                success: function (res) {
+                    if (res.success && res.data) {
+                        $('#np-status').html('<i class="fa fa-check text-success"></i>');
+                        
+                        // Rellenamos los datos directos
+                        llenarSelect('txtCliente', res.data.CodCliente ? res.data.CodCliente.trim() : '');
+                        llenarSelect('txtTemporada', res.data.CodTemcli ? res.data.CodTemcli.trim() : '');
+                        $('#txtPrendasReq').val(res.data.CodItem ? res.data.CodItem.trim() : ''); 
+
+                        var estiloPropioBuscado = res.data.DescripcionTecnica ? res.data.DescripcionTecnica.trim() : '';
+                        
+                        // Consultar Estilos para emparejar el Estilo Cliente (que a veces viene vacío en NP)
+                        var tempShort = res.data.CodTemcli ? res.data.CodTemcli.substring(0, 3) : '';
+                        if (res.data.CodCliente && tempShort && estiloPropioBuscado) {
+                            $.ajax({
+                                url: "/Home/ListarEstilos",
+                                type: "GET",
+                                data: { cliente: res.data.CodCliente.trim(), temporada: tempShort },
+                                success: function (estilosData) {
+                                    var estiloCliente = res.data.CodTecnica ? res.data.CodTecnica.trim() : '';
+                                    if (estilosData && estilosData.length > 0) {
+                                        var match = estilosData.find(x => x.CodEstiloPropio === estiloPropioBuscado);
+                                        if (match) {
+                                            estiloCliente = match.CodEstiloCliente;
+                                        }
+                                    }
+                                    llenarSelect('txtEstilo', estiloCliente);
+                                    llenarSelect('txtEstiloPropio', estiloPropioBuscado);
+                                    
+                                    desbloquearCamposCabecera();
+                                    
+                                    // Forzar recálculo
+                                    if(typeof rellenarCombos === 'function') {
+                                        setTimeout(rellenarCombos, 200);
+                                    }
+                                },
+                                error: function () {
+                                    llenarSelect('txtEstilo', res.data.CodTecnica ? res.data.CodTecnica.trim() : '');
+                                    llenarSelect('txtEstiloPropio', estiloPropioBuscado);
+                                    desbloquearCamposCabecera();
+                                    if(typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
+                                }
+                            });
+                        } else {
+                            llenarSelect('txtEstilo', res.data.CodTecnica ? res.data.CodTecnica.trim() : '');
+                            llenarSelect('txtEstiloPropio', estiloPropioBuscado);
+                            desbloquearCamposCabecera();
+                            if(typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
+                        }
+                    } else {
+                        $('#np-status').html('<i class="fa fa-times text-danger"></i>');
+                        limpiarCamposCabecera();
+                        bloquearCamposCabecera();
+                    }
+                },
+                error: function () {
+                    $('#np-status').html('<i class="fa fa-times text-danger"></i>');
+                    limpiarCamposCabecera();
+                    bloquearCamposCabecera();
+                }
+            });
+        }
+
+        function limpiarCamposCabecera() {
+            $('#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').val('').trigger('change.select2');
+            $('#txtPrendasReq').val('');
+        }
+
+        function llenarSelect(id, value) {
+            var $el = $('#' + id);
+            if (value && value.trim() !== '') {
+                // Si el option no existe, crearlo
+                if ($el.find("option[value='" + value + "']").length == 0) {
+                    var newOption = new Option(value, value, true, true);
+                    $el.append(newOption).trigger('change.select2');
+                } else {
+                    $el.val(value).trigger('change.select2');
+                }
+            } else {
+                $el.val('').trigger('change.select2');
+            }
+        }
+
+        function bloquearCamposCabecera() {
+            $('#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo, #txtItem, #txtUbicacion, #txtTecnica').prop('disabled', true);
+            $('#txtPrendasReq').prop('disabled', true);
+        }
+
+        function desbloquearCamposCabecera() {
+            // Desbloquear solo para Combo e Item
+            $('#txtCombo, #txtItem').prop('disabled', false);
+            // El cliente, temporada, estilo, ubicacion, tecnica y prendas se mantienen bloqueados
+        }
+
+        // ----------------------------------------------------
+        // LOGICA CUSTOM: GUARDADO
+        // ----------------------------------------------------
+        function guardarFBlancoPersonalizado() {
+            // Reutilizamos la extracción global del objeto 'recetaMaster' generada por Visita.js
+            
+            recetaMaster.NP = $("#txtNP").val();
+            // dtFechaUDP y txtOperario existen como hidden para bypass de validación JS
+            recetaMaster.Operario = $("#txtOperario").val();
+            var f = new Date();
+            recetaMaster.FechaUDP = f.getDate() + '/' + (f.getMonth() + 1) + '/' + f.getFullYear(); 
+
+            recetaMaster.Tecnica = $("#txtTecnica").val();
+            recetaMaster.Cliente = $("#txtCliente").val();
+            recetaMaster.Temporada = $("#txtTemporada").val();
+            recetaMaster.Estilo = $("#txtEstilo").val();
+            recetaMaster.EstiloPropio = $("#txtEstiloPropio").val();
+            recetaMaster.Item = $("#txtItem").val();
+            recetaMaster.ComboCabecera = $("#txtCombo").val();
+            recetaMaster.PrendasReq = $("#txtPrendasReq").val();
+            recetaMaster.Ubicacion = $("#txtUbicacion").val();
+            recetaMaster.Arte = $("#txtArte").val();
+
+            if (!recetaMaster.NP || recetaMaster.NP.length < 5) { Swal.fire("Aviso", "Busque una NP válida de 5 dígitos", "warning"); return; }
+            if (recetaMaster.Colores.length === 0) { Swal.fire("Aviso", "Debe agregar al menos un color", "warning"); return; }
+            
+            let tieneInsumos = false;
+            for(let i=0; i<recetaMaster.Colores.length; i++){
+                if(recetaMaster.Colores[i].Insumos.length > 0) { tieneInsumos = true; break; }
+            }
+            if(!tieneInsumos) { Swal.fire("Aviso", "Agregue insumos al detalle", "warning"); return; }
+
+            $('#btnRegistrarFormula').text('Generando...');
+            $('#btnRegistrarFormula').attr('disabled', 'disabled');
+
+            $.ajax({
+                url: $('#URL_Registrar').val(),
+                type: 'POST',
+                data: JSON.stringify(recetaMaster),
+                contentType: 'application/json; charset=utf-8',
+                success: function (res) {
+                    if (res.success && res.result === 'ok_redirect') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: res.message
+                        }).then(() => {
+                            window.location.href = '@Url.Action("MantenimientoFormulas", "Liquidacion")';
+                        });
+                    } else {
+                        Swal.fire("Error", res.message || "No se pudo guardar", "error");
+                        $('#btnRegistrarFormula').text('Generar Fórmula').removeAttr('disabled');
+                    }
+                },
+                error: function () {
+                    Swal.fire("Error", "Ocurrió un error al contactar al servidor", "error");
+                    $('#btnRegistrarFormula').text('Generar Fórmula').removeAttr('disabled');
+                }
+            });
+        }
+    </script>
+}

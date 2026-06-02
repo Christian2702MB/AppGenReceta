@@ -119,7 +119,18 @@
 
                 <div class="row">
                     <div class="col-xs-6 col-sm-3">
-                        <div class="form-group"><label>Fecha</label><input type="text" class="form-control" value="@Model.FechaUDP" readonly /></div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            @{
+                                string fechaMuestra = Model.FechaUDP;
+                                DateTime parsedDate;
+                                if (DateTime.TryParse(Model.FechaUDP, out parsedDate))
+                                {
+                                    fechaMuestra = parsedDate.ToString("dd/MM/yyyy");
+                                }
+                            }
+                            <input type="text" class="form-control" value="@fechaMuestra" readonly />
+                        </div>
                     </div>
                     <div class="col-xs-6 col-sm-3">
                         <div class="form-group"><label>Muestrista</label><input type="text" class="form-control" value="@Model.Operario" readonly /></div>
