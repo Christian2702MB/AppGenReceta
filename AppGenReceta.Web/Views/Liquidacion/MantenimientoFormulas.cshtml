@@ -137,6 +137,10 @@
     .badge-activa { background: #d4edda; color: #155724; }
     .badge-cerrada { background: #f8d7da; color: #721c24; }
     .badge-creada { background: #cce5ff; color: #004085; }
+    .badge-en-proceso { background: #fff3cd; color: #856404; }
+    .badge-pendiente { background: #ffeeba; color: #856404; }
+    .badge-liquidado { background: #d1ecf1; color: #0c5460; }
+    .badge-terminado { background: #e2e3e5; color: #383d41; }
 </style>
 
 <div class="container-fluid py-4">
@@ -249,9 +253,25 @@
                                     {
                                         <span class="badge-estado badge-creada">Creada</span>
                                     }
+                                    else if (item.Estado == "En Proceso")
+                                    {
+                                        <span class="badge-estado badge-en-proceso">En Proceso</span>
+                                    }
+                                    else if (item.Estado == "Pendiente")
+                                    {
+                                        <span class="badge-estado badge-pendiente">Pendiente</span>
+                                    }
+                                    else if (item.Estado == "Liquidado")
+                                    {
+                                        <span class="badge-estado badge-liquidado">Liquidado</span>
+                                    }
+                                    else if (item.Estado == "Terminado")
+                                    {
+                                        <span class="badge-estado badge-terminado">Terminado</span>
+                                    }
                                     else
                                     {
-                                        <span class="badge-estado badge-cerrada">Cerrada</span>
+                                        <span class="badge-estado badge-cerrada">@item.Estado</span>
                                     }
                                 </td>
                                 <td class="text-center">@item.FechaRegistro<br>@item.HoraRegistro</td>

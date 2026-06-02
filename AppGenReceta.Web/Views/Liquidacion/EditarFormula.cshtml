@@ -43,9 +43,29 @@
                 {
                     <span class="label ml-2" style="background-color: #cce5ff; color: #004085; font-size: 14px; position: relative; top: -2px;">Creada</span>
                 }
-                else
+                else if (Model.Estado == "Activa")
                 {
                     <span class="label label-success ml-2" style="font-size: 14px; position: relative; top: -2px;">Activa</span>
+                }
+                else if (Model.Estado == "En Proceso")
+                {
+                    <span class="label ml-2" style="background-color: #fff3cd; color: #856404; font-size: 14px; position: relative; top: -2px;">En Proceso</span>
+                }
+                else if (Model.Estado == "Pendiente")
+                {
+                    <span class="label label-warning ml-2" style="font-size: 14px; position: relative; top: -2px;">Pendiente</span>
+                }
+                else if (Model.Estado == "Liquidado")
+                {
+                    <span class="label ml-2" style="background-color: #d1ecf1; color: #0c5460; font-size: 14px; position: relative; top: -2px;">Liquidado</span>
+                }
+                else if (Model.Estado == "Terminado")
+                {
+                    <span class="label label-default ml-2" style="font-size: 14px; position: relative; top: -2px;">Terminado</span>
+                }
+                else
+                {
+                    <span class="label label-primary ml-2" style="font-size: 14px; position: relative; top: -2px;">@Model.Estado</span>
                 }
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
