@@ -72,6 +72,27 @@
         text-decoration: none;
     }
 
+    .btn-header-primary {
+        background-color: var(--hialpesa-blue);
+        color: white;
+        border: 1px solid var(--hialpesa-blue);
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-header-primary:hover {
+        background-color: #001a45;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 45, 114, 0.3);
+    }
+
     .contenedor-tabla-scroll {
         max-height: 600px;
         overflow-y: auto;
@@ -220,6 +241,9 @@
             </p>
         </div>
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+            <a href="#" id="btnFormulaEnBlanco" class="btn-header-primary">
+                <i class="fas fa-file-alt" style="margin-right: 6px;"></i> + Crear Fórmula en Blanco
+            </a>
             <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
             </a>
