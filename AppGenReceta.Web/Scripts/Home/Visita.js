@@ -962,9 +962,6 @@ function agregarInsumo() {
     // 🟢 NOTA: Se usan mayúsculas iniciales (CodigoInsumo) para mantener 
     // la compatibilidad con el modelo de C# y la función sincronizarPruebasExistentes
     recetaMaster.Colores[indexColorSeleccionado].Insumos.push({
-        //CodigoInsumo: codigoReal,
-        //Descripcion: descripcionReal,
-        //Cantidad: cant
         codigo: codigoReal,
         descripcion: descripcionReal,
         unidades: unid,
