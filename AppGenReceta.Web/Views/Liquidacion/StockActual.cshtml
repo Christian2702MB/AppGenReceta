@@ -170,7 +170,7 @@
                                     <td class="align-middle" style="font-size: 1.2rem;">@item.Descripcion</td>
                                     <td class="text-center align-middle" style="font-size: 1.05rem;">@item.UnidadMedida</td>
                                     <td class="text-end align-middle">
-                                        <div style="font-weight: 700; font-size: 1.25rem;">@((item.StockInicial + item.StockRecibido).ToString("N2"))</div>
+                                        <div style="font-weight: 700; font-size: 1.25rem;">@((item.StockInicial + item.StockRecibido + item.DevolucionesOperativo).ToString("N2"))</div>
                                         <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.StockInicial.ToString("N2") | Recibido: @item.StockRecibido.ToString("N2")</div>
                                         <div style="font-size: 0.95rem; color: #8a9096;">Dev. Operativo: @item.DevolucionesOperativo.ToString("N2")</div>
                                     </td>

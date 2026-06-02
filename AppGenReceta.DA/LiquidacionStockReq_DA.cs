@@ -44,8 +44,8 @@ namespace AppGenReceta.DA
                         SELECT CodInsumo,
                                SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
                                SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
                         FROM LIQ_OperacionesDetalle
                         GROUP BY CodInsumo
                     ) O ON I.CodInsumo = O.CodInsumo
@@ -410,8 +410,8 @@ namespace AppGenReceta.DA
                         SELECT CodInsumo,
                                SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
                                SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
                         FROM LIQ_OperacionesDetalle GROUP BY CodInsumo
                     ) Op ON I.CodInsumo = Op.CodInsumo
                     INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
