@@ -81,6 +81,15 @@
         color: var(--hialpesa-blue) !important;
     }
 
+    /* Bordes de Matriz Cruzada */
+    #tblMatrizCruzada th, #tblMatrizCruzada td {
+        border: 1px solid #c0c6cc !important; /* Borde más oscuro y firme */
+    }
+
+    #tblMatrizCruzada thead th {
+        border-bottom: 2px solid #aeb5bd !important;
+    }
+
     /* Modal / Select2 Integration Styles */
     .select2-container--default .select2-selection--single {
         height: 38px !important;
@@ -138,6 +147,14 @@
         <!-- Tab 1: Balance General -->
         <div role="tabpanel" class="tab-pane active" id="balance">
             <div class="table-container">
+                <div style="display:flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+                    <a href="@Url.Action("ExportarBalanceExcel", "Liquidacion")" class="btn btn-sm btn-success shadow-sm" id="btnExportarBalanceExcel">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </a>
+                    <button class="btn btn-sm btn-danger shadow-sm" id="btnExportarBalancePdf">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </button>
+                </div>
                 <div class="table-responsive">
                     <table id="tblStockActual" class="table table-hover table-striped table-bordered" style="width:100%; font-size: 1.05rem;">
                         <thead>
@@ -303,29 +320,23 @@
                 $('#tblStockActual').DataTable().destroy();
             }
 
-            $('#tblStockActual').DataTable({
+            var dtBalance = $('#tblStockActual').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
                 },
                 "order": [[1, "asc"]],
                 "pageLength": 25,
-                "dom": '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 "buttons": [
                     {
-                        text: '<i class="fas fa-file-excel mr-1"></i> Excel',
-                        className: 'btn btn-sm btn-success',
-                        action: function ( e, dt, node, config ) {
-                            window.location.href = '@Url.Action("ExportarBalanceExcel", "Liquidacion")';
-                        }
-                    },
-                    {
                         extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf mr-1"></i> PDF',
-                        className: 'btn btn-sm btn-danger',
+                        text: 'PDF Oculto',
+                        className: 'd-none buttons-pdf',
                         title: 'Balance General de Stock',
                         orientation: 'landscape',
                         pageSize: 'A4',
                         exportOptions: {
+                            columns: ':visible',
                             format: {
                                 body: function (data, row, column, node) {
                                     var text = data.replace(/<\/div>/gi, "\n").replace(/<br\s*[\/]?>/gi, "\n");
@@ -342,7 +353,6 @@
                             doc.defaultStyle.fontSize = 8;
                             
                             // Ajustar anchos de columnas para que encajen mejor
-                            // Código, Descripción, U.M., Entradas, Salidas, Balance Final
                             doc.content[1].table.widths = ['15%', '25%', '5%', '20%', '20%', '15%'];
                             
                             // Centrar y alinear columnas específicas
@@ -353,9 +363,8 @@
                             objLayout.vLineColor = function(i) { return '#aaa'; };
                             doc.content[1].layout = objLayout;
 
-                            // Alinear contenido de las columnas (índices 2: UM, 3: Entradas, 4: Salidas, 5: Stock Actual)
+                            // Alinear contenido de las columnas
                             doc.content[1].table.body.forEach(function(row, i) {
-                                // Si no es la cabecera (pdfmake asigna el estilo 'tableHeader' a las celdas de cabecera)
                                 if (row[0] && row[0].style !== 'tableHeader') {
                                     if (row[2]) row[2].alignment = 'center';
                                     if (row[3]) row[3].alignment = 'right';
@@ -366,6 +375,11 @@
                         }
                     }
                 ]
+            });
+
+            // Conectar el botn HTML al DataTables PDF
+            $('#btnExportarBalancePdf').on('click', function() {
+                dtBalance.button('.buttons-pdf').trigger();
             });
 
             // Inicializar Tooltips de Bootstrap

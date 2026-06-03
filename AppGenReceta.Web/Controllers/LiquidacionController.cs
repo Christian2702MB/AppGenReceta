@@ -377,9 +377,20 @@ namespace AppGenReceta.Web.Controllers
                     }
 
                     int colIndex = 4;
+                    var pastelColors = new System.Drawing.Color[] {
+                        System.Drawing.Color.FromArgb(232, 245, 233), // Green
+                        System.Drawing.Color.FromArgb(227, 242, 253), // Blue
+                        System.Drawing.Color.FromArgb(255, 235, 238), // Red
+                        System.Drawing.Color.FromArgb(255, 243, 224), // Orange
+                        System.Drawing.Color.FromArgb(243, 229, 245)  // Purple
+                    };
+                    int colorIndex = 0;
+
                     foreach (var np in npGroups.Values)
                     {
                         int startCol = colIndex;
+                        var currentColor = pastelColors[colorIndex % pastelColors.Length];
+                        colorIndex++;
                         
                         // Fila 5: Columna Total Consumo
                         ws.Cells[5, colIndex].Value = "CONSUMO";
@@ -416,6 +427,11 @@ namespace AppGenReceta.Web.Controllers
 
                         ws.Cells[1, startCol, 4, endCol].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                         ws.Cells[1, startCol, 4, endCol].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        ws.Cells[1, startCol, 5, endCol].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        ws.Cells[1, startCol, 5, endCol].Style.Fill.BackgroundColor.SetColor(currentColor);
+                        
+                        // Fix gray color for Consumo so it doesn't get overridden by pastel
+                        ws.Cells[5, startCol].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
                     }
 
                     // Agregar datos
@@ -484,12 +500,12 @@ namespace AppGenReceta.Web.Controllers
                     // AutoFit columnas
                     ws.Cells[ws.Dimension.Address].AutoFitColumns();
 
-                    // Formato de bordes
-                    var borderStyle = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Top.Style = borderStyle;
-                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Left.Style = borderStyle;
-                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Right.Style = borderStyle;
-                    ws.Cells[1, 1, rowIndex - 1, colIndex - 1].Style.Border.Bottom.Style = borderStyle;
+                    // Aplicar bordes a toda la tabla
+                    var dataRange = ws.Cells[1, 1, rowIndex - 1, colIndex - 1];
+                    dataRange.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    dataRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    dataRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    dataRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Matriz_Consumos_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");
