@@ -116,7 +116,7 @@ BEGIN
     DECLARE @StockInicial DECIMAL(18,4) = 0;
     DECLARE @StockSolicitud DECIMAL(18,4) = 0;
     
-    -- Obtener Stock Inicial desde la tabla de inventario maestro
+    -- Obtener Stock Inicial BASE (Global sin consumos, es el inicial inicial de almacén operativo)
     -- Convirtiendo a gramos si la unidad (UM) está en kilogramos (kg)
     SELECT TOP 1 @StockInicial = 
         CASE 
@@ -126,23 +126,31 @@ BEGIN
     FROM LIQ_STK_StockInsumos
     WHERE CodInsumo = @CodInsumo;
     
-    -- Obtener Stock Solicitud sumando desde los detalles de recepción
-    -- Convirtiendo de KG a Gramos (x1000)
+    -- Obtener Stock Solicitud sumando desde los detalles de recepción (GLOBAL, o por NP si quieres restringirlo)
+    -- Como Balance General lo agrupa global, aquí lo mantenemos enfocado a la NP o global?
+    -- Según la regla: Stock Inicial debe coincidir con el actual, entonces debemos descontar todos los consumos operativos.
     SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida * 1000.00), 0)
     FROM LIQ_REQ_RecepcionesDetalle D
     INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
     WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
 
-    DECLARE @ConsumidoInicial DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
-    DECLARE @ConsumidoSolicitud DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0);
+    -- Cálculos globales para Operativo (Afectan al Stock Inicial Base)
+    DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjusteOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @DevueltoCentralGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0);
+    DECLARE @DevueltoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0);
 
-    DECLARE @AjustadoInicial DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
-    DECLARE @AjustadoSolicitud DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0);
+    -- Cálculos locales para Recibido (Afectan al Stock Solicitud de ESTA NP)
+    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+
+    DECLARE @StockOperativoReal DECIMAL(18,4) = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
+    DECLARE @StockSolicitudReal DECIMAL(18,4) = @StockSolicitud - @ConsumidoSolicitudNP - @AjusteSolicitudNP;
 
     SELECT 
-        (@StockInicial - @ConsumidoInicial - @AjustadoInicial) AS StockInicial,
-        (@StockSolicitud - @ConsumidoSolicitud - @AjustadoSolicitud) AS StockSolicitud,
-        ((@StockInicial - @ConsumidoInicial - @AjustadoInicial) + (@StockSolicitud - @ConsumidoSolicitud - @AjustadoSolicitud)) AS StockTotal;
+        @StockOperativoReal AS StockInicial,
+        @StockSolicitudReal AS StockSolicitud,
+        (@StockOperativoReal + @StockSolicitudReal) AS StockTotal;
         
     -- Result Set 2: Historial de Consumos
     SELECT 

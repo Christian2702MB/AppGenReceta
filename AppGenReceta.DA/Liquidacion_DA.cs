@@ -531,8 +531,53 @@ namespace AppGenReceta.DA
             LIQ_SaldosPopupBE saldos = new LIQ_SaldosPopupBE();
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
-                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerSaldosPopup", cnx);
-                cmd.CommandType = CommandType.StoredProcedure;
+                string sql = @"
+    SET NOCOUNT ON;
+    
+    DECLARE @StockInicial DECIMAL(18,4) = 0;
+    DECLARE @StockSolicitud DECIMAL(18,4) = 0;
+    
+    SELECT TOP 1 @StockInicial = 
+        CASE 
+            WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
+            ELSE ISNULL(StockActual, 0)
+        END
+    FROM LIQ_STK_StockInsumos
+    WHERE CodInsumo = @CodInsumo;
+    
+    SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida * 1000.00), 0)
+    FROM LIQ_REQ_RecepcionesDetalle D
+    INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
+    WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
+
+    DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjusteOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @DevueltoCentralGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0);
+    DECLARE @DevueltoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0);
+
+    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+
+    DECLARE @StockOperativoReal DECIMAL(18,4) = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
+    DECLARE @StockSolicitudReal DECIMAL(18,4) = @StockSolicitud - @ConsumidoSolicitudNP - @AjusteSolicitudNP;
+
+    SELECT 
+        @StockOperativoReal AS StockInicial,
+        @StockSolicitudReal AS StockSolicitud,
+        (@StockOperativoReal + @StockSolicitudReal) AS StockTotal;
+        
+    SELECT 
+        FechaRegistro,
+        UsuarioRegistro,
+        FuenteConsumo,
+        Cantidad
+    FROM LIQ_OperacionesDetalle
+    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo'
+    ORDER BY FechaRegistro DESC;
+                ";
+                
+                SqlCommand cmd = new SqlCommand(sql, cnx);
+                cmd.CommandType = CommandType.Text;
                 cmd.Parameters.AddWithValue("@NP", np);
                 cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
                 cnx.Open();
