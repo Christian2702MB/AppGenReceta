@@ -214,13 +214,24 @@ $(document).ready(function () {
             }
         });
         
-        var tableWidth = $(tableElement)[0].scrollWidth;
+        var tableWidthPx = $(tableElement)[0].scrollWidth;
+        var tableHeightPx = $(tableElement)[0].scrollHeight;
+        
+        // Calcular proporciones dinámicas para que el lienzo del PDF encaje perfectamente toda la matriz
+        // 96 DPI es la aproximación estándar para pantallas a pulgadas.
+        var widthInches = (tableWidthPx / 96) + 1; 
+        var heightInches = (tableHeightPx / 96) + 1;
+        
+        // Asegurar un tamaño mínimo (A4 aproximado en pulgadas) por si la matriz es pequeña
+        widthInches = Math.max(widthInches, 11.69);
+        heightInches = Math.max(heightInches, 8.27);
+
         var opt = {
-            margin:       0.3,
+            margin:       0.5,
             filename:     'Matriz_Consumos.pdf',
             image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: tableWidth + 50, width: tableWidth + 50 },
-            jsPDF:        { unit: 'in', format: 'a2', orientation: 'landscape' }
+            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, width: tableWidthPx, windowWidth: tableWidthPx + 50 },
+            jsPDF:        { unit: 'in', format: [widthInches, heightInches], orientation: 'portrait' }
         };
 
         Swal.fire({ title: 'Generando PDF...', didOpen: () => { Swal.showLoading(); }});

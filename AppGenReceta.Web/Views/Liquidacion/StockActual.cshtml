@@ -81,16 +81,15 @@
         color: var(--hialpesa-blue) !important;
     }
 
-    /* Bordes de Matriz Cruzada y Balance General - FIX STICKY OVERLAP */
-    #tblMatrizCruzada, #tblStockActual {
+    /* Bordes de Matriz Cruzada - FIX STICKY OVERLAP */
+    #tblMatrizCruzada {
         border-collapse: separate !important;
         border-spacing: 0 !important;
         border-top: 1px solid #ced4da !important;
         border-left: 1px solid #ced4da !important;
     }
 
-    #tblMatrizCruzada th, #tblMatrizCruzada td,
-    #tblStockActual th, #tblStockActual td {
+    #tblMatrizCruzada th, #tblMatrizCruzada td {
         border-right: 1px solid #ced4da !important;
         border-bottom: 1px solid #ced4da !important;
         border-top: none !important;
@@ -98,8 +97,13 @@
         background-clip: padding-box; /* Fix for sticky background leaking */
     }
 
-    #tblMatrizCruzada thead th, #tblStockActual thead th {
+    #tblMatrizCruzada thead th {
         border-bottom: 1px solid #ced4da !important;
+    }
+
+    /* Restaurar bordes a la cabecera de Balance General que fueron borrados por .table thead th */
+    #tblStockActual thead th {
+        border: 1px solid #ced4da !important;
     }
 
     /* Modal / Select2 Integration Styles */
