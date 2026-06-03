@@ -251,7 +251,7 @@ function actualizarVistaColores() {
             <div class="panel panel-info shadow-sm" style="margin-bottom: 15px;">
                 <div class="panel-heading" style="background-color: #f5f5f5; border-color: #bce8f1;">
                     <h4 class="panel-title" style="color: #31708f;">
-                        <strong>Color Pantone:</strong> ${color.Nombre}
+                        <strong>Color Pantone:</strong> ${color.NombreColor || color.Nombre || ''}
                     </h4>
                 </div>
                 <div class="panel-body">
@@ -298,7 +298,7 @@ function actualizarComboColores() {
     ddl.append('<option value="">Seleccione</option>');
 
     recetaMaster.Colores.forEach((color, index) => {
-        ddl.append('<option value="' + index + '">' + color.Nombre + '</option>');
+        ddl.append('<option value="' + index + '">' + (color.NombreColor || color.Nombre || '') + '</option>');
     });
 }
 

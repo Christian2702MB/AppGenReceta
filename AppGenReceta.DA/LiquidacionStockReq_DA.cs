@@ -554,7 +554,8 @@ namespace AppGenReceta.DA
                                 using (SqlCommand cmd = new SqlCommand(sqlColor, cn, tr))
                                 {
                                     cmd.Parameters.AddWithValue("@IdFormula", idFormula);
-                                    cmd.Parameters.AddWithValue("@NombreColor", color.NombreColor ?? "");
+                                    string nombreFinalColor = !string.IsNullOrEmpty(color.NombreColor) ? color.NombreColor : (color.Nombre ?? "");
+                                    cmd.Parameters.AddWithValue("@NombreColor", nombreFinalColor);
                                     cmd.Parameters.AddWithValue("@Combo", color.Combo ?? "");
                                     idFormulaColor = Convert.ToInt32(cmd.ExecuteScalar());
                                 }
@@ -574,7 +575,8 @@ namespace AppGenReceta.DA
                                         {
                                             cmd.Parameters.AddWithValue("@IdFormulaColor", idFormulaColor);
                                             cmd.Parameters.AddWithValue("@IdFormula", idFormula);
-                                            cmd.Parameters.AddWithValue("@NombreColor", color.NombreColor ?? "");
+                                            string nombreFinalColorInsumo = !string.IsNullOrEmpty(color.NombreColor) ? color.NombreColor : (color.Nombre ?? "");
+                                            cmd.Parameters.AddWithValue("@NombreColor", nombreFinalColorInsumo);
                                             string codigoFinal = !string.IsNullOrEmpty(insumo.CodigoInsumo) ? insumo.CodigoInsumo : (insumo.Codigo ?? "");
                                             cmd.Parameters.AddWithValue("@CodigoInsumo", codigoFinal);
                                             cmd.Parameters.AddWithValue("@Descripcion", insumo.Descripcion ?? "");

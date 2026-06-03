@@ -579,12 +579,14 @@ namespace AppGenReceta.Web.Controllers
                         string ingresosStr = $"{totIngresos.ToString("N2")}\nInicial: {item.StockInicial.ToString("N2")} | Recibido: {item.StockRecibido.ToString("N2")}\nDev. Operativo: {item.DevolucionesOperativo.ToString("N2")}";
                         ws.Cells[rowIndex, 4].Value = ingresosStr;
                         ws.Cells[rowIndex, 4].Style.WrapText = true; // IMPORTANTÍSIMO PARA QUE NO SE OCULTE DATA
+                        ws.Cells[rowIndex, 4].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
                         
                         // Salidas (Multilínea)
                         decimal totSalidas = item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral;
                         string salidasStr = $"{totSalidas.ToString("N2")}\nConsumos: {item.ConsumosTotales.ToString("N2")} | Ajustes: {item.AjustesTotales.ToString("N2")}\nDev. Central: {item.DevolucionesCentral.ToString("N2")}";
                         ws.Cells[rowIndex, 5].Value = salidasStr;
                         ws.Cells[rowIndex, 5].Style.WrapText = true;
+                        ws.Cells[rowIndex, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
                         if (totSalidas > 0) ws.Cells[rowIndex, 5].Style.Font.Color.SetColor(System.Drawing.Color.Red);
 
                         // Stock Actual
