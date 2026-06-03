@@ -408,15 +408,13 @@ namespace AppGenReceta.DA
                   AND EsPrincipal = 1
             ), 0) * CASE WHEN ISNUMERIC(F.Prendas) = 1 THEN CAST(F.Prendas AS DECIMAL(18,2)) ELSE 1 END AS Requerido,
 			        
-            -- Stock Recibido (Calculado como BaseRecibido - Consumos y Ajustes de esta NP)
+            -- Stock Recibido (Calculado como BaseRecibido de recepciones, acumulativo)
             ISNULL((
                 SELECT SUM(D.CantidadRecibida * 1000.00) 
                 FROM LIQ_REQ_Recepciones R
                 INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
                 WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
-            ), 0) -
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) -
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS StockRecibido,
+            ), 0) AS StockRecibido,
             
             -- Stock Operativo (Calculado como BaseInicial - Consumos, Ajustes y Devoluciones GLOBALES, priorizando la foto histórica si existe)
             COALESCE(
