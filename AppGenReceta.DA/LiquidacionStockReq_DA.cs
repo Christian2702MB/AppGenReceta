@@ -399,7 +399,7 @@ namespace AppGenReceta.DA
                         (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
                         (ISNULL(Op.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
-                        ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
+                        ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion = 'Consumo'), 103), '') + ' | ' + ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
                         (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
                     FROM LIQ_STK_StockInsumos I
                     LEFT JOIN (

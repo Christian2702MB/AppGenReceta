@@ -302,6 +302,7 @@ namespace AppGenReceta.Web.Controllers
         // Clase de ayuda temporal para agrupar colores por NP
         private class NpGroup
         {
+            public string Fecha { get; set; }
             public string Cliente { get; set; }
             public string Estilo { get; set; }
             public string Np { get; set; }
@@ -324,36 +325,27 @@ namespace AppGenReceta.Web.Controllers
                     var ws = package.Workbook.Worksheets.Add("Matriz Consumos");
 
                     // Construir cabeceras estáticas
-                    ws.Cells["A1:C1"].Merge = true;
-                    ws.Cells["A1"].Value = "FECHA";
-                    ws.Cells["D1"].Value = DateTime.Now.ToString("dd/MM/yyyy");
-                    ws.Cells["D1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                    ws.Cells["A1:D1"].Style.Font.Bold = true;
-                    ws.Cells["A1:D1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    ws.Cells["A1:D1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0)); // Naranja/Amarillo
+                    ws.Cells["C1"].Value = "FECHA";
+                    ws.Cells["C2"].Value = "CLIENTE";
+                    ws.Cells["C3"].Value = "ESTILO";
+                    ws.Cells["C4"].Value = "NP";
 
-                    ws.Cells["A2:B2"].Merge = true;
-                    ws.Cells["A2"].Value = "CLIENTE";
-                    ws.Cells["A3:B3"].Merge = true;
-                    ws.Cells["A3"].Value = "ESTILO";
-                    ws.Cells["A4:B4"].Merge = true;
-                    ws.Cells["A4"].Value = "NP";
-
-                    ws.Cells["A2:B4"].Style.Font.Bold = true;
-                    ws.Cells["A2:B4"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    ws.Cells["A2:B4"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
-                    ws.Cells["A2:B4"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["C1:C4"].Style.Font.Bold = true;
+                    ws.Cells["C1:C4"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["C1:C4"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
+                    ws.Cells["C1:C4"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["C1:C4"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
                     ws.Cells["A5"].Value = "CÓDIGO";
                     ws.Cells["B5"].Value = "INSUMO";
                     ws.Cells["C5"].Value = "STOCK REAL";
                     
                     ws.Cells["A5:B5"].Style.Font.Bold = true;
-                    ws.Cells["C1:C5"].Style.Font.Bold = true;
-                    ws.Cells["C1:C5"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    ws.Cells["C1:C5"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
-                    ws.Cells["C1:C5"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                    ws.Cells["C1:C5"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    ws.Cells["C5"].Style.Font.Bold = true;
+                    ws.Cells["C5"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["C5"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    ws.Cells["C5"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    ws.Cells["C5"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
                     // Procesar columnas dinámicas
                     var fixedCols = new System.Collections.Generic.List<string> { "Código", "Insumo", "Stock Real" };
@@ -371,13 +363,14 @@ namespace AppGenReceta.Web.Controllers
                     foreach (var dCol in dynamicCols)
                     {
                         var parts = dCol.Split('|');
-                        string cliente = parts.Length > 0 ? parts[0].Trim() : "";
-                        string estilo = parts.Length > 1 ? parts[1].Trim() : "";
-                        string np = parts.Length > 2 ? parts[2].Trim() : "";
-                        string color = parts.Length > 3 ? parts[3].Trim() : "SIN COLOR";
+                        string fecha = parts.Length > 0 ? parts[0].Trim() : "";
+                        string cliente = parts.Length > 1 ? parts[1].Trim() : "";
+                        string estilo = parts.Length > 2 ? parts[2].Trim() : "";
+                        string np = parts.Length > 3 ? parts[3].Trim() : "";
+                        string color = parts.Length > 4 ? parts[4].Trim() : "SIN COLOR";
 
                         if (!npGroups.ContainsKey(np)) {
-                            npGroups[np] = new NpGroup { Cliente = cliente, Estilo = estilo, Np = np };
+                            npGroups[np] = new NpGroup { Fecha = fecha, Cliente = cliente, Estilo = estilo, Np = np };
                         }
                         npGroups[np].Colores.Add(color);
                         npGroups[np].DynamicColumnNames.Add(dCol);
@@ -408,19 +401,21 @@ namespace AppGenReceta.Web.Controllers
 
                         int endCol = colIndex - 1;
 
-                        // Merge para Cabeceras Nivel 1 (Cliente, Estilo, NP)
+                        // Merge para Cabeceras Nivel 1 (Fecha, Cliente, Estilo, NP)
                         if (startCol < endCol) {
+                            ws.Cells[1, startCol, 1, endCol].Merge = true;
                             ws.Cells[2, startCol, 2, endCol].Merge = true;
                             ws.Cells[3, startCol, 3, endCol].Merge = true;
                             ws.Cells[4, startCol, 4, endCol].Merge = true;
                         }
                         
+                        ws.Cells[1, startCol].Value = np.Fecha;
                         ws.Cells[2, startCol].Value = np.Cliente;
                         ws.Cells[3, startCol].Value = np.Estilo;
                         ws.Cells[4, startCol].Value = np.Np;
 
-                        ws.Cells[2, startCol, 4, endCol].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                        ws.Cells[2, startCol, 4, endCol].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        ws.Cells[1, startCol, 4, endCol].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        ws.Cells[1, startCol, 4, endCol].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     }
 
                     // Agregar datos
