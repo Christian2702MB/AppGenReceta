@@ -688,15 +688,21 @@ namespace AppGenReceta.DA
     WHERE NP = @NP AND CodInsumo = @CodInsumo 
     ORDER BY FechaCaptura DESC;
     
-    DECLARE @StockOperativoReal DECIMAL(18,4);
+    DECLARE @StockOperativoBase DECIMAL(18,4);
     IF @SnapshotStock IS NOT NULL
     BEGIN
-        SET @StockOperativoReal = @SnapshotStock;
+        SET @StockOperativoBase = @SnapshotStock;
     END
     ELSE
     BEGIN
-        SET @StockOperativoReal = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
+        SET @StockOperativoBase = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
     END
+
+    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+
+    DECLARE @StockOperativoReal DECIMAL(18,4) = @StockOperativoBase - @ConsumidoInicialNP - @AjusteInicialNP;
+
     DECLARE @StockSolicitudReal DECIMAL(18,4) = @StockSolicitud - @ConsumidoSolicitudNP - @AjusteSolicitudNP;
 
     SELECT 
