@@ -301,6 +301,41 @@ namespace AppGenReceta.DA
                             if (res == 0) throw new Exception(mensaje);
                         }
                     }
+
+                    // -------------------------------------------------------------
+                    // REQUERIMIENTO: CAPTURAR FOTO HISTÓRICA DEL STOCK INICIAL
+                    // Se ejecuta solo si la recepción fue exitosa.
+                    // -------------------------------------------------------------
+                    string sqlSnapshot = @"
+                        -- Eliminar la foto anterior si existiera para tomar una nueva (se actualiza solo con nuevas recepciones)
+                        DELETE FROM LIQ_NP_StockSnapshot WHERE NP = @NP;
+
+                        -- Tomar la foto actual del stock operativo global para todos los insumos de la fórmula de esta NP
+                        INSERT INTO LIQ_NP_StockSnapshot (NP, CodInsumo, StockOperativoInicial, FechaCaptura)
+                        SELECT DISTINCT
+                            F.NP, 
+                            I.CodigoInsumo,
+                            ISNULL((
+                                SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END
+                                FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo
+                            ), 0) -
+                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) -
+                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) -
+                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0) +
+                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0) AS StockOperativoInicial,
+                            GETDATE()
+                        FROM LIQ_Formulas F
+                        INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
+                        INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
+                        WHERE F.NP = @NP;
+                    ";
+                    using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cn))
+                    {
+                        cmdSnap.CommandType = CommandType.Text;
+                        cmdSnap.Parameters.AddWithValue("@NP", codOrdPro);
+                        cmdSnap.ExecuteNonQuery();
+                    }
+                    // -------------------------------------------------------------
                 }
             }
             return mensaje;
@@ -399,7 +434,7 @@ namespace AppGenReceta.DA
                         (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
                         (ISNULL(Op.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
-                        ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion = 'Consumo'), 103), '') + ' | ' + ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
+                        ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '') + ' | ' + ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
                         (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
                     FROM LIQ_STK_StockInsumos I
                     LEFT JOIN (
@@ -416,7 +451,7 @@ namespace AppGenReceta.DA
                     ) Op ON I.CodInsumo = Op.CodInsumo
                     INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
                     LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
-                    WHERE O.TipoOperacion = 'Consumo' AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')
+                    WHERE O.TipoOperacion IN ('Consumo', 'Ajuste') AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')
                     ORDER BY I.Descripcion ASC, PivotCol ASC
                 ";
 

@@ -431,7 +431,8 @@ namespace AppGenReceta.Web.Controllers
                         ws.Cells[1, startCol, 5, endCol].Style.Fill.BackgroundColor.SetColor(currentColor);
                         
                         // Fix gray color for Consumo so it doesn't get overridden by pastel
-                        ws.Cells[5, startCol].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                        ws.Cells[5, startCol].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        ws.Cells[5, startCol].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(220, 220, 220));
                     }
 
                     // Agregar datos
@@ -484,14 +485,14 @@ namespace AppGenReceta.Web.Controllers
                                 ws.Cells[rowIndex, totalColIdx].Style.Numberformat.Format = "#,##0.00";
                                 ws.Cells[rowIndex, totalColIdx].Style.Font.Bold = true;
                                 ws.Cells[rowIndex, totalColIdx].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(220, 220, 220));
                             }
                             else
                             {
                                 ws.Cells[rowIndex, totalColIdx].Value = "-";
                                 ws.Cells[rowIndex, totalColIdx].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                                 ws.Cells[rowIndex, totalColIdx].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                                ws.Cells[rowIndex, totalColIdx].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(220, 220, 220));
                             }
                         }
                         rowIndex++;
@@ -506,6 +507,14 @@ namespace AppGenReceta.Web.Controllers
                     dataRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                     dataRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                     dataRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+                    // Quitar bordes de A1:B4 para igualar Image 2
+                    ws.Cells["A1:B4"].Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                    ws.Cells["A1:B4"].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                    ws.Cells["A1:B4"].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                    ws.Cells["A1:B4"].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                    ws.Cells["A1:B4"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    ws.Cells["A1:B4"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.White);
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Matriz_Consumos_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");

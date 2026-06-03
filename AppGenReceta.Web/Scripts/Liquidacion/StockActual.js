@@ -214,12 +214,13 @@ $(document).ready(function () {
             }
         });
         
+        var tableWidth = $(tableElement)[0].scrollWidth;
         var opt = {
-            margin:       0.5,
+            margin:       0.3,
             filename:     'Matriz_Consumos.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            image:        { type: 'jpeg', quality: 1 },
+            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: tableWidth + 50, width: tableWidth + 50 },
+            jsPDF:        { unit: 'in', format: 'a2', orientation: 'landscape' }
         };
 
         Swal.fire({ title: 'Generando PDF...', didOpen: () => { Swal.showLoading(); }});
@@ -303,25 +304,30 @@ $(document).ready(function () {
         var trNp = $('<tr></tr>');
         var trColor = $('<tr></tr>');
 
-        // Columnas fijas (con rowspan=5)
-        trFecha.append('<th rowspan="5" class="text-center align-middle" style="position: sticky; left: 0; top: 0; z-index: 5; background-color: #f4f8fa; width: 120px; border: 1px solid #ced4da !important; border-bottom: 2px solid #ced4da !important;">Código</th>');
-        trFecha.append('<th rowspan="5" class="text-center align-middle" style="position: sticky; left: 120px; top: 0; z-index: 5; background-color: #f4f8fa; width: 250px; border: 1px solid #ced4da !important; border-bottom: 2px solid #ced4da !important;">Insumo</th>');
-        trFecha.append('<th rowspan="5" class="text-center align-middle" style="position: sticky; left: 370px; top: 0; z-index: 5; background-color: #f4f8fa; width: 100px; border: 1px solid #ced4da !important; border-bottom: 2px solid #ced4da !important;">Stock Real</th>');
+        // Espacio en blanco (filas 1 a 4)
+        trFecha.append('<th rowspan="4" style="position: sticky; left: 0; top: 0; z-index: 6; background-color: #ffffff; min-width: 100px; max-width: 100px; border: none !important;"></th>');
+        trFecha.append('<th rowspan="4" style="position: sticky; left: 100px; top: 0; z-index: 6; background-color: #ffffff; min-width: 250px; max-width: 250px; border: none !important;"></th>');
+        trFecha.append('<th rowspan="4" style="position: sticky; left: 350px; top: 0; z-index: 6; background-color: #ffffff; min-width: 110px; max-width: 110px; border: none !important; border-right: 1px solid #ced4da !important;"></th>');
 
         Object.keys(npGroups).forEach(function(npKey) {
             var group = npGroups[npKey];
             var span = group.Colores.length + 1; // +1 por la columna CONSUMO
 
-            trFecha.append('<th colspan="' + span + '" class="text-center" style="background-color: #fff3e0; border: 1px solid #ced4da !important; color: #e65100;">' + group.Fecha + '</th>');
-            trCliente.append('<th colspan="' + span + '" class="text-center" style="background-color: #e3f2fd; border: 1px solid #ced4da !important; color: #002D72;">' + group.Cliente + '</th>');
-            trEstilo.append('<th colspan="' + span + '" class="text-center" style="background-color: #f8f9fa; border: 1px solid #ced4da !important; color: #495057;">' + group.Estilo + '</th>');
-            trNp.append('<th colspan="' + span + '" class="text-center" style="background-color: #e8f5e9; border: 1px solid #ced4da !important; color: #27ae60;">' + group.Np + '</th>');
+            trFecha.append('<th colspan="' + span + '" class="text-center" style="background-color: #fff3e0; color: #e65100;">' + group.Fecha + '</th>');
+            trCliente.append('<th colspan="' + span + '" class="text-center" style="background-color: #e3f2fd; color: #002D72;">' + group.Cliente + '</th>');
+            trEstilo.append('<th colspan="' + span + '" class="text-center" style="background-color: #f8f9fa; color: #495057;">' + group.Estilo + '</th>');
+            trNp.append('<th colspan="' + span + '" class="text-center" style="background-color: #e8f5e9; color: #27ae60;">' + group.Np + '</th>');
 
-            trColor.append('<th class="text-center" style="background-color: #e9ecef; color: red; font-weight: bold; border: 1px solid #ced4da !important; border-bottom: 2px solid #ced4da !important;">CONSUMO</th>');
+            trColor.append('<th class="text-center" style="background-color: #e9ecef; color: red; font-weight: bold;">CONSUMO</th>');
             group.Colores.forEach(function(c) {
-                trColor.append('<th class="text-center" style="background-color: #f4f8fa; border: 1px solid #ced4da !important; border-bottom: 2px solid #ced4da !important;">' + c + '</th>');
+                trColor.append('<th class="text-center" style="background-color: #f4f8fa;">' + c + '</th>');
             });
         });
+
+        // Fila 5: Cabeceras reales de las columnas fijas
+        trColor.prepend('<th class="text-center align-middle" style="position: sticky; left: 350px; top: 0; z-index: 6; background-color: #f4f8fa; min-width: 110px; max-width: 110px; border-top: 1px solid #ced4da !important; color: var(--hialpesa-blue); font-weight: bold; text-transform: uppercase;">Stock Real</th>');
+        trColor.prepend('<th class="text-center align-middle" style="position: sticky; left: 100px; top: 0; z-index: 6; background-color: #f4f8fa; min-width: 250px; max-width: 250px; border-top: 1px solid #ced4da !important; color: var(--hialpesa-blue); font-weight: bold; text-transform: uppercase;">Insumo</th>');
+        trColor.prepend('<th class="text-center align-middle" style="position: sticky; left: 0; top: 0; z-index: 6; background-color: #f4f8fa; min-width: 100px; max-width: 100px; border-top: 1px solid #ced4da !important; color: var(--hialpesa-blue); font-weight: bold; text-transform: uppercase;">Código</th>');
 
         thead.append(trFecha);
         thead.append(trCliente);
@@ -343,11 +349,11 @@ $(document).ready(function () {
             var tr = $('<tr></tr>');
             
             // Celdas Fijas
-            tr.append('<td class="text-center align-middle" style="position: sticky; left: 0; z-index: 2; background-color: #fff; border: 1px solid #ced4da !important;"><div style="font-weight: 800; font-size: 1.2rem;" class="text-primary">' + (row['Código'] || '') + '</div></td>');
-            tr.append('<td class="align-middle" style="position: sticky; left: 120px; z-index: 2; background-color: #fff; font-size: 1.2rem; border: 1px solid #ced4da !important;">' + (row['Insumo'] || '') + '</td>');
+            tr.append('<td class="text-center align-middle" style="position: sticky; left: 0; z-index: 2; background-color: #fff; min-width: 100px; max-width: 100px;"><div style="font-weight: 800; font-size: 1.1rem;" class="text-primary">' + (row['Código'] || '') + '</div></td>');
+            tr.append('<td class="align-middle" style="position: sticky; left: 100px; z-index: 2; background-color: #fff; font-size: 1.1rem; min-width: 250px; max-width: 250px; white-space: normal; word-wrap: break-word;">' + (row['Insumo'] || '') + '</td>');
             
             var stockReal = row['Stock Real'] !== null && row['Stock Real'] !== undefined ? parseFloat(row['Stock Real']) : 0;
-            tr.append('<td class="text-right align-middle" style="position: sticky; left: 370px; z-index: 2; background-color: #fff; text-align: right !important; border: 1px solid #ced4da !important;"><div style="font-weight: 800; font-size: 1.2rem; color: #2e7d32;">' + stockReal.toFixed(2) + '</div></td>');
+            tr.append('<td class="text-right align-middle" style="position: sticky; left: 350px; z-index: 2; background-color: #fff; text-align: right !important; min-width: 110px; max-width: 110px;"><div style="font-weight: 800; font-size: 1.1rem; color: #2e7d32;">' + stockReal.toFixed(2) + '</div></td>');
 
             // Celdas Dinámicas (agrupadas por NP)
             Object.keys(npGroups).forEach(function(npKey) {
@@ -361,13 +367,13 @@ $(document).ready(function () {
                 });
                 
                 var displaySuma = sumaConsumo > 0 ? sumaConsumo.toFixed(2) : '-';
-                tr.append('<td class="text-right align-middle" style="background-color: #f8f9fa; font-weight: 700; color: #d32f2f; text-align: right !important; border: 1px solid #ced4da !important;">' + displaySuma + '</td>');
+                tr.append('<td class="text-right align-middle" style="background-color: #f8f9fa; font-weight: 700; color: #d32f2f; text-align: right !important;">' + displaySuma + '</td>');
 
                 // 2. Columnas de Colores Individuales
                 group.DynamicColumns.forEach(function(col) {
                     var val = row[col] !== null && row[col] !== undefined ? parseFloat(row[col]) : 0;
                     var displayVal = val > 0 ? val.toFixed(2) : '-';
-                    tr.append('<td class="text-right align-middle text-muted" style="text-align: right !important; border: 1px solid #ced4da !important;">' + displayVal + '</td>');
+                    tr.append('<td class="text-right align-middle text-muted" style="text-align: right !important;">' + displayVal + '</td>');
                 });
             });
 
