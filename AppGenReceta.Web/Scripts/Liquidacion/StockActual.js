@@ -167,95 +167,114 @@ $(document).ready(function () {
         var tableElement = document.getElementById('tblMatrizCruzada');
         var $tableContainer = $(tableElement).closest('.table-responsive');
         var $outerContainer = $(tableElement).closest('.table-container');
-        var $matrizTab = $('#matriz');
+        var $tabPane = $(tableElement).closest('.tab-pane');
         
-        // 1. Guardar posiciones de scroll
-        var scrollPos = {
-            innerX: $tableContainer.scrollLeft(),
-            innerY: $tableContainer.scrollTop(),
-            outerX: $outerContainer.scrollLeft(),
-            windowX: window.scrollX,
-            windowY: window.scrollY
-        };
-        
-        // Forzar todo el scroll a 0. Esto arregla el bug donde html2canvas recorta la parte izquierda si el usuario había scrolleado
-        $tableContainer.scrollLeft(0).scrollTop(0);
-        $outerContainer.scrollLeft(0).scrollTop(0);
-        window.scrollTo(0, 0);
-
-        // 2. Expandir contenedores para revelar toda el área de dibujo
         var oldCSS = {
             innerMaxH: $tableContainer.css('max-height'),
             innerOverflow: $tableContainer.css('overflow'),
-            outerOverflow: $outerContainer.css('overflow'),
-            tabOverflow: $matrizTab.css('overflow')
+            outerOverflow: $outerContainer.css('overflow-x'),
+            tabOverflow: $tabPane.css('overflow'),
+            bodyWidth: $('body').css('width')
         };
         
-        $tableContainer.css({ 'max-height': 'none', 'overflow': 'visible' });
-        $outerContainer.css({ 'overflow': 'visible' });
-        $matrizTab.css({ 'overflow': 'visible' });
+        var tableWidthPx = tableElement.scrollWidth;
         
-        // 3. Remover el comportamiento sticky temporalmente en la tabla
+        // TRUCO DEFINITIVO: Expandir el body y eliminar TODO overflow limitante
+        $('html, body').css({
+            'width': (tableWidthPx + 200) + 'px',
+            'overflow': 'visible'
+        });
+        
+        $tableContainer.css({ 'max-height': 'none', 'overflow': 'visible' });
+        $outerContainer.css({ 'overflow-x': 'visible', 'overflow': 'visible' });
+        $tabPane.css({ 'overflow': 'visible' });
+        
         var originalStyles = [];
         $(tableElement).find('thead, th, td').each(function() {
             if ($(this).css('position') === 'sticky') {
-                originalStyles.push({
-                    el: this,
-                    position: $(this).css('position'),
-                    left: $(this).css('left'),
-                    zIndex: $(this).css('z-index')
-                });
-                $(this).css({
-                    'position': 'static',
-                    'left': 'auto',
-                    'z-index': 'auto',
-                    'background-color': '#fff' // Asegurar fondo blanco
-                });
+                originalStyles.push({ el: this, position: $(this).css('position'), left: $(this).css('left'), zIndex: $(this).css('z-index') });
+                $(this).css({ 'position': 'static', 'left': 'auto', 'z-index': 'auto', 'background-color': '#fff' });
             }
         });
         
-        var tableWidthPx = $(tableElement)[0].scrollWidth;
-        var tableHeightPx = $(tableElement)[0].scrollHeight;
-        
-        // Calcular proporciones dinámicas para que el lienzo del PDF encaje perfectamente toda la matriz
-        // 96 DPI es la aproximación estándar para pantallas a pulgadas.
-        var widthInches = (tableWidthPx / 96) + 1; 
-        var heightInches = (tableHeightPx / 96) + 1;
-        
-        // Asegurar un tamaño mínimo (A4 aproximado en pulgadas) por si la matriz es pequeña
-        widthInches = Math.max(widthInches, 11.69);
-        heightInches = Math.max(heightInches, 8.27);
+        Swal.fire({ title: 'Generando PDF...', text: 'Paginando matriz en hojas A4 Horizontales...', didOpen: () => { Swal.showLoading(); }});
 
-        var opt = {
-            margin:       0.5,
-            filename:     'Matriz_Consumos.pdf',
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, width: tableWidthPx, windowWidth: tableWidthPx + 50 },
-            jsPDF:        { unit: 'in', format: [widthInches, heightInches], orientation: 'portrait' }
-        };
-
-        Swal.fire({ title: 'Generando PDF...', didOpen: () => { Swal.showLoading(); }});
-
-        html2pdf().set(opt).from(tableElement).save().then(function() {
-            Swal.close();
+        setTimeout(function() {
+            if (typeof window.html2canvas !== 'function') {
+                console.error("html2canvas no está disponible globalmente.");
+                Swal.fire('Error', 'Librería de captura no cargada.', 'error');
+                restaurarDOM();
+                return;
+            }
             
-            // 4. Restaurar TODO (Estilos CSS y Posiciones de Scroll)
-            $tableContainer.css({ 'max-height': oldCSS.innerMaxH, 'overflow': oldCSS.innerOverflow });
-            $outerContainer.css({ 'overflow': oldCSS.outerOverflow });
-            $matrizTab.css({ 'overflow': oldCSS.tabOverflow });
-            
-            $tableContainer.scrollLeft(scrollPos.innerX).scrollTop(scrollPos.innerY);
-            $outerContainer.scrollLeft(scrollPos.outerX);
-            window.scrollTo(scrollPos.windowX, scrollPos.windowY);
+            // Llamar a html2canvas DIRECTAMENTE, sin pasar por html2pdf
+            window.html2canvas(tableElement, {
+                scale: 2,
+                useCORS: true,
+                width: tableWidthPx + 50,
+                windowWidth: tableWidthPx + 200,
+                logging: false
+            }).then(function(canvas) {
+                
+                var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                var canvasW = canvas.width;
+                var canvasH = canvas.height;
+                
+                var JsPdfClass = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+                if (!JsPdfClass) {
+                    console.error("jsPDF nativo no disponible.");
+                    Swal.fire('Error', 'Librería PDF no cargada.', 'error');
+                    restaurarDOM();
+                    return;
+                }
 
-            originalStyles.forEach(function(item) {
-                $(item.el).css({
-                    'position': item.position,
-                    'left': item.left,
-                    'z-index': item.zIndex
-                });
+                // Generar PDF A4 Horizontal
+                var pdf = new JsPdfClass('l', 'pt', 'a4');
+                var pdfW = pdf.internal.pageSize.getWidth();
+                var pdfH = pdf.internal.pageSize.getHeight();
+                
+                var margin = 20; // 20pt de margen en cada hoja
+                var usableW = pdfW - (margin * 2);
+                var usableH = pdfH - (margin * 2);
+
+                // Escala de la imagen (ajustar si el texto se ve muy grande o pequeño)
+                var scaleFactor = 0.55; 
+                var imgW = canvasW * scaleFactor;
+                var imgH = canvasH * scaleFactor;
+                
+                var pagesX = Math.ceil(imgW / usableW);
+                var pagesY = Math.ceil(imgH / usableH);
+                
+                // Recorremos la grilla virtual de hojas y "fotografiamos" el pedazo de canvas correspondiente
+                for (var y = 0; y < pagesY; y++) {
+                    for (var x = 0; x < pagesX; x++) {
+                        if (x > 0 || y > 0) pdf.addPage();
+                        
+                        var posX = margin - (x * usableW);
+                        var posY = margin - (y * usableH);
+                        
+                        pdf.addImage(imgData, 'JPEG', posX, posY, imgW, imgH);
+                    }
+                }
+                
+                pdf.save('Matriz_Consumos_Paginada.pdf');
+                Swal.close();
+                restaurarDOM();
+
+            }).catch(function(err) {
+                console.error("Error en PDF:", err);
+                Swal.fire('Error', 'Hubo un error al renderizar la tabla.', 'error');
+                restaurarDOM();
             });
-        });
+            
+            function restaurarDOM() {
+                $tableContainer.css({ 'max-height': oldCSS.innerMaxH, 'overflow': oldCSS.innerOverflow });
+                $outerContainer.css({ 'overflow-x': oldCSS.outerOverflow, 'overflow': '' });
+                $tabPane.css({ 'overflow': oldCSS.tabOverflow });
+                $('html, body').css({ 'width': oldCSS.bodyWidth, 'overflow': '' });
+                originalStyles.forEach(function(item) { $(item.el).css({ 'position': item.position, 'left': item.left, 'z-index': item.zIndex }); });
+            }
+        }, 500); // 500ms de espera para asegurar que el DOM eliminó el overflow
     });
 
     function cargarMatrizCruzada() {
