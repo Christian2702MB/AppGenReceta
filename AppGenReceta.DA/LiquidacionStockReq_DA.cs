@@ -330,8 +330,7 @@ namespace AppGenReceta.DA
                                 FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo
                             ), 0) -
                             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) -
-                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) -
-                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0) +
+                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) +
                             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0) AS StockOperativoInicial,
                             GETDATE()
                         FROM LIQ_Formulas F
@@ -442,8 +441,7 @@ namespace AppGenReceta.DA
                         (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
                         (ISNULL(Op.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
-                        (ISNULL(Op.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
+                        (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
                         ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '') + ' | ' + ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
                         (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
                     FROM LIQ_STK_StockInsumos I

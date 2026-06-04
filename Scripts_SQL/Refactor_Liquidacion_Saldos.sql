@@ -144,7 +144,7 @@ BEGIN
     DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
     DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
 
-    DECLARE @StockOperativoBase DECIMAL(18,4) = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
+    DECLARE @StockOperativoBase DECIMAL(18,4) = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal + @DevueltoOperativoGlobal;
 
     DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
