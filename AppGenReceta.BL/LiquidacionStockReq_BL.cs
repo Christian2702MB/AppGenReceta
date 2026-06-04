@@ -56,7 +56,7 @@ namespace AppGenReceta.BL
             // 1. Validar que exista la fórmula para esta NP
             if (!_da.ExisteFormulaParaNP(codOrdPro))
             {
-                throw new System.Exception("No se puede recepcionar porque no tiene fórmula creada. La fórmula debe aparecer en la pestaña 'Mantenimiento de Fórmulas'.");
+                throw new System.Exception("No se puede recepcionar porque no tiene fórmula creada. La fórmula debe aparecer en la pestaña 'Control de Fórmulas de Planta'.");
             }
 
             // 2. Obtener el detalle real de "ConsumoAdicional" 
