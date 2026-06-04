@@ -126,7 +126,29 @@
         border-radius: 8px !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border: 1px solid #ced4da !important;
+    /* Custom Tooltip Premium */
+    .tooltip-inner {
+        background-color: #002D72 !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+        padding: 12px 16px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        font-size: 0.95rem !important;
+        text-align: left !important;
+        max-width: 320px !important;
     }
+    .tooltip.top .tooltip-arrow { border-top-color: #002D72 !important; }
+    .tooltip.bottom .tooltip-arrow { border-bottom-color: #002D72 !important; }
+    .tooltip.bs-tooltip-top .arrow::before { border-top-color: #002D72 !important; }
+    .tooltip.bs-tooltip-bottom .arrow::before { border-bottom-color: #002D72 !important; }
+    
+    .tooltip-content-formula { line-height: 1.6; }
+    .tooltip-content-formula .badge-op {
+        display: inline-block; width: 18px; height: 18px; color: white; border-radius: 50%; 
+        text-align: center; line-height: 18px; font-weight: bold; margin-right: 8px; font-size: 12px;
+    }
+    .tooltip-content-formula .badge-plus { background-color: #2ecc71; }
+    .tooltip-content-formula .badge-minus { background-color: #e74c3c; }
 </style>
 
 <div class="container-fluid py-4">
@@ -186,12 +208,15 @@
                                 <th class="text-center" style="text-align: center !important; width: 50px;">U.M.</th>
                                 <th class="text-center" style="text-align: center !important; width: 160px;">Stock Inicial / Entradas</th>
                                 <th class="text-center" style="text-align: center !important; width: 160px;">Consumido / Ajustado</th>
-                                <th class="text-center" style="text-align: center !important; width: 100px;">
+                                <th class="text-center align-middle" style="text-align: center !important; width: 140px;">
                                     Stock Actual 
-                                    <i class="fas fa-info-circle text-primary" style="margin-left: 5px; cursor: help; font-size: 0.9em;"
+                                    <i class="fas fa-info-circle" style="color: #002D72; margin-left: 5px; cursor: help; font-size: 1.1em; transition: all 0.2s;"
+                                       onmouseover="this.style.color='#f39c12'; this.style.transform='scale(1.2)';" 
+                                       onmouseout="this.style.color='#002D72'; this.style.transform='scale(1)';"
                                        data-toggle="tooltip" 
-                                       data-placement="top" 
-                                       title="Fórmula: Stock Inicial + Stock Recibido - Consumos Totales (Ini+Sol) - Ajustes Totales (Ini+Sol) - Devoluciones Central">
+                                       data-html="true"
+                                       data-placement="left" 
+                                       title="<div class='tooltip-content-formula'><div style='border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; margin-bottom: 8px; font-weight: 700; color: #f39c12; font-size: 1.05rem;'><i class='fas fa-calculator mr-1'></i> Fórmula del Stock</div><div><span class='badge-op badge-plus'>+</span> Stock Inicial</div><div><span class='badge-op badge-plus'>+</span> Stock Recibido</div><div><span class='badge-op badge-minus'>-</span> Consumos</div><div><span class='badge-op badge-minus'>-</span> Ajustes</div><div><span class='badge-op badge-minus'>-</span> Dev. Central</div></div>">
                                     </i>
                                 </th>
                             </tr>

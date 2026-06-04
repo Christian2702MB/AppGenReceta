@@ -645,7 +645,7 @@ namespace AppGenReceta.Web.Controllers
                     ws.Column(3).Width = 8;
                     ws.Column(4).Width = 40;
                     ws.Column(5).Width = 40;
-                    ws.Column(6).Width = 15;
+                    ws.Column(6).Width = 35;
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Balance_General_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");
