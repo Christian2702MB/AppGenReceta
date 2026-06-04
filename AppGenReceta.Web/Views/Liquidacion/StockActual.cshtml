@@ -209,8 +209,18 @@
                                     <td class="text-center align-middle" style="font-size: 1.05rem; text-align: center !important;">@item.UnidadMedida</td>
                                     <td class="text-right align-middle" style="text-align: right !important;">
                                         <div class="fw-bold" style="font-weight: 700; font-size: 1.25rem;">@item.TotalIngresosNeto.ToString("N2")</div>
-                                        <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.InicialNeto.ToString("N2") (@item.StockInicialOriginal.ToString("N2") + @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
-                                        <div style="font-size: 0.95rem; color: #6c757d;">Recibido: @item.RecibidoNeto.ToString("N2") (@item.StockRecibidoOriginal.ToString("N2") - @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">
+                                            @(item.DevolucionesOperativo > 0 ? "Ini:" : "Inicial:") @item.InicialNeto.ToString("N2")
+                                            @if(item.DevolucionesOperativo > 0) {
+                                                @($"({item.StockInicialOriginal.ToString("N2")} + {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)")
+                                            }
+                                        </div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">
+                                            @(item.DevolucionesOperativo > 0 ? "Rec:" : "Recibido:") @item.RecibidoNeto.ToString("N2")
+                                            @if(item.DevolucionesOperativo > 0) {
+                                                @($"({item.StockRecibidoOriginal.ToString("N2")} - {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)")
+                                            }
+                                        </div>
                                     </td>
                                     <td class="text-right align-middle" style="text-align: right !important;">
                                         <div style="font-weight: 700; font-size: 1.25rem; color: #d32f2f;">@((item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral).ToString("N2"))</div>

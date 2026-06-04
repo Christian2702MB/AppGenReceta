@@ -595,8 +595,16 @@ namespace AppGenReceta.Web.Controllers
                         ws.Cells[rowIndex, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
                         // Entradas (Multilínea)
-                        decimal totIngresos = item.StockInicial + item.StockRecibido + item.DevolucionesOperativo;
-                        string ingresosStr = $"{totIngresos.ToString("N2")}\nInicial: {item.StockInicial.ToString("N2")} | Recibido: {item.StockRecibido.ToString("N2")}\nDev. Operativo: {item.DevolucionesOperativo.ToString("N2")}";
+                        decimal totIngresos = item.TotalIngresosNeto;
+                        string ingresosStr;
+                        if (item.DevolucionesOperativo > 0)
+                        {
+                            ingresosStr = $"{totIngresos.ToString("N2")}\nIni: {item.InicialNeto.ToString("N2")} ({item.StockInicialOriginal.ToString("N2")} + {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)\nRec: {item.RecibidoNeto.ToString("N2")} ({item.StockRecibidoOriginal.ToString("N2")} - {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)";
+                        }
+                        else
+                        {
+                            ingresosStr = $"{totIngresos.ToString("N2")}\nInicial: {item.InicialNeto.ToString("N2")}\nRecibido: {item.RecibidoNeto.ToString("N2")}";
+                        }
                         ws.Cells[rowIndex, 4].Value = ingresosStr;
                         ws.Cells[rowIndex, 4].Style.WrapText = true; // IMPORTANTÍSIMO PARA QUE NO SE OCULTE DATA
                         ws.Cells[rowIndex, 4].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
