@@ -191,7 +191,7 @@
                                     <i class="fas fa-info-circle text-primary" style="margin-left: 5px; cursor: help; font-size: 0.9em;"
                                        data-toggle="tooltip" 
                                        data-placement="top" 
-                                       title="Fórmula: StockInicial + StockRecibido - ConsumosTotales(Ini+Sol) - AjustesTotales(Ini+Sol) - DevolucionesCentral + DevolucionesOperativo">
+                                       title="Fórmula: Stock Inicial + Stock Recibido - Consumos Totales (Ini+Sol) - Ajustes Totales (Ini+Sol) - Devoluciones Central">
                                     </i>
                                 </th>
                             </tr>
@@ -208,14 +208,14 @@
                                     <td class="align-middle" style="font-size: 1.2rem; text-align: left !important;">@item.Descripcion</td>
                                     <td class="text-center align-middle" style="font-size: 1.05rem; text-align: center !important;">@item.UnidadMedida</td>
                                     <td class="text-right align-middle" style="text-align: right !important;">
-                                        <div style="font-weight: 700; font-size: 1.25rem;">@((item.StockInicial + item.StockRecibido + item.DevolucionesOperativo).ToString("N2"))</div>
-                                        <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.StockInicial.ToString("N2") | Recibido: @item.StockRecibido.ToString("N2")</div>
-                                        <div style="font-size: 0.95rem; color: #8a9096;">Dev. Operativo: @item.DevolucionesOperativo.ToString("N2")</div>
+                                        <div class="fw-bold" style="font-weight: 700; font-size: 1.25rem;">@item.TotalIngresosNeto.ToString("N2")</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.InicialNeto.ToString("N2") (@item.StockInicialOriginal.ToString("N2") + @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">Recibido: @item.RecibidoNeto.ToString("N2") (@item.StockRecibidoOriginal.ToString("N2") - @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
                                     </td>
                                     <td class="text-right align-middle" style="text-align: right !important;">
                                         <div style="font-weight: 700; font-size: 1.25rem; color: #d32f2f;">@((item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral).ToString("N2"))</div>
                                         <div style="font-size: 0.95rem; color: #6c757d;">Consumos: @item.ConsumosTotales.ToString("N2") | Ajustes: @item.AjustesTotales.ToString("N2")</div>
-                                        <div style="font-size: 0.95rem; color: #8a9096;">Dev. Central: @item.DevolucionesCentral.ToString("N2")</div>
+                                        <div style="font-size: 0.95rem; color: #6c757d;">Dev. Central: @item.DevolucionesCentral.ToString("N2")</div>
                                     </td>
                                     <td class="text-right align-middle" style="text-align: right !important;">
                                         <div style="font-weight: 800; font-size: 1.2rem; color: #2e7d32;">

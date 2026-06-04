@@ -23,17 +23,23 @@ namespace AppGenReceta.DA
                         I.Descripcion,
                         I.UnidadMedida,
                         CONVERT(VARCHAR(10), I.FechaUltimaActualizacion, 103) + ' ' + CONVERT(VARCHAR(8), I.FechaUltimaActualizacion, 108) AS FechaModificacion,
-                        ISNULL(I.StockActual, 0) AS StockInicial,
-                        ISNULL(R.StockRecibido, 0) AS StockRecibido,
+                        ISNULL(I.StockActual, 0) AS StockInicialOriginal,
+                        ISNULL(R.StockRecibido, 0) AS StockRecibidoOriginal,
                         ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosTotales,
                         ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
                         ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
                         ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
-                        (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
+                        
+                        -- Cálculos Netos Internos
+                        (ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS InicialNeto,
+                        (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS RecibidoNeto,
+
+                        -- Stock Actual (Se anula DevolucionOperativo al usar los netos)
+                        ((ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) + 
+                        (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) - 
                         (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) + 
-                        (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual
+                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual
                     FROM LIQ_STK_StockInsumos I
                     LEFT JOIN (
                         SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
@@ -65,8 +71,12 @@ namespace AppGenReceta.DA
                                 CodInsumo = dr["CodInsumo"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 UnidadMedida = dr["UnidadMedida"].ToString(),
-                                StockInicial = Convert.ToDecimal(dr["StockInicial"]),
-                                StockRecibido = Convert.ToDecimal(dr["StockRecibido"]),
+                                StockInicialOriginal = Convert.ToDecimal(dr["StockInicialOriginal"]),
+                                StockRecibidoOriginal = Convert.ToDecimal(dr["StockRecibidoOriginal"]),
+                                InicialNeto = Convert.ToDecimal(dr["InicialNeto"]),
+                                RecibidoNeto = Convert.ToDecimal(dr["RecibidoNeto"]),
+                                StockInicial = Convert.ToDecimal(dr["StockInicialOriginal"]), // Mantenemos valor original para compatibilidad
+                                StockRecibido = Convert.ToDecimal(dr["StockRecibidoOriginal"]), // Mantenemos valor original para compatibilidad
                                 ConsumosTotales = Convert.ToDecimal(dr["ConsumosTotales"]),
                                 AjustesTotales = Convert.ToDecimal(dr["AjustesTotales"]),
                                 DevolucionesCentral = Convert.ToDecimal(dr["DevolucionesCentral"]),

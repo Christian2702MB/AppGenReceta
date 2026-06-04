@@ -15,6 +15,13 @@ namespace AppGenReceta.BE
         public decimal DevolucionesOperativo { get; set; }
         public decimal StockActual { get; set; }
         public string FechaModificacion { get; set; }
+        
+        // Nuevos campos para desglose neto de Ingresos
+        public decimal StockInicialOriginal { get; set; }
+        public decimal StockRecibidoOriginal { get; set; }
+        public decimal InicialNeto { get; set; }
+        public decimal RecibidoNeto { get; set; }
+        public decimal TotalIngresosNeto { get { return InicialNeto + RecibidoNeto; } }
     }
 
     public class LIQ_RequerimientoBE
