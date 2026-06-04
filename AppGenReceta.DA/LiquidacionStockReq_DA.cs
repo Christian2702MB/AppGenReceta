@@ -39,7 +39,10 @@ namespace AppGenReceta.DA
                         (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) - 
                         (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual
+                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual,
+                        
+                        -- Stock Pendiente de Liquidar
+                        ISNULL(Pendientes.SaldoPendiente, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS StockPorLiquidar
                     FROM LIQ_STK_StockInsumos I
                     LEFT JOIN (
                         SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
@@ -55,6 +58,28 @@ namespace AppGenReceta.DA
                         FROM LIQ_OperacionesDetalle
                         GROUP BY CodInsumo
                     ) O ON I.CodInsumo = O.CodInsumo
+                    LEFT JOIN (
+                        SELECT 
+                            Base.CodInsumo,
+                            SUM(Base.Recibido - Base.Consumido - Base.Ajustado - Base.Devuelto) AS SaldoPendiente
+                        FROM (
+                            SELECT 
+                                I.CodigoInsumo AS CodInsumo,
+                                F.NP,
+                                ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) 
+                                        FROM LIQ_REQ_Recepciones R 
+                                        INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento 
+                                        WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
+                            FROM LIQ_Formulas F
+                            INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
+                            INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
+                            WHERE F.Estado != 'Cerrada'
+                        ) Base
+                        GROUP BY Base.CodInsumo
+                    ) Pendientes ON I.CodInsumo = Pendientes.CodInsumo
                     ORDER BY I.Descripcion ASC;
                 ";
 
@@ -82,7 +107,11 @@ namespace AppGenReceta.DA
                                 DevolucionesCentral = Convert.ToDecimal(dr["DevolucionesCentral"]),
                                 DevolucionesOperativo = Convert.ToDecimal(dr["DevolucionesOperativo"]),
                                 StockActual = Convert.ToDecimal(dr["StockActual"]),
-                                FechaModificacion = dr["FechaModificacion"].ToString()
+                                
+                                StockPorLiquidar = Convert.ToDecimal(dr["StockPorLiquidar"]),
+                                StockDisponible = Convert.ToDecimal(dr["StockActual"]) - Convert.ToDecimal(dr["StockPorLiquidar"]),
+                                
+                                FechaModificacion = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
                             });
                         }
                     }

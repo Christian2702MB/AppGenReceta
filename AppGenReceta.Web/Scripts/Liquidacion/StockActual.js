@@ -212,6 +212,11 @@ $(document).ready(function () {
                         if (bg && bg === 'transparent') {
                             data.cell.styles.fillColor = [255, 255, 255];
                         }
+                        
+                        // Eliminar bordes de las celdas vacías en la cabecera (esquinas superiores izquierdas)
+                        if (data.section === 'head' && data.cell.text.join('').trim() === '') {
+                            data.cell.styles.lineWidth = 0;
+                        }
                     }
                 });
 

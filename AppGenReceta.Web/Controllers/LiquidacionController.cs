@@ -618,9 +618,10 @@ namespace AppGenReceta.Web.Controllers
                         if (totSalidas > 0) ws.Cells[rowIndex, 5].Style.Font.Color.SetColor(System.Drawing.Color.Red);
 
                         // Stock Actual
-                        ws.Cells[rowIndex, 6].Value = item.StockActual;
-                        ws.Cells[rowIndex, 6].Style.Numberformat.Format = "#,##0.00";
-                        ws.Cells[rowIndex, 6].Style.Font.Bold = true;
+                        string stockActualStr = $"{item.StockActual.ToString("N2")}\nDisponible: {item.StockDisponible.ToString("N2")}\nPor Liquidar: {item.StockPorLiquidar.ToString("N2")}";
+                        ws.Cells[rowIndex, 6].Value = stockActualStr;
+                        ws.Cells[rowIndex, 6].Style.WrapText = true;
+                        ws.Cells[rowIndex, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
                         if (item.StockActual > 0)
                             ws.Cells[rowIndex, 6].Style.Font.Color.SetColor(System.Drawing.Color.Green);
                         else if (item.StockActual < 0)

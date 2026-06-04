@@ -22,6 +22,9 @@ namespace AppGenReceta.BE
         public decimal InicialNeto { get; set; }
         public decimal RecibidoNeto { get; set; }
         public decimal TotalIngresosNeto { get { return InicialNeto + RecibidoNeto; } }
+        
+        public decimal StockPorLiquidar { get; set; }
+        public decimal StockDisponible { get; set; }
     }
 
     public class LIQ_RequerimientoBE
