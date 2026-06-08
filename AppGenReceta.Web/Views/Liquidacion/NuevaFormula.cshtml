@@ -100,6 +100,16 @@
         box-shadow: 0 4px 10px rgba(0, 45, 114, 0.3);
     }
 
+    /* Animación de pulso */
+    .btn-pulse {
+        animation: pulse-animation 2s infinite;
+    }
+    @@keyframes pulse-animation {
+        0% { box-shadow: 0 0 0 0 rgba(0, 45, 114, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 45, 114, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 45, 114, 0); }
+    }
+
     .contenedor-tabla-scroll {
         max-height: 600px;
         overflow-y: auto;
@@ -248,11 +258,11 @@
             </p>
         </div>
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
-            <a href="@Url.Action("NuevaFormulaBlanco", "Liquidacion")" id="btnFormulaEnBlanco" class="btn-header-primary">
-                <i class="fas fa-file-alt" style="margin-right: 6px;"></i> + Crear Fórmula en Blanco
-            </a>
             <a href="@Url.Action("MantenimientoFormulas", "Liquidacion")" class="btn-header-back">
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
+            </a>
+            <a href="@Url.Action("NuevaFormulaBlanco", "Liquidacion")" id="btnFormulaEnBlanco" class="btn-header-primary btn-pulse">
+                <i class="fas fa-file-alt" style="margin-right: 6px;"></i> + Crear Fórmula en Blanco
             </a>
         </div>
     </div>
@@ -278,10 +288,10 @@
 
         @if (Model.Count == 0)
         {
-            <div class="alert alert-info border-0 shadow-sm text-center" style="padding: 40px;">
-                <i class="fas fa-info-circle" style="font-size: 2.5rem; color: #17a2b8; display: block; margin-bottom: 10px;"></i>
-                <p style="font-size: 1.1rem; margin: 0;">No se encontraron recetas disponibles para formular.</p>
-                <small class="text-muted">Todas las recetas con NP de 5 dígitos ya tienen fórmula asignada o no existen.</small>
+            <div style="padding: 40px 20px; text-align:center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 15px;">
+                <i class="fas fa-flask" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                <h4 style="color: #64748b; font-weight: 600; font-size: 16px; margin-top: 0;">Sin Recetas Base Disponibles</h4>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Todas las recetas con NP de 5 dígitos ya tienen fórmula asignada o no existen.</p>
             </div>
         }
         else

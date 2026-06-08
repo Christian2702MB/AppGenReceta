@@ -126,6 +126,16 @@
         text-decoration: none;
     }
 
+    /* Animación de pulso */
+    .btn-pulse {
+        animation: pulse-animation 2s infinite;
+    }
+    @@keyframes pulse-animation {
+        0% { box-shadow: 0 0 0 0 rgba(0, 45, 114, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 45, 114, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 45, 114, 0); }
+    }
+
     .badge-estado {
         padding: 6px 14px;
         border-radius: 20px;
@@ -161,7 +171,7 @@
 
             @if (rolActual == "Administrador" || rolActual == "Liquidador")
             {
-                <a href="@Url.Action("NuevaFormula", "Liquidacion")" class="btn-header-new">
+                <a href="@Url.Action("NuevaFormula", "Liquidacion")" class="btn-header-new btn-pulse">
                     <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Construir Fórmula de Producción
                 </a>
             }
@@ -214,8 +224,10 @@
         <div class="table-responsive">
             @if (Model.Count == 0)
             {
-                <div class="alert alert-info border-0 shadow-sm text-center">
-                    <i class="fas fa-info-circle mr-2"></i> No se encontraron fórmulas para visualizar.
+                <div style="padding: 40px 20px; text-align:center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 15px;">
+                    <i class="fas fa-list-alt" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                    <h4 style="color: #64748b; font-weight: 600; font-size: 16px; margin-top: 0;">Sin Fórmulas de Producción</h4>
+                    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">No se encontraron fórmulas para visualizar bajo los filtros actuales.</p>
                 </div>
             }
             else
