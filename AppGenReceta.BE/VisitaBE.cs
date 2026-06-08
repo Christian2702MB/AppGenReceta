@@ -190,4 +190,19 @@ namespace AppGenReceta.BE
         public string CodTecnica         { get; set; }
         public string DescripcionTecnica { get; set; }
     }
+
+    [Serializable]
+    public class ItemDatoCompletoBE
+    {
+        public List<ItemDatoBE> Cabecera { get; set; }
+        public List<EstiloBE> Estilos { get; set; }
+        public List<string> Combos { get; set; }
+
+        public ItemDatoCompletoBE()
+        {
+            Cabecera = new List<ItemDatoBE>();
+            Estilos = new List<EstiloBE>();
+            Combos = new List<string>();
+        }
+    }
 }

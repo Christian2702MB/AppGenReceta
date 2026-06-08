@@ -314,8 +314,12 @@ $(document).ready(function () {
                     // Agrupamos para mostrar sólo Items únicos en el dropdown
                     var seen = {};
                     var resultados = [];
-                    $.each(data, function (i, row) {
-                        if (!seen[row.CodItem]) {
+                    
+                    // Adaptación para leer la nueva estructura JSON o la antigua
+                    var cabeceraList = data.Cabecera ? data.Cabecera : data;
+
+                    $.each(cabeceraList, function (i, row) {
+                        if (row && row.CodItem && !seen[row.CodItem]) {
                             seen[row.CodItem] = true;
                             resultados.push({ id: row.CodItem, text: row.CodItem, _data: row });
                         }
@@ -480,13 +484,18 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
         data: { item: itemSeleccionado },
         dataType: 'json',
         success: function (data) {
-            if (!data || data.length === 0) {
-                Swal.fire('Sin resultados', 'No se encontraron datos para el ítem seleccionado.', 'warning');
+            if (data && data.error) {
+                Swal.fire('Error del Servidor', data.message, 'error');
                 return;
             }
 
-            // Tomamos la primera fila (el SP puede retornar varias por combinaciones)
-            var row = data[0];
+            if (!data || !data.Cabecera || data.Cabecera.length === 0) {
+                Swal.fire('Sin resultados', 'No se encontraron datos para el ítem seleccionado. Revise si recompiló la solución C#.', 'warning');
+                return;
+            }
+
+            // Tomamos la primera fila de la cabecera
+            var row = data.Cabecera[0];
 
             // ── 1. Rellenar campos auto-rellenados (bloqueados) ───────────
             // Cliente
@@ -513,7 +522,49 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
                 $('#txtTecnica').empty().append('<option value="">Seleccione una Técnica</option>').trigger('change.select2');
             }
 
-            // Los campos Estilo Cliente, Estilo Propio y Combo permanecen bloqueados
+            // ── 2. Autocompletar Estilos y Combos si existen ───────────
+            $('#txtEstilo').empty().append('<option value="">Seleccione o escriba...</option>');
+            $('#txtEstiloPropio').empty().append('<option value="">Seleccione o escriba...</option>');
+            $('#txtCombo').empty().append('<option value="">Seleccione o escriba...</option>');
+
+            var tieneEstilos = data.Estilos && data.Estilos.length > 0;
+            if (tieneEstilos) {
+                // Llenar Estilos Cliente y Propios manteniendo la dependencia 1 a 1 en los data attributes
+                $.each(data.Estilos, function (index, item) {
+                    var optionEstiloCliente = $('<option></option>')
+                        .val(item.CodEstiloCliente)
+                        .text(item.CodEstiloCliente)
+                        .attr('data-cliente', item.CodEstiloCliente)
+                        .attr('data-propio', item.CodEstiloPropio);
+                    $('#txtEstilo').append(optionEstiloCliente);
+
+                    // Al cargar ambos a la vez, el dropdown propio también se llena (el change event sincroniza)
+                    var optionEstiloPropio = $('<option></option>')
+                        .val(item.CodEstiloPropio)
+                        .text(item.CodEstiloPropio)
+                        .attr('data-cliente', item.CodEstiloCliente)
+                        .attr('data-propio', item.CodEstiloPropio);
+                    $('#txtEstiloPropio').append(optionEstiloPropio);
+                });
+                
+                // Activar si hay datos
+                $('#txtEstilo').prop('disabled', false).trigger('change.select2');
+                $('#txtEstiloPropio').prop('disabled', false).trigger('change.select2');
+            } else {
+                // Si no hay estilos, los dejamos vacíos y bloqueados
+                $('#txtEstilo').prop('disabled', true).trigger('change.select2');
+                $('#txtEstiloPropio').prop('disabled', true).trigger('change.select2');
+            }
+
+            var tieneCombos = data.Combos && data.Combos.length > 0;
+            if (tieneCombos) {
+                $.each(data.Combos, function (index, item) {
+                    $('#txtCombo').append(new Option(item, item, false, false));
+                });
+                $('#txtCombo').prop('disabled', false).trigger('change.select2');
+            } else {
+                $('#txtCombo').prop('disabled', true).trigger('change.select2');
+            }
 
             Swal.fire({
                 icon: 'success',
@@ -820,7 +871,7 @@ function guardarRecetaCompleta() {
             return;
         }
         if (recetaMaster.ComboCabecera.length === 0) {
-            Swal.fire("Aviso", "Agregue estilo propio", "warning");
+            Swal.fire("Aviso", "Agregue un combo", "warning");
             return;
         }
     }

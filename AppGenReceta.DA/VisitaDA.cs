@@ -1102,9 +1102,9 @@ namespace AppGenReceta.DA
         }
 
         // 08/05/2026 - CMendez: Búsqueda por Item - ADO.NET puro, .NET Framework 4.8 compatible
-        public List<ItemDatoBE> BuscarDatosPorItem(string itemBusqueda)
+        public ItemDatoCompletoBE BuscarDatosPorItem(string itemBusqueda)
         {
-            List<ItemDatoBE> lista = new List<ItemDatoBE>();
+            ItemDatoCompletoBE resultadoCompleto = new ItemDatoCompletoBE();
             try
             {
                 using (SqlConnection cnx = new SqlConnection(ConnectionString))
@@ -1118,9 +1118,10 @@ namespace AppGenReceta.DA
                     cnx.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
+                        // 1. Primer Result Set: Cabecera
                         while (dr.Read())
                         {
-                            lista.Add(new ItemDatoBE
+                            resultadoCompleto.Cabecera.Add(new ItemDatoBE
                             {
                                 // Columnas tal como las devuelve el SP
                                 CodCliente         = dr["Cliente"]              != DBNull.Value ? dr["Cliente"].ToString().Trim()          : "",
@@ -1131,11 +1132,37 @@ namespace AppGenReceta.DA
                                 DescripcionTecnica = dr["Tecnica"]              != DBNull.Value ? dr["Tecnica"].ToString().Trim()  : ""
                             });
                         }
+
+                        // 2. Segundo Result Set: Estilos
+                        if (dr.NextResult())
+                        {
+                            while (dr.Read())
+                            {
+                                resultadoCompleto.Estilos.Add(new EstiloBE
+                                {
+                                    CodEstiloCliente = dr["CodEstiloCliente"] != DBNull.Value ? dr["CodEstiloCliente"].ToString().Trim() : "",
+                                    CodEstiloPropio = dr["CodEstiloPropio"] != DBNull.Value ? dr["CodEstiloPropio"].ToString().Trim() : ""
+                                });
+                            }
+                        }
+
+                        // 3. Tercer Result Set: Combos
+                        if (dr.NextResult())
+                        {
+                            while (dr.Read())
+                            {
+                                string combo = dr["Combo"] != DBNull.Value ? dr["Combo"].ToString().Trim() : "";
+                                if (!string.IsNullOrEmpty(combo))
+                                {
+                                    resultadoCompleto.Combos.Add(combo);
+                                }
+                            }
+                        }
                     }
                 }
             }
             catch (Exception ex) { throw ex; }
-            return lista;
+            return resultadoCompleto;
         }
 
     }

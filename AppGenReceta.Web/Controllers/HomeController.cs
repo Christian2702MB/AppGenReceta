@@ -423,18 +423,27 @@ namespace AppGenReceta.Web.Controllers
             try
             {
                 VisitaBL visitaBL = new VisitaBL();
-                var lista = visitaBL.BuscarDatosPorItem(item.Trim());
+                var datosCompletos = visitaBL.BuscarDatosPorItem(item.Trim());
 
-                // Mapeamos a un objeto anónimo con propiedades en camelCase para el JS
-                var resultado = lista.Select(x => new
+                // Mapeamos a un objeto anónimo con propiedades para el JS
+                var resultado = new
                 {
-                    CodItem       = x.CodItem,
-                    CodCliente    = x.CodCliente,
-                    CodTemcli     = x.CodTemcli,
-                    Ubicacion     = x.Ubicacion,
-                    CodTecnica    = x.CodTecnica,
-                    DescripcionTecnica = x.DescripcionTecnica
-                }).ToList();
+                    Cabecera = datosCompletos.Cabecera.Select(x => new
+                    {
+                        CodItem       = x.CodItem,
+                        CodCliente    = x.CodCliente,
+                        CodTemcli     = x.CodTemcli,
+                        Ubicacion     = x.Ubicacion,
+                        CodTecnica    = x.CodTecnica,
+                        DescripcionTecnica = x.DescripcionTecnica
+                    }).ToList(),
+                    Estilos = datosCompletos.Estilos.Select(x => new
+                    {
+                        CodEstiloCliente = x.CodEstiloCliente,
+                        CodEstiloPropio = x.CodEstiloPropio
+                    }).ToList(),
+                    Combos = datosCompletos.Combos
+                };
 
                 return Json(resultado, JsonRequestBehavior.AllowGet);
             }

@@ -263,7 +263,7 @@ namespace AppGenReceta.BL
             }
         }
         // 08/05/2026 - CMendez: Búsqueda por Item
-        public List<ItemDatoBE> BuscarDatosPorItem(string item)
+        public ItemDatoCompletoBE BuscarDatosPorItem(string item)
         {
             try
             {
