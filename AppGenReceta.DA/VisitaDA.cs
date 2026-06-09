@@ -1159,6 +1159,28 @@ namespace AppGenReceta.DA
                             }
                         }
                     }
+
+                    // Búsqueda de respaldo (Fallback) para Combo
+                    // Si el SP no trajo ningún combo, se busca en LG_ITEMCOMB
+                    if (resultadoCompleto.Combos.Count == 0 && !string.IsNullOrEmpty(itemBusqueda))
+                    {
+                        string queryCombo = "SELECT LTRIM(RTRIM(REPLACE(REPLACE(a.Des_Comb, '-', ''), '''', ''))) AS Des_Comb FROM LG_ITEMCOMB a WHERE a.Cod_Item = @ItemBusq";
+                        using (SqlCommand cmdCombo = new SqlCommand(queryCombo, cnx))
+                        {
+                            cmdCombo.Parameters.AddWithValue("@ItemBusq", itemBusqueda);
+                            using (SqlDataReader drCombo = cmdCombo.ExecuteReader())
+                            {
+                                while (drCombo.Read())
+                                {
+                                    string comboFallback = drCombo["Des_Comb"] != DBNull.Value ? drCombo["Des_Comb"].ToString().Trim() : "";
+                                    if (!string.IsNullOrEmpty(comboFallback))
+                                    {
+                                        resultadoCompleto.Combos.Add(comboFallback);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex) { throw ex; }

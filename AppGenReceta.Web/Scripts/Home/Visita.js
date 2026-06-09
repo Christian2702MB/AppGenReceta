@@ -234,6 +234,9 @@ $(document).ready(function () {
             if (ignorarEventosEstilo) return;
             var data = e.params.data;
             autocompletarCabeceraDesdeEstilo(data.id, false);
+        }).on('select2:clear', function (e) {
+            // Al limpiar el Estilo Cliente, reseteamos todos los campos dependientes
+            $('#txtCliente, #txtTemporada, #txtEstiloPropio, #txtItem, #txtCombo, #txtUbicacion, #txtTecnica').empty().trigger('change.select2');
         });
 
         // Optimización: Búsqueda dinámica para Estilo Propio
@@ -274,6 +277,9 @@ $(document).ready(function () {
             if (ignorarEventosEstilo) return;
             var data = e.params.data;
             autocompletarCabeceraDesdeEstilo(data.id, true);
+        }).on('select2:clear', function (e) {
+            // Al limpiar el Estilo Propio, reseteamos todos los campos dependientes
+            $('#txtCliente, #txtTemporada, #txtEstilo, #txtItem, #txtCombo, #txtUbicacion, #txtTecnica').empty().trigger('change.select2');
         });
 
     } else {  // modoQuery === 'ITEM'
@@ -337,6 +343,10 @@ $(document).ready(function () {
         }).on('select2:select', function (e) {
             // Al seleccionar el Item, lanzamos el autocompletado
             autocompletarCabeceraDesdeItem(e.params.data.id);
+        }).on('select2:clear', function (e) {
+            // Al limpiar el Item, restablecemos toda la cabecera a su estado bloqueado y vacío
+            $('#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo, #txtUbicacion, #txtTecnica').empty().trigger('change.select2');
+            $('#txtEstilo, #txtEstiloPropio, #txtCombo').prop('disabled', true);
         });
 
     } // fin else (modoQuery === 'ITEM')
