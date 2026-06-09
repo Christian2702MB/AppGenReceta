@@ -14,9 +14,9 @@ var recetaMaster = {
     Item: "",        // <-- Agregado
     ComboCabecera: "",       // <-- Agregado
     PrendasReq: "",       // <-- Agregado   
-    // Concepto ya no va aquí
     Ubicacion: "",    // <-- Agregado
     Arte: "",    // <-- Agregado
+    Observaciones: "", // <-- Agregado
     Colores: [],
     PruebasGlobales: [] // <-- NUEVO: Guardará la información de las columnas de prueba
 };
@@ -544,6 +544,7 @@ function procesarDatosReceta(res) {
     $("#txtUbicacion").val(d.Ubicacion);
     //Inicio
     $("#txtArte").val(d.Arte);
+    $("#txtObservaciones").val(d.Observaciones);
 
     /*$(`input[name='ubicacion'][value='${d.Ubicacion}']`).prop('checked', true);*/
     // Dentro de la carga de datos:
@@ -746,6 +747,7 @@ function guardarRecetaCompleta() {
     // recetaMaster.Concepto = $("#txtConcepto").val(); // Removido
     recetaMaster.Ubicacion = $("#txtUbicacion").val();
     recetaMaster.Arte = $("#txtArte").val();
+    recetaMaster.Observaciones = $("#txtObservaciones").val();
 
     // VALIDACIÓN: Si el valor es una cadena vacía, nulo o indefinido
     if (!fechaSeleccionada || fechaSeleccionada.trim() === "") {
