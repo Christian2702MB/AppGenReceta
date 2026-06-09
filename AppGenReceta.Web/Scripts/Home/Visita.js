@@ -858,6 +858,14 @@ function guardarRecetaCompleta() {
         Swal.fire("Aviso", "Agregue la técnica", "warning");
         return;
     }
+    if (recetaMaster.Ubicacion.length === 0) {
+        Swal.fire("Aviso", "Agregue la ubicación", "warning");
+        return;
+    }
+    if (recetaMaster.ComboCabecera.length === 0) {
+        Swal.fire("Aviso", "Agregue un combo", "warning");
+        return;
+    }
     if (recetaMaster.Cliente.length === 0) {
         Swal.fire("Aviso", "Agregue el cliente", "warning");
         return;
@@ -878,10 +886,6 @@ function guardarRecetaCompleta() {
         }
         if (recetaMaster.EstiloPropio.length === 0) {
             Swal.fire("Aviso", "Agregue estilo propio", "warning");
-            return;
-        }
-        if (recetaMaster.ComboCabecera.length === 0) {
-            Swal.fire("Aviso", "Agregue un combo", "warning");
             return;
         }
     }
