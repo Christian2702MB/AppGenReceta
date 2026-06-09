@@ -176,7 +176,7 @@ BEGIN
     BEGIN TRANSACTION    
 		-- 1. Insertar Cabecera usando los datos internos del XML
 		--select * from Visita
-        INSERT INTO AGR_Recetas (NP, OperarioUDP, Tecnica, FechaUDP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Prendas, Ubicacion, Arte, FechaRegistro) 
+        INSERT INTO AGR_Recetas (NP, OperarioUDP, Tecnica, FechaUDP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Prendas, Ubicacion, Arte, Observaciones, FechaRegistro) 
         SELECT 
             T.c.value('(NP)[1]', 'VARCHAR(20)'),
             T.c.value('(Operario)[1]', 'VARCHAR(100)'),
@@ -191,6 +191,7 @@ BEGIN
 			T.c.value('(PrendasReq)[1]', 'VARCHAR(100)'),
 			T.c.value('(Ubicacion)[1]', 'VARCHAR(50)'), -- Nuevo
 			T.c.value('(Arte)[1]', 'VARCHAR(100)'), -- Nuevo
+			T.c.value('(Observaciones)[1]', 'VARCHAR(800)'), -- Nuevo
             GETDATE()
         FROM @XmlData.nodes('/VisitaBE') AS T(c);
         
@@ -686,6 +687,7 @@ BEGIN
 				--Item = @XML_DATA.value('(VisitaBE/Item)[1]', 'VARCHAR(100)'),
 				--Combo = @XML_DATA.value('(VisitaBE/ComboCabecera)[1]', 'VARCHAR(100)'),
 				Prendas = @XML_DATA.value('(VisitaBE/PrendasReq)[1]', 'VARCHAR(100)'),
+				Observaciones = @XML_DATA.value('(VisitaBE/Observaciones)[1]', 'VARCHAR(800)'),
 				--Concepto = @XML_DATA.value('(VisitaBE/Concepto)[1]', 'VARCHAR(100)'),
                 --Ubicacion = @XML_DATA.value('(VisitaBE/Ubicacion)[1]', 'VARCHAR(50)'),
 				FechaUpdate = getdate()
@@ -923,6 +925,7 @@ BEGIN
 	rtrim(V.EstiloPropio) AS 'EstiloPropio', 
 	rtrim(V.Combo) AS 'ComboCabecera',  
 	V.Prendas as 'PrendasReq',
+	ISNULL(V.Observaciones, '') as 'Observaciones',
 	rtrim(V.Temporada) as 'Temporada',
 	rtrim(V.Item) as 'Item',
 	isnull(V.UsuarioCierre,'') as 'UsuarioCierre',  

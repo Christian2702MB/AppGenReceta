@@ -839,6 +839,7 @@ function guardarRecetaCompleta() {
     // Concepto ya no va en cabecera
     recetaMaster.Ubicacion = $("#txtUbicacion").val();
     recetaMaster.Arte = $("#txtArte").val();
+    recetaMaster.Observaciones = $("#txtObservaciones").val();
 
     // VALIDACIÓN: Si el valor es una cadena vacía, nulo o indefinido
     if (!fechaSeleccionada || fechaSeleccionada.trim() === "") {
@@ -949,6 +950,7 @@ var recetaMaster = {
     // Concepto no va aquí
     Ubicacion: "",    // <-- Agregado
     Arte: "",    // <-- Agregado
+    Observaciones: "", // <-- Agregado
     Colores: []
 };
 

@@ -488,6 +488,7 @@ namespace AppGenReceta.DA
                             entidad.Ubicacion = dr["Ubicacion"].ToString();
                             entidad.Arte = dr["Arte"].ToString();
                             entidad.FechaUDP = dr["FechaUDP"].ToString();
+                            entidad.Observaciones = dr["Observaciones"].ToString();
 
                             entidad.Temporada = dr["Temporada"].ToString();
                             entidad.Item = dr["Item"].ToString();
