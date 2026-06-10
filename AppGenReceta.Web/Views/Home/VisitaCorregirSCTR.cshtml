@@ -216,6 +216,9 @@
             </div>
             <div class="panel-body">
                 <div class="btn-group pull-right">
+                    <button type="button" id="btnHabilitarEdicion" class="btn btn-warning btn-sm" style="margin-right: 5px; color: #fff; background-color: #f0ad4e; border-color: #eea236;">
+                        <i class="fa fa-pencil"></i> Habilitar Edición
+                    </button>
                     <button type="button" class="btn btn-info btn-sm" onclick="abrirModalPrueba()"
                         style="margin-right: 5px;">
                         <i class="fa fa-flask"></i> Nueva Prueba Gramos/UDP
@@ -457,7 +460,7 @@
                 $("#formLibroVisita button, #formLibroVisita .btn").not("#btnCancelarVisita").addClass("disabled").attr("onclick", "return false;");
 
                 // 3. Ocultar el botón de Guardar/Actualizar
-                $("#btnGuardarVisita, #btnActualizarReceta, #btnRegistrarTodo, #btnAgregarColor, #btnAgregarInsumo").hide();
+                $("#btnGuardarVisita, #btnActualizarReceta, #btnRegistrarTodo, #btnAgregarColor, #btnAgregarInsumo, #btnHabilitarEdicion").hide();
 
                 //// 4. Cambiar el título para indicar que es modo consulta
                 //$(".page-header span").append(" - (Modo Lectura)");

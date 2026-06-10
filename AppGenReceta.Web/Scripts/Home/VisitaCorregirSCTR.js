@@ -73,6 +73,7 @@ function sincronizarPruebasExistentes() {
 }
 
 var contadorPruebas = 0;
+window.edicionHabilitada = false;
 
 function abrirModalPrueba() {
     $("#txtNombrePrueba").val(null).trigger('change');
@@ -384,8 +385,15 @@ function inyectarPruebasDOM() {
                         let isPrincipal = (pruebaPrincipalDelColor === nombreGlobalNorm);
                         let isLastRow = (indexRow === filasInsumos.length - 1);
 
-                        let disabledAttr = p.EsHistorico ? 'disabled="disabled" title="Dato guardado"' : '';
-                        let bgColorInput = p.EsHistorico ? 'background-color: #e9ecef;' : (isPrincipal ? 'background-color: #fff; font-weight: bold; border-color: #ffc107;' : '');
+                        let habilitado = true;
+                        if (window.g_isReadOnly) {
+                            habilitado = false;
+                        } else if (p.EsHistorico && !window.edicionHabilitada) {
+                            habilitado = false;
+                        }
+
+                        let disabledAttr = habilitado ? '' : 'disabled="disabled" title="Dato guardado"';
+                        let bgColorInput = habilitado ? (isPrincipal ? 'background-color: #fff; font-weight: bold; border-color: #ffc107;' : '') : 'background-color: #e9ecef; cursor: not-allowed;';
 
                         let borderBtm = isLastRow ? 'border-bottom: 2px solid #ffc107;' : '';
                         let bgColTd = isPrincipal ? `background-color: #fff3cd !important; border-left: 2px solid #ffc107; border-right: 2px solid #ffc107; ${borderBtm}` : '';
@@ -499,6 +507,14 @@ $(document).ready(function () {
     // asegúrate de marcar el cambio ahí también
     $('#btnAgregarColor, #btnAgregarInsumo').click(function () {
         hayCambios = true;
+    });
+
+    $('#btnHabilitarEdicion').click(function () {
+        if (!window.g_isReadOnly) {
+            window.edicionHabilitada = true;
+            inyectarPruebasDOM();
+            $(this).prop('disabled', true).html('<i class="fa fa-check"></i> Edición Habilitada');
+        }
     });
 
     // 2. Luego mandamos a dibujar el primer color (o la tabla por defecto)
