@@ -313,7 +313,49 @@
         </div>
     </form>
 
+    <!-- Modal Consumo Desarrollo -->
+    <div class="modal fade" id="modalConsumoDesarrollo" tabindex="-1" role="dialog" aria-labelledby="modalConsumoDesarrolloLabel" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #07238a; color: white;">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 1; color: white;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalConsumoDesarrolloLabel"><i class="fa fa-flask"></i> Registrar Consumo Desarrollo</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="hdnCodInsumoDesarrollo" />
+                    <input type="hidden" id="hdnIdInsumoDesarrollo" />
+                    
+                    <div class="alert alert-info text-center" style="margin-bottom: 15px; padding: 10px;">
+                        <strong>Insumo:</strong> <span id="lblDescInsumoDesarrollo"></span><br />
+                        <small id="lblCodInsumoDesarrollo" class="text-muted"></small>
+                    </div>
 
+                    <div class="card mb-3" style="border: 2px solid #07238a; border-radius: 5px; margin-bottom: 15px;">
+                        <div class="card-body text-center" style="padding: 15px;">
+                            <h5 style="color: #07238a; font-weight: bold; margin-top: 0;">STOCK DISPONIBLE</h5>
+                            <h3 class="m-0 text-success" id="lblStockDisponibleDesarrollo" style="font-weight: bold; margin-bottom: 0;">0.00 gr</h3>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cantidad a Consumir (gr): <span class="text-danger">*</span></label>
+                        <input type="number" id="txtCantConsumoDesarrollo" class="form-control text-center" step="0.01" min="0.01" placeholder="0.00" style="font-size: 18px; font-weight: bold;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Motivo / Observación (Opcional):</label>
+                        <textarea id="txtMotivoConsumoDesarrollo" class="form-control" rows="2" placeholder="Detalles del consumo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarConsumoDesarrollo()" style="background-color: #07238a;"><i class="fa fa-save"></i> Registrar Consumo</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @*}*@
 

@@ -146,6 +146,7 @@ namespace AppGenReceta.BE
         public string Descripcion { get; set; }
         public double GramosUDP { get; set; } // Conservará el Valor Original
         public double ConsumoUDP { get; set; }
+        public decimal ConsumoDesarrollo { get; set; }
 
         // Nueva lista para almacenar el historial de pruebas
         [XmlArray("PruebasUDP")] 

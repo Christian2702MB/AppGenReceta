@@ -912,6 +912,7 @@ BEGIN
 	-- ==========================================
     -- Tabla 1: Cabecera
     -- ==========================================
+    DECLARE @NP_RECETA VARCHAR(20) = (SELECT TOP 1 NP FROM AGR_Recetas WHERE IdRecetas = @ID_VISITA);
 	SELECT 
 	V.NP, 
 	V.OperarioUDP as 'Operario', 
@@ -947,7 +948,8 @@ BEGIN
 	(C.Combo) as ComboColor, 
 	I.codigoInsumo AS CodigoInsumo, -- Se agregó el AS para que C# lo lea exacto
     I.Descripcion as InsumoDescripcion, 
-	I.Cantidad as CantidadInsumo
+	I.Cantidad as CantidadInsumo,
+    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP_RECETA AND CodInsumo = I.codigoInsumo AND TipoOperacion = 'Consumo Desarrollo'), 0) AS ConsumoDesarrollo
     FROM AGR_Colores C
     INNER JOIN AGR_Insumos I ON C.IdColor = I.IdColor
     WHERE C.IdRecetas = @ID_VISITA;

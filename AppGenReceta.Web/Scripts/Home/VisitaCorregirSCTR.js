@@ -616,8 +616,9 @@ function actualizarVistaColores() {
                         <thead>
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
-                                <th style="width: 35%">Insumo</th>
-                                <th style="width: 28%" class="text-right">STRIKE OFF</th>
+                                <th style="width: 25%">Insumo</th>
+                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;">Cons. Desarrollo</th>
+                                <th style="width: 20%" class="text-right">STRIKE OFF</th>
                             </tr>
                         </thead>
                         <tbody>`
@@ -642,8 +643,9 @@ function actualizarVistaColores() {
                         <thead>
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
-                                <th style="width: 35%">Insumo</th>
-                                <th style="width: 28%" class="text-right">STRIKE OFF</th>
+                                <th style="width: 25%">Insumo</th>
+                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;">Cons. Desarrollo</th>
+                                <th style="width: 20%" class="text-right">STRIKE OFF</th>
                                 <th style="width: 10%"></th>
                             </tr>
                         </thead>
@@ -654,7 +656,10 @@ function actualizarVistaColores() {
             htmlColor += window.g_isReadOnly ? `
                 <tr data-idinsumo="${insumo.IDInsumo || insumo.IdInsumo || ''}">
                     <td><strong>${insumo.CodigoInsumo}</strong></td>
-                    <td><strong>${insumo.Descripcion} (gr)</strong></td>
+                    <td><strong>${insumo.Descripcion}</strong></td>
+                    <td class="text-center" style="background-color: #fcf8e3;">
+                        <span class="label label-warning" style="font-size: 13px;"><i class="fa fa-flask"></i> ${(insumo.ConsumoDesarrollo || 0).toFixed(2)} gr</span>
+                    </td>
                     <td class="text-right"><strong>${insumo.Cantidad.toFixed(2)}</strong></td>
                 </tr>`
                 : `
@@ -663,7 +668,12 @@ function actualizarVistaColores() {
                         <input type="hidden" class="hidden-id-insumo" value="${insumo.IDInsumo || insumo.IdInsumo || ''}" />
                         <strong>${insumo.CodigoInsumo}</strong>
                     </td>
-                    <td><strong>${insumo.Descripcion} (gr)</strong></td>
+                    <td><strong>${insumo.Descripcion}</strong></td>
+                    <td class="text-center" style="background-color: #fcf8e3;">
+                        <button type="button" class="btn btn-warning btn-xs" onclick="abrirModalConsumoDesarrollo('${insumo.CodigoInsumo}', '${insumo.Descripcion}', ${insumo.IDInsumo || insumo.IdInsumo || 0})" title="Registrar Consumo">
+                            <i class="fa fa-flask"></i> <span class="badge" style="background-color: white; color: black; margin-left: 3px;">${(insumo.ConsumoDesarrollo || 0).toFixed(2)} gr</span>
+                        </button>
+                    </td>
                     <td class="text-right"><strong>${insumo.Cantidad.toFixed(2)}</strong></td>
                     <td class="text-center">
                         <button type="button" class="btn btn-link btn-xs text-danger" 
@@ -1060,6 +1070,122 @@ function guardarArchivo(blob, filename) {
             document.body.removeChild(a);
         }, 0)
     }
+}
+
+// ====================================================================
+// MÓDULO: REGISTRO DE CONSUMO DESARROLLO (LABORATORIO)
+// ====================================================================
+
+function abrirModalConsumoDesarrollo(codigoInsumo, descripcion, idInsumo) {
+    var np = $("#txtNP").val();
+    if (!np || np.trim() === "") {
+        Swal.fire("Aviso", "La receta debe tener un NP asignado para registrar consumos.", "warning");
+        return;
+    }
+
+    $("#hdnCodInsumoDesarrollo").val(codigoInsumo);
+    $("#hdnIdInsumoDesarrollo").val(idInsumo);
+    $("#lblDescInsumoDesarrollo").text(descripcion);
+    $("#lblCodInsumoDesarrollo").text(codigoInsumo);
+    $("#txtCantConsumoDesarrollo").val('');
+    $("#txtMotivoConsumoDesarrollo").val('');
+    $("#lblStockDisponibleDesarrollo").html('<i class="fa fa-spinner fa-spin text-primary"></i> <span style="font-size:16px;">Cargando...</span>');
+
+    // Consultar stock
+    $.get("/Home/ObtenerSaldosDesarrolloInsumo", { np: np, codInsumo: codigoInsumo }, function (res) {
+        var tbHistorial = $("#tbHistorialConsumoDesarrollo");
+        tbHistorial.empty();
+
+        if (res.success && res.data) {
+            $("#lblStockDisponibleDesarrollo").text(res.data.StockGlobal.toFixed(2) + " gr");
+            // Guardamos el stock maximo para validacion
+            $("#txtCantConsumoDesarrollo").attr("max", res.data.StockGlobal);
+            
+            // Cargar Historial
+            if (res.data.HistorialConsumo && res.data.HistorialConsumo.length > 0) {
+                res.data.HistorialConsumo.forEach(function (h) {
+                    tbHistorial.append(
+                        '<tr>' +
+                            '<td>' + h.Fecha + '</td>' +
+                            '<td>' + h.Usuario + '</td>' +
+                            '<td class="text-right"><strong>' + h.Cantidad.toFixed(2) + ' gr</strong></td>' +
+                        '</tr>'
+                    );
+                });
+            } else {
+                tbHistorial.append('<tr><td colspan="3" class="text-center text-muted">No hay consumos previos.</td></tr>');
+            }
+        } else {
+            $("#lblStockDisponibleDesarrollo").text("0.00 gr");
+            $("#txtCantConsumoDesarrollo").attr("max", 0);
+            tbHistorial.append('<tr><td colspan="3" class="text-center text-muted">No se encontraron datos.</td></tr>');
+        }
+    });
+
+    $("#modalConsumoDesarrollo").modal("show");
+    
+    $('#modalConsumoDesarrollo').on('shown.bs.modal', function () {
+        $('#txtCantConsumoDesarrollo').focus();
+    });
+}
+
+function guardarConsumoDesarrollo() {
+    var cantidad = parseFloat($("#txtCantConsumoDesarrollo").val());
+    var maxStock = parseFloat($("#txtCantConsumoDesarrollo").attr("max") || 0);
+
+    if (isNaN(cantidad) || cantidad <= 0) {
+        Swal.fire("Error", "Ingrese una cantidad válida mayor a 0", "error");
+        return;
+    }
+
+    if (cantidad > maxStock) {
+        Swal.fire("Aviso", "La cantidad ingresada supera el stock disponible (" + maxStock.toFixed(2) + " gr)", "warning");
+        return;
+    }
+
+    var obj = {
+        NP: $("#txtNP").val(),
+        CodInsumo: $("#hdnCodInsumoDesarrollo").val(),
+        Cantidad: cantidad,
+        Motivo: $("#txtMotivoConsumoDesarrollo").val()
+    };
+
+    var btn = $("#modalConsumoDesarrollo .btn-primary");
+    btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Registrando...');
+
+    $.ajax({
+        url: '/Home/RegistrarConsumoDesarrollo',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function(res) {
+            btn.prop("disabled", false).html('<i class="fa fa-save"></i> Registrar Consumo');
+            if (res.success) {
+                $("#modalConsumoDesarrollo").modal("hide");
+                Swal.fire({
+                    title: "¡Éxito!",
+                    text: "El consumo se registró correctamente.",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    Swal.fire({
+                        title: 'Actualizando Datos',
+                        text: 'Por favor espere...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    cargarDatosParaEdicion($("#hdnIdVisita").val());
+                });
+            } else {
+                Swal.fire("Error", res.message || "No se pudo registrar el consumo", "error");
+            }
+        },
+        error: function() {
+            btn.prop("disabled", false).html('<i class="fa fa-save"></i> Registrar Consumo');
+            Swal.fire("Error", "Ocurrió un error en el servidor", "error");
+        }
+    });
 }
 
 

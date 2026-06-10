@@ -541,6 +541,7 @@ namespace AppGenReceta.DA
                                     CodigoInsumo = dr["CodigoInsumo"].ToString(),
                                     Descripcion = dr["InsumoDescripcion"].ToString(),
                                     Cantidad = Convert.ToDecimal(dr["CantidadInsumo"].ToString()),
+                                    ConsumoDesarrollo = Convert.ToDecimal(dr["ConsumoDesarrollo"].ToString()),
                                     //GramosUDP = dr["GramosUDP"] != DBNull.Value ? Convert.ToDouble(dr["GramosUDP"]) : 0,
                                     Pruebas = new List<PruebaUDPBE>() // Inicializar la lista
                                 });

@@ -454,6 +454,49 @@ namespace AppGenReceta.Web.Controllers
         }
         // ─────────────────────────────────────────────────────────────────────
 
+        // =====================================================================
+        // ENDPOINTS: REGISTRO DE CONSUMO DESARROLLO (MODAL)
+        // =====================================================================
+        [HttpGet]
+        public JsonResult ObtenerSaldosDesarrolloInsumo(string np, string codInsumo)
+        {
+            try
+            {
+                var bl = new Liquidacion_BL();
+                var data = bl.ObtenerSaldosPopup(np, codInsumo);
+                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult RegistrarConsumoDesarrollo(LIQ_OperacionBE ope)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                var bl = new Liquidacion_BL();
+                ope.Usuario = Session["NombreUsuario"].ToString();
+                
+                // Forzar campos estandarizados para Laboratorio
+                ope.TipoOperacion = "Consumo Desarrollo";
+                ope.FuenteConsumo = "Stock Inicial"; // Extrae del stock original asignado al laboratorio
+
+                bool res = bl.RegistrarOperacion(ope);
+                return Json(new { success = res });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        // =====================================================================
+
         #region Corregir SCTR
 
         // HomeController.cs 17/03/2026

@@ -674,12 +674,12 @@ namespace AppGenReceta.DA
     INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
     WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
 
-    DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @AjusteOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @DevueltoCentralGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0);
     DECLARE @DevueltoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0);
 
-    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
     DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
 
     DECLARE @SnapshotStock DECIMAL(18,4) = NULL;
@@ -698,17 +698,23 @@ namespace AppGenReceta.DA
         SET @StockOperativoBase = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
     END
 
-    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
 
     DECLARE @StockOperativoReal DECIMAL(18,4) = @StockOperativoBase - @ConsumidoInicialNP - @AjusteInicialNP;
 
     DECLARE @StockSolicitudReal DECIMAL(18,4) = @StockSolicitud - @ConsumidoSolicitudNP - @AjusteSolicitudNP;
 
+    DECLARE @StockGlobalReal DECIMAL(18,4) = @StockInicial + @StockSolicitud - 
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) - 
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) - 
+        ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0);
+
     SELECT 
         @StockOperativoReal AS StockInicial,
         @StockSolicitudReal AS StockSolicitud,
-        (@StockOperativoReal + @StockSolicitudReal) AS StockTotal;
+        (@StockOperativoReal + @StockSolicitudReal) AS StockTotal,
+        @StockGlobalReal AS StockGlobal;
         
     SELECT 
         FechaRegistro,
@@ -716,7 +722,7 @@ namespace AppGenReceta.DA
         FuenteConsumo,
         Cantidad
     FROM LIQ_OperacionesDetalle
-    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo'
+    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo')
     ORDER BY FechaRegistro DESC;
                 ";
                 
@@ -732,6 +738,7 @@ namespace AppGenReceta.DA
                         saldos.StockInicial = Convert.ToDecimal(dr["StockInicial"]);
                         saldos.StockSolicitud = Convert.ToDecimal(dr["StockSolicitud"]);
                         saldos.StockTotal = Convert.ToDecimal(dr["StockTotal"]);
+                        saldos.StockGlobal = Convert.ToDecimal(dr["StockGlobal"]);
                     }
                     
                     if (dr.NextResult())
