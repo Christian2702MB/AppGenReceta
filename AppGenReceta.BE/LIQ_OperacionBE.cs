@@ -18,6 +18,7 @@ namespace AppGenReceta.BE
         public string Usuario { get; set; }
         public string FuenteConsumo { get; set; }
         public string NombreColor { get; set; }
+        public int? IdVisita { get; set; }
     }
 
     /// <summary>

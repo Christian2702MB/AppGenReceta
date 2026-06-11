@@ -883,7 +883,7 @@ namespace AppGenReceta.Web.Controllers
         {
             try
             {
-                var data = bl.ObtenerSaldosPopup(np, codInsumo);
+                var data = bl.ObtenerSaldosPopup(np, codInsumo, null);
                 return Json(data, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)

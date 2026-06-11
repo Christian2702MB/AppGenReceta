@@ -10,6 +10,8 @@ namespace AppGenReceta.BE
         public decimal StockInicial { get; set; }
         public decimal StockRecibido { get; set; }
         public decimal ConsumosTotales { get; set; }
+        public decimal ConsumosProduccion { get; set; }
+        public decimal ConsumosDesarrollo { get; set; }
         public decimal AjustesTotales { get; set; }
         public decimal DevolucionesCentral { get; set; }
         public decimal DevolucionesOperativo { get; set; }

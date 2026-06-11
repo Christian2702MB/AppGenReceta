@@ -26,6 +26,8 @@ namespace AppGenReceta.DA
                         ISNULL(I.StockActual, 0) AS StockInicialOriginal,
                         ISNULL(R.StockRecibido, 0) AS StockRecibidoOriginal,
                         ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosTotales,
+                        ISNULL(O.ConsumosProduccion, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosProduccion,
+                        ISNULL(O.ConsumosDesarrollo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosDesarrollo,
                         ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
                         ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
                         ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
@@ -52,6 +54,8 @@ namespace AppGenReceta.DA
                     LEFT JOIN (
                         SELECT CodInsumo,
                                SUM(CASE WHEN TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosProduccion,
+                               SUM(CASE WHEN TipoOperacion = 'Consumo Desarrollo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosDesarrollo,
                                SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
                                SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
@@ -103,6 +107,8 @@ namespace AppGenReceta.DA
                                 StockInicial = Convert.ToDecimal(dr["StockInicialOriginal"]), // Mantenemos valor original para compatibilidad
                                 StockRecibido = Convert.ToDecimal(dr["StockRecibidoOriginal"]), // Mantenemos valor original para compatibilidad
                                 ConsumosTotales = Convert.ToDecimal(dr["ConsumosTotales"]),
+                                ConsumosProduccion = Convert.ToDecimal(dr["ConsumosProduccion"]),
+                                ConsumosDesarrollo = Convert.ToDecimal(dr["ConsumosDesarrollo"]),
                                 AjustesTotales = Convert.ToDecimal(dr["AjustesTotales"]),
                                 DevolucionesCentral = Convert.ToDecimal(dr["DevolucionesCentral"]),
                                 DevolucionesOperativo = Convert.ToDecimal(dr["DevolucionesOperativo"]),

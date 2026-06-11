@@ -670,7 +670,7 @@ function actualizarVistaColores() {
                     </td>
                     <td><strong>${insumo.Descripcion}</strong></td>
                     <td class="text-center" style="background-color: #fcf8e3;">
-                        <button type="button" class="btn btn-warning btn-xs" onclick="abrirModalConsumoDesarrollo('${insumo.CodigoInsumo}', '${insumo.Descripcion}', ${insumo.IDInsumo || insumo.IdInsumo || 0})" title="Registrar Consumo">
+                        <button type="button" class="btn btn-warning btn-xs" onclick="abrirModalConsumoDesarrollo('${color.Nombre}', '${insumo.CodigoInsumo}', '${insumo.Descripcion}', ${insumo.IDInsumo || insumo.IdInsumo || 0})" title="Registrar Consumo">
                             <i class="fa fa-flask"></i> <span class="badge" style="background-color: white; color: black; margin-left: 3px;">${(insumo.ConsumoDesarrollo || 0).toFixed(2)} gr</span>
                         </button>
                     </td>
@@ -1076,23 +1076,25 @@ function guardarArchivo(blob, filename) {
 // MÓDULO: REGISTRO DE CONSUMO DESARROLLO (LABORATORIO)
 // ====================================================================
 
-function abrirModalConsumoDesarrollo(codigoInsumo, descripcion, idInsumo) {
+function abrirModalConsumoDesarrollo(nombreColor, codigoInsumo, descripcion, idInsumo) {
     var np = $("#txtNP").val();
-    if (!np || np.trim() === "") {
-        Swal.fire("Aviso", "La receta debe tener un NP asignado para registrar consumos.", "warning");
-        return;
-    }
+    var idVisita = $("#hdnIdVisita").val();
+    //if (!np || np.trim() === "") {
+    //    Swal.fire("Aviso", "La receta debe tener un NP asignado para registrar consumos.", "warning");
+    //    return;
+    //}
 
+    $("#hdnColorDesarrollo").val(nombreColor);
     $("#hdnCodInsumoDesarrollo").val(codigoInsumo);
     $("#hdnIdInsumoDesarrollo").val(idInsumo);
-    $("#lblDescInsumoDesarrollo").text(descripcion);
+    $("#lblDescInsumoDesarrollo").html(descripcion + " <br><small style='color:#f39c12; font-weight:bold;'>Color: " + nombreColor + "</small>");
     $("#lblCodInsumoDesarrollo").text(codigoInsumo);
     $("#txtCantConsumoDesarrollo").val('');
     $("#txtMotivoConsumoDesarrollo").val('');
     $("#lblStockDisponibleDesarrollo").html('<i class="fa fa-spinner fa-spin text-primary"></i> <span style="font-size:16px;">Cargando...</span>');
 
     // Consultar stock
-    $.get("/Home/ObtenerSaldosDesarrolloInsumo", { np: np, codInsumo: codigoInsumo }, function (res) {
+    $.get("/Home/ObtenerSaldosDesarrolloInsumo", { np: np, codInsumo: codigoInsumo, nombreColor: nombreColor, idVisita: idVisita }, function (res) {
         var tbHistorial = $("#tbHistorialConsumoDesarrollo");
         tbHistorial.empty();
 
@@ -1146,6 +1148,8 @@ function guardarConsumoDesarrollo() {
     var obj = {
         NP: $("#txtNP").val(),
         CodInsumo: $("#hdnCodInsumoDesarrollo").val(),
+        NombreColor: $("#hdnColorDesarrollo").val(),
+        IdVisita: $("#hdnIdVisita").val() || null,
         Cantidad: cantidad,
         Motivo: $("#txtMotivoConsumoDesarrollo").val()
     };

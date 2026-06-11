@@ -458,13 +458,12 @@ namespace AppGenReceta.Web.Controllers
         // ENDPOINTS: REGISTRO DE CONSUMO DESARROLLO (MODAL)
         // =====================================================================
         [HttpGet]
-        public JsonResult ObtenerSaldosDesarrolloInsumo(string np, string codInsumo)
+        public JsonResult ObtenerSaldosDesarrolloInsumo(string np, string codInsumo, string nombreColor, int? idVisita = null)
         {
             try
             {
-                var bl = new Liquidacion_BL();
-                var data = bl.ObtenerSaldosPopup(np, codInsumo);
-                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+                var saldos = new Liquidacion_BL().ObtenerSaldosPopup(np, codInsumo, nombreColor, idVisita);
+                return Json(new { success = true, data = saldos }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {

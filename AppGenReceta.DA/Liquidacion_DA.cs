@@ -343,7 +343,7 @@ namespace AppGenReceta.DA
             {
                 SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_RegistrarOperacion", cnx);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NP", ope.NP);
+                cmd.Parameters.AddWithValue("@NP", ope.NP ?? "");
                 cmd.Parameters.AddWithValue("@CodInsumo", ope.CodInsumo);
                 cmd.Parameters.AddWithValue("@TipoOperacion", ope.TipoOperacion);
                 cmd.Parameters.AddWithValue("@Cantidad", ope.Cantidad);
@@ -352,6 +352,7 @@ namespace AppGenReceta.DA
                 cmd.Parameters.AddWithValue("@Usuario", ope.Usuario ?? "");
                 cmd.Parameters.AddWithValue("@FuenteConsumo", string.IsNullOrEmpty(ope.FuenteConsumo) ? "Stock Inicial" : ope.FuenteConsumo);
                 cmd.Parameters.AddWithValue("@NombreColor", string.IsNullOrEmpty(ope.NombreColor) ? (object)DBNull.Value : ope.NombreColor);
+                cmd.Parameters.AddWithValue("@IdVisita", ope.IdVisita.HasValue ? (object)ope.IdVisita.Value : DBNull.Value);
 
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
@@ -650,7 +651,7 @@ namespace AppGenReceta.DA
             return lista;
         }
 
-        public LIQ_SaldosPopupBE ObtenerSaldosPopup(string np, string codInsumo)
+        public LIQ_SaldosPopupBE ObtenerSaldosPopup(string np, string codInsumo, string nombreColor = null, int? idVisita = null)
         {
             LIQ_SaldosPopupBE saldos = new LIQ_SaldosPopupBE();
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
@@ -722,14 +723,22 @@ namespace AppGenReceta.DA
         FuenteConsumo,
         Cantidad
     FROM LIQ_OperacionesDetalle
-    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo')
+    WHERE CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo')
+      AND (@NombreColor IS NULL OR NombreColor = @NombreColor)
+      AND (
+            (@IdVisita IS NOT NULL AND IdVisita = @IdVisita)
+            OR 
+            (@IdVisita IS NULL AND NP = @NP)
+          )
     ORDER BY FechaRegistro DESC;
                 ";
                 
                 SqlCommand cmd = new SqlCommand(sql, cnx);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@NP", np);
+                cmd.Parameters.AddWithValue("@NP", np ?? "");
                 cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
+                cmd.Parameters.AddWithValue("@NombreColor", string.IsNullOrEmpty(nombreColor) ? (object)DBNull.Value : nombreColor);
+                cmd.Parameters.AddWithValue("@IdVisita", idVisita.HasValue ? (object)idVisita.Value : DBNull.Value);
                 cnx.Open();
                 using (SqlDataReader dr = cmd.ExecuteReader())
                 {
