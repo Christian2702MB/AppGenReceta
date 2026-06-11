@@ -513,7 +513,9 @@ $(document).ready(function () {
         if (!window.g_isReadOnly) {
             window.edicionHabilitada = true;
             inyectarPruebasDOM();
-            $(this).prop('disabled', true).html('<i class="fa fa-check"></i> Edición Habilitada');
+            $(this).prop('disabled', true)
+                   .css({'background-color': '#28a745', 'color': 'white', 'border-color': '#28a745'})
+                   .html('<i class="fa fa-check"></i> Edición Habilitada');
         }
     });
 
@@ -602,7 +604,7 @@ function actualizarVistaColores() {
         let htmlColor = window.g_isReadOnly ?
             `
             <div class="panel panel-info shadow-sm" style="margin-bottom: 15px;">
-                <div class="panel-heading" style="background-color: #f5f5f5; border-color: #bce8f1;">
+                <div class="panel-heading" style="background-color: #eaf3fa; border-bottom: 2px solid #bce8f1; padding: 12px 15px;">
                     <div class="row">
                         <div class="col-md-6">
                             <h4 class="panel-title" style="color: #31708f;">
@@ -617,14 +619,14 @@ function actualizarVistaColores() {
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
                                 <th style="width: 25%">Insumo</th>
-                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;">Cons. Desarrollo</th>
+                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;"><i class="fa fa-flask"></i> Cons. Desarrollo</th>
                                 <th style="width: 20%" class="text-right">STRIKE OFF</th>
                             </tr>
                         </thead>
                         <tbody>`
             : `
             <div class="panel panel-info shadow-sm" style="margin-bottom: 15px;">
-                <div class="panel-heading" style="background-color: #f5f5f5; border-color: #bce8f1;">
+                <div class="panel-heading" style="background-color: #eaf3fa; border-bottom: 2px solid #bce8f1; padding: 12px 15px;">
                     <div class="row">
                         <div class="col-md-6">
                             <h4 class="panel-title" style="color: #31708f;">
@@ -644,7 +646,7 @@ function actualizarVistaColores() {
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
                                 <th style="width: 25%">Insumo</th>
-                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;">Cons. Desarrollo</th>
+                                <th style="width: 15%" class="text-center bg-warning" style="color:#8a6d3b;"><i class="fa fa-flask"></i> Cons. Desarrollo</th>
                                 <th style="width: 20%" class="text-right">STRIKE OFF</th>
                                 <th style="width: 10%"></th>
                             </tr>
@@ -1108,9 +1110,9 @@ function abrirModalConsumoDesarrollo(nombreColor, codigoInsumo, descripcion, idI
                 res.data.HistorialConsumo.forEach(function (h) {
                     tbHistorial.append(
                         '<tr>' +
-                            '<td>' + h.Fecha + '</td>' +
-                            '<td>' + h.Usuario + '</td>' +
-                            '<td class="text-right"><strong>' + h.Cantidad.toFixed(2) + ' gr</strong></td>' +
+                            '<td class="text-center">' + h.Fecha + '</td>' +
+                            '<td class="text-center">' + h.Usuario + '</td>' +
+                            '<td class="text-center"><strong>' + h.Cantidad.toFixed(2) + ' gr</strong></td>' +
                         '</tr>'
                     );
                 });
