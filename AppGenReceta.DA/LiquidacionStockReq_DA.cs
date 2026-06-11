@@ -443,14 +443,25 @@ namespace AppGenReceta.DA
                     {
                         while (dr.Read())
                         {
+                            string codIns = dr["CodInsumo"].ToString();
+                            string nombreIns = dr["NombreInsumo"].ToString();
+                            string um = dr["UnidadMedida"].ToString();
+
+                            // Interceptar insumo ficticio de habilitación manual
+                            if (codIns == "HAB-000000")
+                            {
+                                nombreIns = "HABILITACIÓN MANUAL - SISTEMA";
+                                um = "UND";
+                            }
+
                             lista.Add(new LIQ_REQ_RecepcionDetalleBE
                             {
                                 IdRecepcionDetalle = Convert.ToInt32(dr["IdRecepcionDetalle"]),
                                 NumRequerimiento = Convert.ToInt32(dr["NumRequerimiento"]),
-                                CodInsumo = dr["CodInsumo"].ToString(),
-                                NombreInsumo = dr["NombreInsumo"].ToString(),
+                                CodInsumo = codIns,
+                                NombreInsumo = nombreIns,
                                 CantidadRecibida = Convert.ToDecimal(dr["CantidadRecibida"]),
-                                UnidadMedida = dr["UnidadMedida"].ToString(),
+                                UnidadMedida = um,
                                 Lote = dr["Lote"] != DBNull.Value ? dr["Lote"].ToString() : ""
                             });
                         }

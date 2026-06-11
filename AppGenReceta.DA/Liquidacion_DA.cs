@@ -214,6 +214,81 @@ namespace AppGenReceta.DA
         }
 
         /// <summary>
+        /// Obtiene una lista de NPs que tienen fórmula pero NO tienen recepción.
+        /// </summary>
+        public List<LIQ_NPSinRecepcionBE> ObtenerNPsSinRecepcion()
+        {
+            var lista = new List<LIQ_NPSinRecepcionBE>();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                string sql = @"
+                    SELECT F.NP, C.NombreColor AS Cliente, F.Estilo 
+                    FROM LIQ_Formulas F 
+                    LEFT JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula AND C.NombreColor <> ''
+                    WHERE F.Estado <> 'Eliminada'
+                      AND NOT EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP)
+                ";
+                using (SqlCommand cmd = new SqlCommand(sql, cnx))
+                {
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        var npSet = new HashSet<string>();
+                        while (dr.Read())
+                        {
+                            string np = dr["NP"].ToString();
+                            if (!npSet.Contains(np))
+                            {
+                                npSet.Add(np);
+                                lista.Add(new LIQ_NPSinRecepcionBE
+                                {
+                                    NP = np,
+                                    Cliente = dr["Cliente"]?.ToString(),
+                                    Estilo = dr["Estilo"]?.ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
+        /// <summary>
+        /// Crea una recepción en blanco para habilitar la NP en Control Operativo.
+        /// </summary>
+        public string CrearRecepcionBlanco(string np, string usuario)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_CrearRecepcionBlanco", cnx))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NP", np);
+                    cmd.Parameters.AddWithValue("@Usuario", usuario);
+
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            int numReq = Convert.ToInt32(dr["NumRequerimiento"]);
+                            if (numReq > 0)
+                            {
+                                return "OK|" + dr["Mensaje"].ToString();
+                            }
+                            else
+                            {
+                                return "ERROR|" + dr["Mensaje"].ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            return "ERROR|No se obtuvo respuesta del servidor.";
+        }
+
+        /// <summary>
         /// Actualiza una fórmula existente enviando la data como XML.
         /// </summary>
         public bool ActualizarFormula(LIQ_FormulaBE entidad)

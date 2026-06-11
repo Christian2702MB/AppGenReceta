@@ -6,6 +6,7 @@
 <!-- Carga de Recursos Específicos -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
     /* ESTANDARIZACION GLOBAL DE BOTONES UI/UX */
@@ -583,17 +584,18 @@
 
     <!-- CABECERA -->
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
-        <div style="flex: 1 1 auto; margin-bottom: 15px;">
+        <div style="margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #002D72; padding-left: 15px; letter-spacing: -0.5px;">
                 Control Operativo (NPs)
             </h1>
-            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Administre el registro diario de consumos, mermas, devoluciones y ejecute el cierre de las órdenes.</p>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Administre el registro diario de consumos, mermas, devoluciones<br/>y ejecute el cierre de las órdenes.</p>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; justify-content: flex-end;">
             <a href="@Url.Action("Index", "Liquidacion")" class="btn-header-back">
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
             </a>
+            <button class="btn-outline-hialpesa" onclick="abrirModalHabilitarNP()"><i class="fas fa-check-circle" style="color:#0ea5e9;"></i> Habilitar NP</button>
             <button class="btn-primary-hialpesa" onclick="abrirNuevaLiquidacion()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
         </div>
     </div>
@@ -1243,7 +1245,92 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- MODAL HABILITAR NP (RECEPCIÓN EN BLANCO) -->
+<div class="modal fade modal-custom" id="habilitarNPModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document" style="max-width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #0ea5e9;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><i class="fas fa-check-circle"></i> Habilitar NP para Control</h4>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Seleccione la NP (Fórmula) que desea habilitar en el panel de Control Operativo. Esto simulará una recepción automática en blanco.</p>
+                <div class="form-group">
+                    <label>Buscar NP <span style="color:red">*</span></label>
+                    <select class="form-control" id="ddlNPHabilitar" style="width: 100%;">
+                        <option value="">Seleccione una NP...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600; font-size: 13px;">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="habilitarNP()" style="background-color: #0ea5e9; border-color: #0ea5e9; border-radius: 6px; font-weight: 600; font-size: 13px;"><i class="fas fa-save"></i> Habilitar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
+    
+    // ── HABILITAR NP EN BLANCO ──
+    function abrirModalHabilitarNP() {
+        Swal.fire({ title: 'Cargando NPs...', didOpen: () => { Swal.showLoading(); } });
+        
+        $.get('@Url.Action("ObtenerNPsSinRecepcion", "Liquidacion")', function(res) {
+            Swal.close();
+            var $ddl = $("#ddlNPHabilitar");
+            $ddl.empty().append('<option value="">Seleccione una NP...</option>');
+            
+            if(res && res.length > 0) {
+                res.forEach(function(item) {
+                    $ddl.append('<option value="' + item.NP + '">' + item.NP + ' - ' + (item.Cliente || 'SIN CLIENTE') + ' (' + (item.Estilo || 'SIN ESTILO') + ')</option>');
+                });
+            } else {
+                $ddl.append('<option value="" disabled>No hay NPs pendientes de habilitar</option>');
+            }
+            
+            // Inicializar Select2
+            $ddl.select2({
+                dropdownParent: $('#habilitarNPModal'),
+                placeholder: 'Seleccione o busque una NP',
+                allowClear: true
+            });
+            
+            $("#habilitarNPModal").modal("show");
+        }).fail(function() {
+            Swal.fire('Error', 'No se pudieron cargar las NPs disponibles.', 'error');
+        });
+    }
+
+    function habilitarNP() {
+        var np = $("#ddlNPHabilitar").val();
+        if(!np) {
+            Swal.fire('Atención', 'Debe seleccionar una NP.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Habilitando...',
+            text: 'Registrando recepción en blanco',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.post('@Url.Action("HabilitarNP", "Liquidacion")', { np: np }, function(res) {
+            if(res.success) {
+                $("#habilitarNPModal").modal("hide");
+                Swal.fire('¡Éxito!', res.message, 'success').then(() => {
+                    cargarDataInicial();
+                });
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        }).fail(function() {
+            Swal.fire('Error', 'Problema de red al intentar habilitar.', 'error');
+        });
+    }
     
     // BASES DE DATOS FRONTEND (AHORA SE CARGAN VÍA AJAX)
     var activeLiquidations = {};

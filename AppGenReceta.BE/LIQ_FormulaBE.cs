@@ -129,4 +129,15 @@ namespace AppGenReceta.BE
         public string OperarioUDP { get; set; }
         public string FechaRegistro { get; set; }
     }
+
+    /// <summary>
+    /// DTO para la lista de NPs que tienen fórmula pero no tienen recepción.
+    /// </summary>
+    [Serializable]
+    public class LIQ_NPSinRecepcionBE
+    {
+        public string NP { get; set; }
+        public string Cliente { get; set; }
+        public string Estilo { get; set; }
+    }
 }

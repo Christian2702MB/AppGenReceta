@@ -234,6 +234,7 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+
         /// <summary>
         /// Elimina lógicamente una fórmula.
         /// </summary>
@@ -903,6 +904,42 @@ namespace AppGenReceta.Web.Controllers
             catch (Exception ex)
             {
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerNPsSinRecepcion()
+        {
+            try
+            {
+                var data = bl.ObtenerNPsSinRecepcion();
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult HabilitarNP(string np)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                string msj = bl.CrearRecepcionBlanco(np, usuario);
+                
+                if (msj.StartsWith("OK|"))
+                    return Json(new { success = true, message = msj.Substring(3) });
+                else
+                    return Json(new { success = false, message = msj.Substring(6) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

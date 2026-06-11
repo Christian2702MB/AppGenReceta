@@ -38,6 +38,24 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public List<LIQ_NPSinRecepcionBE> ObtenerNPsSinRecepcion()
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerNPsSinRecepcion();
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public string CrearRecepcionBlanco(string np, string usuario)
+        {
+            try
+            {
+                return new Liquidacion_DA().CrearRecepcionBlanco(np, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
         public bool ActualizarFormula(LIQ_FormulaBE entidad)
         {
             try
