@@ -39,12 +39,12 @@ $(document).ready(function () {
     if (modoQuery === 'NORMAL') {
         // Lógica para modo normal
         $("#rdoModoNormal").prop("checked", true);
-        $("#lblInfoModoRegistro").html('(Seleccione Cliente &rarr; Temporada &rarr; Estilo)');
+        $("#lblInfoModoRegistro").html('<i class="fa fa-info-circle text-primary"></i> <strong>Registro Manual:</strong> Seleccione Cliente &rarr; Temporada &rarr; Estilo.');
         $("#txtCliente, #txtTemporada").prop("disabled", false);
     } else if (modoQuery === 'ITEM') {
         // Lógica para modo Búsqueda por Item
         $("#rdoModoItem").prop("checked", true);
-        $("#lblInfoModoRegistro").html('(Busque directamente un <strong>Item</strong> [mín. 3 car.], los datos de cabecera se auto-rellenarán)');
+        $("#lblInfoModoRegistro").html('<i class="fa fa-magic text-success"></i> <strong>Autocompletado:</strong> Digite un Item (mín. 3 caracteres) para cargar los datos.');
         // Bloquear campos superiores; el punto de entrada es txtItem con Select2 AJAX
         $("#txtCliente, #txtTemporada, #txtEstilo, #txtEstiloPropio, #txtCombo").prop("disabled", true);
         // Deshabilitar Ubicación y Técnica en modo ITEM (se auto-rellenan al seleccionar Item)
@@ -52,7 +52,7 @@ $(document).ready(function () {
     } else {
         // Por defecto (incluyendo modoQuery === 'INVERSO' o vacío), modo INVERSO
         $("#rdoModoInverso").prop("checked", true);
-        $("#lblInfoModoRegistro").html('(Busque directamente un Estilo [mín. 4 letras], todo se auto-rellenará)');
+        $("#lblInfoModoRegistro").html('<i class="fa fa-magic text-warning"></i> <strong>Autocompletado:</strong> Digite un Estilo (mín. 4 caracteres) para cargar los datos.');
         $("#txtCliente, #txtTemporada").prop("disabled", true);
         // 13/05/2026: Deshabilitar Ubicación y Técnica en modo INVERSO (se auto-rellenan al seleccionar Item)
         $("#txtUbicacion, #txtTecnica").prop("disabled", true);

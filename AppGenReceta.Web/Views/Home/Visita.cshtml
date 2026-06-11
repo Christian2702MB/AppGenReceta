@@ -51,6 +51,23 @@
         font-size: 14px; /* Tamaño de fuente estándar */
     }
 
+    /* Estilos UI Experto para opacar radios inactivos conservando su color */
+    input[type="radio"] + span.label {
+        transition: all 0.2s ease-in-out;
+        display: inline-block;
+        padding: 5px 12px; /* Reducido ligeramente a petición del usuario */
+        border-radius: 4px; /* Opcional: para que las esquinas estén bien redondeadas */
+    }
+    input[type="radio"]:not(:checked) + span.label {
+        opacity: 0.4;
+        filter: saturate(60%);
+    }
+    input[type="radio"]:checked + span.label {
+        opacity: 1;
+        filter: saturate(100%);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+
     @@keyframes fadeSlideIn {
         from { opacity: 0; transform: translateY(-15px); }
         to { opacity: 1; transform: translateY(0); }
