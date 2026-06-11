@@ -634,7 +634,7 @@ function actualizarVistaColores() {
                             </h4>
                         </div>
                         <div class="col-md-6 text-right">
-                            <button type="button" class="btn btn-danger btn-xs" onclick="eliminarColor(${indexColor})">
+                            <button type="button" class="btn btn-danger btn-xs btn-danger-hover" onclick="eliminarColor(${indexColor})">
                                 <i class="fa fa-trash"></i> Eliminar Color
                             </button>
                         </div>
@@ -672,13 +672,13 @@ function actualizarVistaColores() {
                     </td>
                     <td><strong>${insumo.Descripcion}</strong></td>
                     <td class="text-center" style="background-color: #fcf8e3;">
-                        <button type="button" class="btn btn-warning btn-xs" onclick="abrirModalConsumoDesarrollo('${color.Nombre}', '${insumo.CodigoInsumo}', '${insumo.Descripcion}', ${insumo.IDInsumo || insumo.IdInsumo || 0})" title="Registrar Consumo">
+                        <button type="button" class="btn btn-warning btn-xs btn-pulse-flask" onclick="abrirModalConsumoDesarrollo('${color.Nombre}', '${insumo.CodigoInsumo}', '${insumo.Descripcion}', ${insumo.IDInsumo || insumo.IdInsumo || 0})" title="Registrar Consumo">
                             <i class="fa fa-flask"></i> <span class="badge" style="background-color: white; color: black; margin-left: 3px;">${(insumo.ConsumoDesarrollo || 0).toFixed(2)} gr</span>
                         </button>
                     </td>
                     <td class="text-right"><strong>${insumo.Cantidad.toFixed(2)}</strong></td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-link btn-xs text-danger" 
+                        <button type="button" class="btn btn-link btn-xs text-danger btn-delete-insumo" 
                                 onclick="eliminarInsumo(${indexColor}, ${indexInsumo})">
                             <i class="fa fa-times"></i>
                         </button>
