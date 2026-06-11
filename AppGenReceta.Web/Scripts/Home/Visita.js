@@ -1056,7 +1056,7 @@ function renderizarTabla() {
             htmlInsumos += `
                             <div class="alert alert-warning" style="padding:5px; margin-bottom:2px;">
                             <small><b>${ins.codigo}</b> - ${ins.descripcion} | <b>Cant:</b> ${parseFloat(ins.cantidad).toFixed(2)} </b> ${ins.unidades}</small>
-                            <button type="button" class="close" onclick="eliminarInsumo(${idx}, ${idxIns})">&times;</button>
+                            <button type="button" class="close btn-delete-insumo" onclick="eliminarInsumo(${idx}, ${idxIns})">&times;</button>
                         </div>`;
         });
         var claseActiva = (indexColorSeleccionado === idx) ? "success" : "";
@@ -1067,7 +1067,7 @@ function renderizarTabla() {
                 </td>
                 <td>${htmlInsumos || '<span class="text-muted">Sin insumos</span>'}</td>
                 <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarColor(${idx})">
+                    <button type="button" class="btn btn-danger btn-sm btn-danger-hover" onclick="eliminarColor(${idx})">
                         <i class="fa fa-trash-alt"></i>
                     </button>
                 </td>

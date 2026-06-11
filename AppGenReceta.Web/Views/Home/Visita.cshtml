@@ -41,33 +41,138 @@
         border: 1px solid #aaa !important;
         z-index: 1051; /* Por encima de otros elementos de Bootstrap */
     }
+
+    #btnRegistrarTodo, #btnLimpiar, #btnCancelarVisita {
+        display: inline-flex; /* Activa el alineamiento flexible */
+        align-items: center; /* Centra verticalmente icono y texto */
+        justify-content: center; /* Centra horizontalmente el contenido */
+        padding: 8px 16px; /* Da espacio interno uniforme reducido */
+        min-width: 125px; /* Tamaño consistente mínimo más proporcionado */
+        font-size: 14px; /* Tamaño de fuente estándar */
+    }
+
+    @@keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(-15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-animado {
+        animation: fadeSlideIn 0.5s ease-out forwards;
+    }
+
+    .form-control[readonly] {
+        background-color: #f8f9fa !important;
+        border-color: #e2e6ea !important;
+        color: #495057;
+        font-weight: 600;
+        box-shadow: none;
+    }
+    
+    label {
+        font-weight: 600;
+        color: #555;
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    /* Animaciones dinámicas para botones UX */
+    .btn-hover-fx {
+        transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    .btn-hover-fx:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2) !important;
+        filter: brightness(1.05);
+    }
+    .btn-hover-fx:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        filter: brightness(0.95);
+    }
+
+    /* Animación especial para botones acoplados (input-group) sin moverlos verticalmente */
+    .btn-group-hover-fx {
+        transition: all 0.2s ease !important;
+    }
+    .btn-group-hover-fx:hover {
+        filter: brightness(1.1);
+    }
+    .btn-group-hover-fx:active {
+        filter: brightness(0.9);
+        box-shadow: inset 0 3px 5px rgba(0,0,0,0.2) !important;
+    }
+    .btn-group-hover-fx:hover i {
+        transform: scale(1.2);
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Animación de expansión para el botón del matraz (Consumo Desarrollo) */
+    .btn-pulse-flask {
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease !important;
+    }
+    .btn-pulse-flask:hover {
+        transform: scale(1.12);
+        box-shadow: 0 5px 15px rgba(240, 173, 78, 0.4) !important;
+        z-index: 10;
+        position: relative;
+    }
+    .btn-pulse-flask:active {
+        transform: scale(0.95);
+    }
+
+    /* Animación para botones de peligro (Eliminar Color) */
+    .btn-danger-hover {
+        transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    .btn-danger-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3) !important;
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+    }
+    .btn-danger-hover:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2) !important;
+    }
+
+    /* Animación para eliminar insumo (cruz en la tabla) */
+    .btn-delete-insumo {
+        transition: transform 0.2s ease, color 0.2s ease !important;
+    }
+    .btn-delete-insumo:hover {
+        transform: scale(1.3);
+        color: #c82333 !important;
+    }
 </style>
 <div class="panel-body">
     @*<form action="@Url.Action("RegistrarVisitaCompleta", "Home")" method="post" id="formLibroVisita">*@
     <form id="formLibroVisita">
         <input type="hidden" id="hdnIdVisita" value="0" />
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 5px; border-bottom: 1px solid #07238a;">
-                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Datos de la Cabecera</span>
-                </h2>
+        <div class="panel panel-default shadow-sm panel-animado" style="border-top: 4px solid #07238a; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+            <div class="panel-body" style="background-color: #ffffff; padding: 15px 20px;">
+                <h4 style="margin-top: 0px; margin-bottom: 20px; color: #07238a; font-weight: bold; border-bottom: 1px solid #f0f2f5; padding-bottom: 10px; display: flex; align-items: center;">
+                    <i class="fa fa-clipboard-check" style="color: #17a2b8; margin-right: 8px;"></i> 
+                    Información General de la Receta <span class="label label-primary" style="margin-left: 10px; font-size: 11px; vertical-align: middle; background-color: #07238a; border-radius: 4px;">NUEVA RECETA</span>
+                </h4>
                 <div class="row">
                     <div class="col-xs-12 col-sm-12 mb-3">
-                        <div class="row align-items-center bg-light p-2 rounded border" style="margin-bottom: 5px; border-radius:4px; padding: 10px;">
-                            <div class="col-sm-2 text-right"><strong>Modo de Registro:</strong></div>
-                            <div class="col-sm-6">
-                                <label class="radio-inline mr-3" style="cursor:pointer; margin-right: 15px;">
+                        <div class="row bg-light p-2 rounded border" style="margin-bottom: 10px; border-radius:4px; padding: 10px 15px;">
+                            <div class="col-sm-12" style="margin-bottom: 8px;">
+                                <strong style="color: #495057; font-size: 14px;">Modo de Registro:</strong>
+                            </div>
+                            <div class="col-sm-12" style="display: flex; flex-wrap: wrap; align-items: center; gap: 15px;">
+                                <label class="radio-inline" style="cursor:pointer; margin: 0;">
                                     <input type="radio" name="rdoModoRegistro" id="rdoModoNormal" value="NORMAL" onchange="cambiarModoRegistro()"> <span class="label label-primary" style="font-size: 13px;">Proceso Clásico</span>
                                 </label>
-                                <label class="radio-inline mr-3" style="cursor:pointer; margin-right: 15px;">
+                                <label class="radio-inline" style="cursor:pointer; margin: 0;">
                                     <input type="radio" name="rdoModoRegistro" id="rdoModoInverso" value="INVERSO" checked="checked" onchange="cambiarModoRegistro()"> <span class="label label-warning" style="font-size: 13px;">Búsqueda por Estilo</span>
                                 </label>
-                                <label class="radio-inline" style="cursor:pointer;">
+                                <label class="radio-inline" style="cursor:pointer; margin: 0;">
                                     <input type="radio" name="rdoModoRegistro" id="rdoModoItem" value="ITEM" onchange="cambiarModoRegistro()"> <span class="label label-success" style="font-size: 13px;">Búsqueda por Item</span>
                                 </label>
-                            </div>
-                            <div class="col-sm-4 text-muted" id="lblInfoModoRegistro" style="font-size: 13px; font-style: italic;">
-                                (Seleccione Cliente &rarr; Temporada &rarr; Estilo)
+                                <span class="text-muted" id="lblInfoModoRegistro" style="font-size: 13px; font-style: italic;">
+                                    (Seleccione Cliente &rarr; Temporada &rarr; Estilo)
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -217,25 +322,30 @@
             </div>
         </div>
 
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Color Pantone</label>
-                        <input type="text" id="txtNuevoColor" class="form-control" placeholder="Ej: Rojo">
-                    </div>
-                    <div class="col-md-2">
-                        <label>&nbsp;</label>
-                        <button type="button" id="btnAgregarColor" class="btn btn-primary btn-block" onclick="agregarColor()">
-                            <i class="fa fa-plus mr-2"></i> Agregar Color
-                        </button>
+        <div class="panel panel-default shadow-sm panel-animado" style="border-top: 3px solid #f0ad4e; border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+            <div class="panel-heading" style="background-color: #fffaf0; padding: 10px 15px; border-bottom: 1px solid #fcf8e3;">
+                <h5 style="margin: 0; color: #d58512; font-weight: bold;"><i class="fa fa-plus-circle"></i> Agregar Elementos</h5>
+            </div>
+            <div class="panel-body" style="padding: 15px;">
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-md-6" style="border-right: 1px dashed #ddd;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="color: #d58512;">Nuevo Color Pantone:</label>
+                            <div class="input-group">
+                                <input type="text" id="txtNuevoColor" class="form-control" placeholder="Ej: Rojo">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-warning btn-group-hover-fx" id="btnAgregarColor" type="button"
+                                        onclick="agregarColor()" style="color: white; font-weight: bold;"><i class="fa fa-plus"></i> Crear Color</button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <hr />
 
                 <table id="tablaMaestra" class="table table-bordered">
-                    <thead style="background-color: #07238a; color: white;">
+                    <thead style="background-color: #f4f6f9; color: #333; border-top: 3px solid #07238a; border-bottom: 2px solid #dee2e6;">
                         <tr>
                             <th>Color Pantone (Clic para seleccionar)</th>
                             <th>Insumos del Color</th>
@@ -246,35 +356,33 @@
                     </tbody>
                 </table>
 
-                <div id="panelInsumos" class="panel panel-info" style="display:none; border: 2px solid #07238a;">
-                    <div class="panel-heading">Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
-                    <div class="panel-body">
+                <div id="panelInsumos" class="panel panel-info shadow-sm panel-animado" style="display:none; border: 2px solid #17a2b8; border-radius: 6px; overflow: hidden; margin-top: 15px;">
+                    <div class="panel-heading" style="background-color: #eaf3fa; padding: 10px 15px; border-bottom: 1px solid #bce8f1; color: #31708f;">
+                        <h5 style="margin: 0; font-weight: bold;"><i class="fa fa-tint"></i> Agregando Insumo para: <strong id="lblColorActivo"></strong></h5>
+                    </div>
+                    <div class="panel-body" style="background-color: #fdfdfd; padding: 15px;">
                         <div class="row">
-                            @*<div class="col-md-3">
-                                    <label>Código Insumo</label>
-                                    <input type="text" name="cboInsumo" class="form-control" value="" id="cboInsumo" readonly />
-                                </div>*@
                             <div class="col-md-8">
-                                <div class="form-group">
+                                <div class="form-group" style="margin-bottom: 0;">
                                     <label>Descripción Insumo:</label>
-                                    <select id="txtDescInsumo" name="txtDescInsumo" class="form-control" style="background-color: #eee;" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
+                                    <select id="txtDescInsumo" name="txtDescInsumo" class="form-control" style="background-color: #fff;" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
                                         <option value="">Seleccione o busque un insumo...</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>Stock</label>
-                                    <input type="text" name="txtStock" class="form-control" value="" id="txtStock" readonly />
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Stock Disp.:</label>
+                                    <input type="text" name="txtStock" class="form-control" value="" id="txtStock" readonly style="text-align: right; font-weight: bold; color: #28a745; background-color: #f4f6f9 !important;" />
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>Peso (gr)</label>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Peso (gr):</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" id="txtCantInsumo" class="form-control" placeholder="0.00" min="0">
+                                        <input type="number" step="0.01" id="txtCantInsumo" class="form-control" placeholder="0.00" min="0" style="text-align: right; border-color: #28a745;">
                                         <span class="input-group-btn">
-                                            <button type="button" id="btnAgregarInsumo" class="btn btn-success" onclick="agregarInsumo()" title="Agregar Insumo al Color Seleccionado" style="height: 34px;">
+                                            <button type="button" id="btnAgregarInsumo" class="btn btn-success btn-group-hover-fx" onclick="agregarInsumo()" title="Agregar Insumo al Color Seleccionado" style="font-weight: bold;">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </span>
@@ -290,26 +398,16 @@
 
         @Html.Hidden("URL_Registrar", Url.Action("RegistrarVisitaCompleta", "Home"))
 
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-xs-12 col-sm-4" style="text-align: right">
-                        <div class="form-group">
-                            <a id="btnRegistrarTodo" class="btn btn-primary px-4 shadow-sm" onclick="guardarRecetaCompleta()"><i class="fa fa-check mr-2"></i> Registrar</a>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-4" style="text-align: center">
-                        <div class="form-group">
-                            <a id="btnLimpiar" class="btn btn-warning px-4 shadow-sm text-white" onclick="location.reload();"><i class="fas fa-broom mr-2"></i> Limpiar</a>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-4">
-                        <div class="form-group" style="text-align: left">
-                            <a id="btnCancelarVisita" class="btn btn-danger px-4 shadow-sm"><i class="fa fa-times mr-2"></i> Cancelar</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="form-group panel-animado" style="margin-top: 20px; margin-bottom: 40px; text-align: right; border-top: 1px solid #e0e0e0; padding-top: 25px;">
+            <a id="btnCancelarVisita" class="btn btn-default shadow-sm btn-hover-fx" style="margin-right: 15px; font-weight: bold; color: #666; border: 1px solid #ccc; cursor: pointer;">
+                <i class="fa fa-times" style="margin-right: 6px;"></i> Cancelar
+            </a>
+            <a id="btnLimpiar" class="btn btn-warning shadow-sm btn-hover-fx" onclick="location.reload();" style="margin-right: 15px; font-weight: bold; color: white; cursor: pointer;">
+                <i class="fas fa-eraser" style="margin-right: 6px;"></i> Limpiar
+            </a>
+            <a id="btnRegistrarTodo" class="btn btn-primary shadow-sm btn-hover-fx" onclick="guardarRecetaCompleta()" style="font-weight: bold; background-color: #07238a; border-color: #07238a; cursor: pointer;">
+                <i class="fa fa-save" style="margin-right: 6px;"></i> Registrar
+            </a>
         </div>
     </form>
 
@@ -317,7 +415,7 @@
     <div class="modal fade" id="modalConsumoDesarrollo" tabindex="-1" role="dialog" aria-labelledby="modalConsumoDesarrolloLabel" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header" style="background-color: #07238a; color: white;">
+                <div class="modal-header" style="background-color: #e67e22; color: white;">
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 1; color: white;">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -327,31 +425,31 @@
                     <input type="hidden" id="hdnCodInsumoDesarrollo" />
                     <input type="hidden" id="hdnIdInsumoDesarrollo" />
                     
-                    <div class="alert alert-info text-center" style="margin-bottom: 15px; padding: 10px;">
-                        <strong>Insumo:</strong> <span id="lblDescInsumoDesarrollo"></span><br />
-                        <small id="lblCodInsumoDesarrollo" class="text-muted"></small>
+                    <div class="text-center" style="margin-bottom: 15px; padding: 12px; background-color: #fdf5e6; border-left: 4px solid #e67e22; border-radius: 4px;">
+                        <span style="font-size: 15px; color: #333;"><strong>Insumo:</strong> <span id="lblDescInsumoDesarrollo"></span></span><br />
+                        <span id="lblCodInsumoDesarrollo" class="text-muted" style="font-size: 13px;"></span>
                     </div>
 
-                    <div class="card mb-3" style="border: 2px solid #07238a; border-radius: 5px; margin-bottom: 15px;">
+                    <div class="card mb-3 shadow-sm" style="border: 1px solid #f0ad4e; border-radius: 8px; margin-bottom: 15px; background-color: #fffcf5;">
                         <div class="card-body text-center" style="padding: 15px;">
-                            <h5 style="color: #07238a; font-weight: bold; margin-top: 0;">STOCK DISPONIBLE</h5>
-                            <h3 class="m-0 text-success" id="lblStockDisponibleDesarrollo" style="font-weight: bold; margin-bottom: 0;">0.00 gr</h3>
+                            <h5 style="color: #d58512; font-weight: bold; margin-top: 0; font-size: 13px; letter-spacing: 1px;">STOCK DISPONIBLE</h5>
+                            <h3 class="m-0 text-success" id="lblStockDisponibleDesarrollo" style="font-weight: bold; margin-bottom: 0; font-size: 28px;">0.00 gr</h3>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Cantidad a Consumir (gr): <span class="text-danger">*</span></label>
-                        <input type="number" id="txtCantConsumoDesarrollo" class="form-control text-center" step="0.01" min="0.01" placeholder="0.00" style="font-size: 18px; font-weight: bold;">
+                        <label style="color: #555; font-weight: 600;">Cantidad a Consumir (gr): <span class="text-danger">*</span></label>
+                        <input type="number" id="txtCantConsumoDesarrollo" class="form-control text-center input-lg" step="0.01" min="0.01" placeholder="0.00" style="font-size: 22px; font-weight: bold; color: #d58512; border: 2px solid #f0ad4e; box-shadow: inset 0 1px 1px rgba(0,0,0,.075);">
                     </div>
                     
                     <div class="form-group">
-                        <label>Motivo / Observación (Opcional):</label>
+                        <label style="color: #555; font-weight: 600;">Motivo / Observación (Opcional):</label>
                         <textarea id="txtMotivoConsumoDesarrollo" class="form-control" rows="2" placeholder="Detalles del consumo..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="guardarConsumoDesarrollo()" style="background-color: #07238a;"><i class="fa fa-save"></i> Registrar Consumo</button>
+                    <button type="button" class="btn btn-default btn-hover-fx" data-dismiss="modal"><i class="fa fa-times"></i> Cancelar</button>
+                    <button type="button" class="btn btn-warning btn-hover-fx" onclick="guardarConsumoDesarrollo()" style="color: white; font-weight: bold;"><i class="fa fa-save"></i> Registrar Consumo</button>
                 </div>
             </div>
         </div>
