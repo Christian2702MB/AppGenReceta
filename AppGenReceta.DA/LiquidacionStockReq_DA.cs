@@ -477,7 +477,15 @@ namespace AppGenReceta.DA
                         (ISNULL(Op.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                         (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
-                        ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Consumo Desarrollo', 'Ajuste')), 103), '') + ' | ' + ISNULL(F.Cliente, '') + ' | ' + ISNULL(F.Estilo, '') + ' | ' + O.NP + ' | ' + ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
+                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN
+                            ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.TipoOperacion = 'Consumo Desarrollo'), 103), '')
+                        ELSE
+                            ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '')
+                        END + ' | ' + 
+                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'DESARROLLO' ELSE ISNULL(F.Cliente, '') END + ' | ' + 
+                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'MUESTRA' ELSE ISNULL(F.Estilo, '') END + ' | ' + 
+                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'VARIOS' ELSE O.NP END + ' | ' + 
+                        ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
                         (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
                     FROM LIQ_STK_StockInsumos I
                     LEFT JOIN (

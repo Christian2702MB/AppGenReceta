@@ -611,7 +611,7 @@ namespace AppGenReceta.Web.Controllers
                         
                         // Salidas (Multilínea)
                         decimal totSalidas = item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral;
-                        string salidasStr = $"{totSalidas.ToString("N2")}\nConsumos: {item.ConsumosTotales.ToString("N2")} | Ajustes: {item.AjustesTotales.ToString("N2")}\nDev. Central: {item.DevolucionesCentral.ToString("N2")}";
+                        string salidasStr = $"{totSalidas.ToString("N2")}\nConsumos: {item.ConsumosTotales.ToString("N2")} (Pro: {item.ConsumosProduccion.ToString("N2")} | Lab: {item.ConsumosDesarrollo.ToString("N2")})\nAjustes: {item.AjustesTotales.ToString("N2")} | Dev. Central: {item.DevolucionesCentral.ToString("N2")}";
                         ws.Cells[rowIndex, 5].Value = salidasStr;
                         ws.Cells[rowIndex, 5].Style.WrapText = true;
                         ws.Cells[rowIndex, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
