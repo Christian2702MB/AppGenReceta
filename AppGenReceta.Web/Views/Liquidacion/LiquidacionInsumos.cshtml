@@ -1029,6 +1029,7 @@
                                 <th style="font-size: 11px;">Fecha</th>
                                 <th style="font-size: 11px;">Usuario</th>
                                 <th style="font-size: 11px;">Fuente</th>
+                                <th style="font-size: 11px; width: 15%;">NP</th>
                                 <th style="font-size: 11px;">Motivo</th>
                                 <th class="text-right" style="font-size: 11px;">Cantidad (g)</th>
                             </tr>
@@ -1047,6 +1048,7 @@
                                 <th style="font-size: 11px;">Fecha</th>
                                 <th style="font-size: 11px;">Usuario</th>
                                 <th style="font-size: 11px;">Fuente</th>
+                                <th style="font-size: 11px; width: 15%;">NP</th>
                                 <th style="font-size: 11px;">Motivo</th>
                                 <th class="text-right" style="font-size: 11px;">Cantidad (g)</th>
                             </tr>
@@ -2370,8 +2372,8 @@
                                 <tr>
                                     <td>${op.Fecha}</td>
                                     <td>${op.Usuario}</td>
-                                    <td>${op.Fuente}</td>
-                                    <td class="text-right text-primary"><strong>${op.Cantidad.toFixed(2)}</strong></td>
+                                    <td>${(op.Fuente || '').replace('Stock Merma (', 'Stock Merma<br>(')}</td>
+                                      <td class="text-right text-primary"><strong>${op.Cantidad.toFixed(2)}</strong></td>
                                 </tr>
                             `);
                         });
@@ -2529,9 +2531,9 @@
                     var row = `<tr>
                         <td>${item.FechaRegistro}</td>
                         <td>${item.UsuarioRegistro}</td>
-                        <td>${item.Fuente || '-'}</td>
-                        <td>${item.Motivo || '-'}</td>
-                        <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
+                        <td>${(item.Fuente || '-').replace('Stock Merma (', 'Stock Merma<br>(')}</td>
+                          <td>${item.Motivo || '-'}</td>
+                          <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
                     </tr>`;
                     $tbody.append(row);
                 });
@@ -2878,8 +2880,8 @@
 
     function abrirHistorialMerma(codigoMerma) {
         $("#lblHistorialUsoMermaCodigo").text(codigoMerma);
-        $("#tbodyHistorialUsoMermaConsumo").html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
-        $("#tbodyHistorialUsoMermaAjuste").html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+        $("#tbodyHistorialUsoMermaConsumo").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+        $("#tbodyHistorialUsoMermaAjuste").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
         
         $("#historialUsoMermaModal").modal("show");
 
@@ -2893,6 +2895,7 @@
                         <td>${item.Fecha}</td>
                         <td>${item.Usuario}</td>
                         <td>${item.Fuente}</td>
+                        <td><strong>${item.NP || '-'}</strong></td>
                         <td>${item.Motivo}</td>
                         <td class="text-right"><strong>${item.Cantidad.toFixed(2)}</strong></td>
                     </tr>`;
@@ -2905,16 +2908,16 @@
                 });
 
                 if (consumosHtml === '') {
-                    consumosHtml = '<tr><td colspan="5" class="text-center text-muted">No hay consumos registrados para esta merma.</td></tr>';
+                    consumosHtml = '<tr><td colspan="6" class="text-center text-muted">No hay consumos registrados para esta merma.</td></tr>';
                 }
                 if (ajustesHtml === '') {
-                    ajustesHtml = '<tr><td colspan="5" class="text-center text-muted">No hay ajustes registrados para esta merma.</td></tr>';
+                    ajustesHtml = '<tr><td colspan="6" class="text-center text-muted">No hay ajustes registrados para esta merma.</td></tr>';
                 }
 
                 $("#tbodyHistorialUsoMermaConsumo").html(consumosHtml);
                 $("#tbodyHistorialUsoMermaAjuste").html(ajustesHtml);
             } else {
-                var errRow = '<tr><td colspan="5" class="text-center text-danger">Error al cargar historial</td></tr>';
+                var errRow = '<tr><td colspan="6" class="text-center text-danger">Error al cargar historial</td></tr>';
                 $("#tbodyHistorialUsoMermaConsumo").html(errRow);
                 $("#tbodyHistorialUsoMermaAjuste").html(errRow);
                 console.error("Error obteniendo historial de merma:", response.error);

@@ -983,6 +983,7 @@ namespace AppGenReceta.DA
                             FechaRegistro, 
                             UsuarioRegistro, 
                             FuenteConsumo, 
+                            NP,
                             Cantidad, 
                             Motivo,
                             TipoOperacion
@@ -1005,6 +1006,7 @@ namespace AppGenReceta.DA
                                 Fecha = dr["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "",
                                 Usuario = dr["UsuarioRegistro"].ToString(),
                                 Fuente = dr["FuenteConsumo"].ToString(),
+                                NP = dr["NP"].ToString(),
                                 Cantidad = Convert.ToDecimal(dr["Cantidad"]),
                                 Motivo = dr["Motivo"].ToString(),
                                 TipoOperacion = dr["TipoOperacion"].ToString()
