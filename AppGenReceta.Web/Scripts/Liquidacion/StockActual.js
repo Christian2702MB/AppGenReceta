@@ -330,9 +330,16 @@ $(document).ready(function () {
         data.forEach(function(row) {
             var tr = $('<tr></tr>');
             
+            var codigoInsumo = row['Código'] || '';
+            var isMerma = codigoInsumo.startsWith('MER-');
+            var desc = row['Insumo'] || '';
+            if (isMerma) {
+                desc += ' <span class="badge" style="background-color: #8e44ad; color: white; font-size: 0.8rem; margin-left: 8px; vertical-align: middle;"><i class="fas fa-recycle" style="margin-right:3px;"></i>MERMA</span>';
+            }
+
             // Celdas Fijas
-            tr.append('<td class="text-center align-middle" style="position: sticky; left: 0; z-index: 2; background-color: #fff; min-width: 100px; max-width: 100px;"><div style="font-weight: 800; font-size: 1.1rem;" class="text-primary">' + (row['Código'] || '') + '</div></td>');
-            tr.append('<td class="align-middle" style="position: sticky; left: 100px; z-index: 2; background-color: #fff; font-size: 1.1rem; min-width: 250px; max-width: 250px; white-space: normal; word-wrap: break-word;">' + (row['Insumo'] || '') + '</td>');
+            tr.append('<td class="text-center align-middle" style="position: sticky; left: 0; z-index: 2; background-color: #fff; min-width: 100px; max-width: 100px;"><div style="font-weight: 800; font-size: 1.1rem;" class="text-primary">' + codigoInsumo + '</div></td>');
+            tr.append('<td class="align-middle" style="position: sticky; left: 100px; z-index: 2; background-color: #fff; font-size: 1.1rem; min-width: 250px; max-width: 250px; white-space: normal; word-wrap: break-word;">' + desc + '</td>');
             
             var stockReal = row['Stock Real'] !== null && row['Stock Real'] !== undefined ? parseFloat(row['Stock Real']) : 0;
             tr.append('<td class="text-right align-middle" style="position: sticky; left: 350px; z-index: 2; background-color: #fff; text-align: right !important; min-width: 110px; max-width: 110px;"><div style="font-weight: 800; font-size: 1.1rem; color: #2e7d32;">' + stockReal.toFixed(2) + '</div></td>');

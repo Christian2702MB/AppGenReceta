@@ -523,40 +523,79 @@ namespace AppGenReceta.DA
             {
                 string sql = @"
                     SET ARITHABORT ON;
-                    SELECT 
-                        I.CodInsumo AS [Código],
-                        I.Descripcion AS [Insumo],
-                        (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
-                        (ISNULL(Op.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
-                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN
-                            ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.TipoOperacion = 'Consumo Desarrollo'), 103), '')
-                        ELSE
-                            ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '')
-                        END + ' | ' + 
-                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'DESARROLLO' ELSE ISNULL(F.Cliente, '') END + ' | ' + 
-                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'MUESTRA' ELSE ISNULL(F.Estilo, '') END + ' | ' + 
-                        CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'VARIOS' ELSE O.NP END + ' | ' + 
-                        ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
-                        (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
-                    FROM LIQ_STK_StockInsumos I
-                    LEFT JOIN (
-                        SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
-                        FROM LIQ_REQ_RecepcionesDetalle GROUP BY CodInsumo
-                    ) R ON I.CodInsumo = R.CodInsumo
-                    LEFT JOIN (
-                        SELECT CodInsumo,
-                               SUM(CASE WHEN TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
-                        FROM LIQ_OperacionesDetalle GROUP BY CodInsumo
-                    ) Op ON I.CodInsumo = Op.CodInsumo
-                    INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
-                    LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
-                    WHERE O.TipoOperacion IN ('Consumo', 'Consumo Desarrollo', 'Ajuste') AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')
-                    ORDER BY I.Descripcion ASC, PivotCol ASC
+                    WITH CTE_Insumos AS (
+                        SELECT 
+                            1 AS OrdenFila,
+                            I.CodInsumo AS [Código],
+                            I.Descripcion AS [Insumo],
+                            (ISNULL(I.StockActual, 0) + ISNULL(R.StockRecibido, 0) - 
+                            (ISNULL(Op.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                            (ISNULL(Op.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                            (ISNULL(Op.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS [Stock Real],
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN
+                                ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.TipoOperacion = 'Consumo Desarrollo'), 103), '')
+                            ELSE
+                                ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '')
+                            END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'DESARROLLO' ELSE ISNULL(F.Cliente, '') END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'MUESTRA' ELSE ISNULL(F.Estilo, '') END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'VARIOS' ELSE O.NP END + ' | ' + 
+                            ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
+                            (O.Cantidad / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) AS Cantidad
+                        FROM LIQ_STK_StockInsumos I
+                        LEFT JOIN (
+                            SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
+                            FROM LIQ_REQ_RecepcionesDetalle GROUP BY CodInsumo
+                        ) R ON I.CodInsumo = R.CodInsumo
+                        LEFT JOIN (
+                            SELECT CodInsumo,
+                                   SUM(CASE WHEN TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                            FROM LIQ_OperacionesDetalle GROUP BY CodInsumo
+                        ) Op ON I.CodInsumo = Op.CodInsumo
+                        INNER JOIN LIQ_OperacionesDetalle O ON I.CodInsumo = O.CodInsumo
+                        LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
+                        WHERE O.TipoOperacion IN ('Consumo', 'Consumo Desarrollo', 'Ajuste') AND O.FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')
+                    ),
+                    CTE_Mermas AS (
+                        SELECT 
+                            2 AS OrdenFila,
+                            M.CodigoMerma AS [Código],
+                            M.NombreColor + ' (NP: ' + M.NP + ')' AS [Insumo],
+                            CAST((M.Gramos - ISNULL(Op.ConsumosTotales, 0) - ISNULL(Op.AjustesTotales, 0)) / 1000.0 AS DECIMAL(18,4)) AS [Stock Real],
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN
+                                ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.TipoOperacion = 'Consumo Desarrollo'), 103), '')
+                            ELSE
+                                ISNULL(CONVERT(varchar, (SELECT MAX(FechaRegistro) FROM LIQ_OperacionesDetalle O2 WHERE O2.NP = O.NP AND O2.TipoOperacion IN ('Consumo', 'Ajuste')), 103), '')
+                            END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'DESARROLLO' ELSE ISNULL(F.Cliente, '') END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'MUESTRA' ELSE ISNULL(F.Estilo, '') END + ' | ' + 
+                            CASE WHEN O.TipoOperacion = 'Consumo Desarrollo' THEN 'VARIOS' ELSE O.NP END + ' | ' + 
+                            ISNULL(O.NombreColor, 'SIN COLOR') AS PivotCol,
+                            (O.Cantidad / 1000.0) AS Cantidad
+                        FROM LIQ_MER_MermasColor M
+                        LEFT JOIN (
+                            SELECT MermaReutilizada, 
+                                   SUM(CASE WHEN TipoOperacion = 'Consumo' THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste' THEN Cantidad ELSE 0 END) AS AjustesTotales
+                            FROM LIQ_OperacionesDetalle
+                            WHERE (TipoOperacion = 'Consumo' OR TipoOperacion = 'Ajuste') AND FuenteConsumo = 'Stock Merma'
+                            GROUP BY MermaReutilizada
+                        ) Op ON M.CodigoMerma = Op.MermaReutilizada
+                        INNER JOIN LIQ_OperacionesDetalle O ON M.CodigoMerma = O.MermaReutilizada
+                        LEFT JOIN LIQ_Formulas F ON O.NP = F.NP
+                        WHERE O.TipoOperacion = 'Consumo' AND O.FuenteConsumo = 'Stock Merma'
+                          AND M.FechaVencimiento IS NOT NULL 
+                          AND M.Gramos > 0
+                          AND CAST(M.FechaVencimiento AS DATE) >= CAST(GETDATE() AS DATE)
+                          AND CAST(M.Gramos - ISNULL(Op.ConsumosTotales, 0) - ISNULL(Op.AjustesTotales, 0) AS DECIMAL(18,2)) > 0
+                    )
+                    SELECT * FROM CTE_Insumos
+                    UNION ALL
+                    SELECT * FROM CTE_Mermas
+                    ORDER BY OrdenFila ASC, [Insumo] ASC, PivotCol ASC
                 ";
 
                 using (SqlCommand cmd = new SqlCommand(sql, cn))
