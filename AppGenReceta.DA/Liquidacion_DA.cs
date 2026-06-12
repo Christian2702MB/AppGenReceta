@@ -540,7 +540,7 @@ namespace AppGenReceta.DA
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Central%'), 0) AS DevueltoCentral,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Operativo%'), 0) AS DevueltoOperativo,
             ISNULL((SELECT SUM(Gramos) FROM LIQ_MER_MermasColor WHERE NP = F.NP AND NombreColor = C.NombreColor), 0) AS Merma,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor), 0) AS Ajuste,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor AND FuenteConsumo != 'Stock Merma'), 0) AS Ajuste,
             
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) AS ConsumidoInicial,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitud,
@@ -821,7 +821,11 @@ namespace AppGenReceta.DA
     SELECT 
         FechaRegistro,
         UsuarioRegistro,
-        FuenteConsumo,
+        CASE 
+            WHEN ISNULL(FuenteConsumo, '') = 'Stock Merma' AND ISNULL(MermaReutilizada, '') != '' 
+            THEN 'Stock Merma (' + MermaReutilizada + ')'
+            ELSE ISNULL(FuenteConsumo, 'Sin especificar')
+        END AS FuenteConsumo,
         Cantidad
     FROM LIQ_OperacionesDetalle
     WHERE CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo')
@@ -1055,8 +1059,28 @@ namespace AppGenReceta.DA
             {
                 using (SqlConnection cnx = new SqlConnection(ConnectionString))
                 {
-                    SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_ObtenerAjustesPorInsumo", cnx);
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    string sql = @"
+                        SELECT 
+                            IdOperacion AS IdAjuste,
+                            Cantidad,
+                            Motivo,
+                            CASE 
+                                WHEN ISNULL(FuenteConsumo, '') = 'Stock Merma' AND ISNULL(MermaReutilizada, '') != '' 
+                                THEN 'Stock Merma (' + MermaReutilizada + ')'
+                                ELSE ISNULL(FuenteConsumo, 'Sin especificar')
+                            END AS Fuente,
+                            FechaRegistro,
+                            UsuarioRegistro
+                        FROM 
+                            LIQ_OperacionesDetalle
+                        WHERE 
+                            TipoOperacion = 'Ajuste'
+                            AND NP = @NP 
+                            AND CodInsumo = @CodInsumo
+                        ORDER BY 
+                            FechaRegistro DESC;";
+                    SqlCommand cmd = new SqlCommand(sql, cnx);
+                    cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@NP", np);
                     cmd.Parameters.AddWithValue("@CodInsumo", codInsumo);
                     cnx.Open();

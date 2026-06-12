@@ -21,7 +21,11 @@ BEGIN
         IdOperacion AS IdAjuste,
         Cantidad,
         Motivo,
-        ISNULL(FuenteConsumo, 'Sin especificar') AS Fuente,
+        CASE 
+            WHEN ISNULL(FuenteConsumo, '') = 'Stock Merma' AND ISNULL(MermaReutilizada, '') != '' 
+            THEN 'Stock Merma (' + MermaReutilizada + ')'
+            ELSE ISNULL(FuenteConsumo, 'Sin especificar')
+        END AS Fuente,
         FechaRegistro,
         UsuarioRegistro
     FROM 
