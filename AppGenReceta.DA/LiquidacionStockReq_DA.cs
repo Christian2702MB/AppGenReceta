@@ -18,73 +18,114 @@ namespace AppGenReceta.DA
             {
                 string sql = @"
                     SET ARITHABORT ON;
-                    SELECT 
-                        I.CodInsumo,
-                        I.Descripcion,
-                        I.UnidadMedida,
-                        CONVERT(VARCHAR(10), I.FechaUltimaActualizacion, 103) + ' ' + CONVERT(VARCHAR(8), I.FechaUltimaActualizacion, 108) AS FechaModificacion,
-                        ISNULL(I.StockActual, 0) AS StockInicialOriginal,
-                        ISNULL(R.StockRecibido, 0) AS StockRecibidoOriginal,
-                        ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosTotales,
-                        ISNULL(O.ConsumosProduccion, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosProduccion,
-                        ISNULL(O.ConsumosDesarrollo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosDesarrollo,
-                        ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
-                        ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
-                        ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
-                        
-                        -- Cálculos Netos Internos
-                        (ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS InicialNeto,
-                        (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS RecibidoNeto,
-
-                        -- Stock Actual (Se anula DevolucionOperativo al usar los netos)
-                        ((ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) + 
-                        (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) - 
-                        (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
-                        (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual,
-                        
-                        -- Stock Pendiente de Liquidar
-                        ISNULL(Pendientes.SaldoPendiente, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS StockPorLiquidar
-                    FROM LIQ_STK_StockInsumos I
-                    LEFT JOIN (
-                        SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
-                        FROM LIQ_REQ_RecepcionesDetalle
-                        GROUP BY CodInsumo
-                    ) R ON I.CodInsumo = R.CodInsumo
-                    LEFT JOIN (
-                        SELECT CodInsumo,
-                               SUM(CASE WHEN TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosProduccion,
-                               SUM(CASE WHEN TipoOperacion = 'Consumo Desarrollo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosDesarrollo,
-                               SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
-                               SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
-                        FROM LIQ_OperacionesDetalle
-                        GROUP BY CodInsumo
-                    ) O ON I.CodInsumo = O.CodInsumo
-                    LEFT JOIN (
+                    WITH CTE_Insumos AS (
                         SELECT 
-                            Base.CodInsumo,
-                            SUM(Base.Recibido - Base.Consumido - Base.Ajustado - Base.Devuelto) AS SaldoPendiente
-                        FROM (
+                            1 AS OrdenFila,
+                            I.CodInsumo,
+                            I.Descripcion,
+                            I.UnidadMedida,
+                            CONVERT(VARCHAR(10), I.FechaUltimaActualizacion, 103) + ' ' + CONVERT(VARCHAR(8), I.FechaUltimaActualizacion, 108) AS FechaModificacion,
+                            ISNULL(I.StockActual, 0) AS StockInicialOriginal,
+                            ISNULL(R.StockRecibido, 0) AS StockRecibidoOriginal,
+                            ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosTotales,
+                            ISNULL(O.ConsumosProduccion, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosProduccion,
+                            ISNULL(O.ConsumosDesarrollo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS ConsumosDesarrollo,
+                            ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
+                            ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
+                            ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
+                            
+                            -- Cálculos Netos Internos
+                            (ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS InicialNeto,
+                            (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS RecibidoNeto,
+
+                            -- Stock Actual (Se anula DevolucionOperativo al usar los netos)
+                            ((ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) + 
+                            (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) - 
+                            (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                            (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                            (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual,
+                            
+                            -- Stock Pendiente de Liquidar
+                            ISNULL(Pendientes.SaldoPendiente, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS StockPorLiquidar
+                        FROM LIQ_STK_StockInsumos I
+                        LEFT JOIN (
+                            SELECT CodInsumo, SUM(CantidadRecibida) AS StockRecibido
+                            FROM LIQ_REQ_RecepcionesDetalle
+                            GROUP BY CodInsumo
+                        ) R ON I.CodInsumo = R.CodInsumo
+                        LEFT JOIN (
+                            SELECT CodInsumo,
+                                   SUM(CASE WHEN TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosProduccion,
+                                   SUM(CASE WHEN TipoOperacion = 'Consumo Desarrollo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosDesarrollo,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
+                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                            FROM LIQ_OperacionesDetalle
+                            GROUP BY CodInsumo
+                        ) O ON I.CodInsumo = O.CodInsumo
+                        LEFT JOIN (
                             SELECT 
-                                I.CodigoInsumo AS CodInsumo,
-                                F.NP,
-                                ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) 
-                                        FROM LIQ_REQ_Recepciones R 
-                                        INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento 
-                                        WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
-                            FROM LIQ_Formulas F
-                            INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
-                            INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                            WHERE F.Estado != 'Cerrada'
-                        ) Base
-                        GROUP BY Base.CodInsumo
-                    ) Pendientes ON I.CodInsumo = Pendientes.CodInsumo
-                    ORDER BY I.Descripcion ASC;
+                                Base.CodInsumo,
+                                SUM(Base.Recibido - Base.Consumido - Base.Ajustado - Base.Devuelto) AS SaldoPendiente
+                            FROM (
+                                SELECT 
+                                    I.CodigoInsumo AS CodInsumo,
+                                    F.NP,
+                                    ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) 
+                                            FROM LIQ_REQ_Recepciones R 
+                                            INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento 
+                                            WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
+                                FROM LIQ_Formulas F
+                                INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
+                                INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
+                                WHERE F.Estado != 'Cerrada'
+                            ) Base
+                            GROUP BY Base.CodInsumo
+                        ) Pendientes ON I.CodInsumo = Pendientes.CodInsumo
+                    ),
+                    CTE_Mermas AS (
+                        SELECT 
+                            2 AS OrdenFila,
+                            M.CodigoMerma AS CodInsumo,
+                            M.NombreColor + ' (NP: ' + M.NP + ')' AS Descripcion,
+                            'KG' AS UnidadMedida,
+                            CONVERT(VARCHAR(10), M.FechaRegistro, 103) + ' ' + CONVERT(VARCHAR(8), M.FechaRegistro, 108) AS FechaModificacion,
+                            (M.Gramos / 1000.0) AS StockInicialOriginal,
+                            0 AS StockRecibidoOriginal,
+                            (ISNULL(Op.ConsumosTotales, 0) / 1000.0) AS ConsumosTotales,
+                            (ISNULL(Op.ConsumosTotales, 0) / 1000.0) AS ConsumosProduccion,
+                            0 AS ConsumosDesarrollo,
+                            (ISNULL(Op.AjustesTotales, 0) / 1000.0) AS AjustesTotales,
+                            0 AS DevolucionesCentral,
+                            0 AS DevolucionesOperativo,
+                            
+                            (M.Gramos / 1000.0) AS InicialNeto,
+                            0 AS RecibidoNeto,
+                            
+                            CAST((M.Gramos - ISNULL(Op.ConsumosTotales, 0) - ISNULL(Op.AjustesTotales, 0)) / 1000.0 AS DECIMAL(18,4)) AS StockActual,
+                            0 AS StockPorLiquidar
+                        FROM LIQ_MER_MermasColor M
+                        LEFT JOIN (
+                            SELECT MermaReutilizada, 
+                                   SUM(CASE WHEN TipoOperacion = 'Consumo' THEN Cantidad ELSE 0 END) AS ConsumosTotales,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste' THEN Cantidad ELSE 0 END) AS AjustesTotales
+                            FROM LIQ_OperacionesDetalle
+                            WHERE (TipoOperacion = 'Consumo' OR TipoOperacion = 'Ajuste') AND FuenteConsumo = 'Stock Merma'
+                            GROUP BY MermaReutilizada
+                        ) Op ON M.CodigoMerma = Op.MermaReutilizada
+                        WHERE M.FechaVencimiento IS NOT NULL 
+                          AND M.Gramos > 0
+                          AND CAST(M.FechaVencimiento AS DATE) >= CAST(GETDATE() AS DATE)
+                          AND CAST(M.Gramos - ISNULL(Op.ConsumosTotales, 0) - ISNULL(Op.AjustesTotales, 0) AS DECIMAL(18,2)) > 0
+                    )
+                    SELECT * FROM CTE_Insumos
+                    UNION ALL
+                    SELECT * FROM CTE_Mermas
+                    ORDER BY OrdenFila ASC, Descripcion ASC;
                 ";
 
                 using (SqlCommand cmd = new SqlCommand(sql, cn))
@@ -97,6 +138,7 @@ namespace AppGenReceta.DA
                         {
                             lista.Add(new LIQ_StockInsumoBE
                             {
+                                OrdenFila = Convert.ToInt32(dr["OrdenFila"]),
                                 CodInsumo = dr["CodInsumo"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 UnidadMedida = dr["UnidadMedida"].ToString(),

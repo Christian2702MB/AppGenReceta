@@ -4,6 +4,7 @@ namespace AppGenReceta.BE
 {
     public class LIQ_StockInsumoBE
     {
+        public int OrdenFila { get; set; }
         public string CodInsumo { get; set; }
         public string Descripcion { get; set; }
         public string UnidadMedida { get; set; }
