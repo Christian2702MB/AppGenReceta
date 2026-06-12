@@ -610,10 +610,10 @@ namespace AppGenReceta.DA
                         // 1. Insertar Cabecera (IdRecetaOrigen = 0)
                         string sqlCabecera = @"
                             INSERT INTO LIQ_Formulas 
-                            (IdRecetaOrigen, NP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Ubicacion, Tecnica, OperarioUDP, FechaUDP, Prendas, Arte, UsuarioCreacion, Estado)
+                            (IdRecetaOrigen, NP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Ubicacion, Tecnica, OperarioUDP, FechaUDP, Prendas, Arte, UsuarioCreacion, Estado, Observaciones)
                             OUTPUT INSERTED.IdFormula
                             VALUES 
-                            (0, @NP, @Cliente, @Temporada, @Estilo, @EstiloPropio, @Item, @Combo, @Ubicacion, @Tecnica, @Operario, @FechaUDP, @Prendas, @Arte, @UsuarioCreacion, 'Activa');
+                            (0, @NP, @Cliente, @Temporada, @Estilo, @EstiloPropio, @Item, @Combo, @Ubicacion, @Tecnica, @Operario, @FechaUDP, @Prendas, @Arte, @UsuarioCreacion, 'Activa', @Observaciones);
                         ";
                         
                         int idFormula = 0;
@@ -633,6 +633,7 @@ namespace AppGenReceta.DA
                             cmd.Parameters.AddWithValue("@Prendas", receta.PrendasReq ?? "");
                             cmd.Parameters.AddWithValue("@Arte", receta.Arte ?? "");
                             cmd.Parameters.AddWithValue("@UsuarioCreacion", usuario ?? "");
+                            cmd.Parameters.AddWithValue("@Observaciones", receta.Observaciones ?? "");
 
                             idFormula = Convert.ToInt32(cmd.ExecuteScalar());
                         }

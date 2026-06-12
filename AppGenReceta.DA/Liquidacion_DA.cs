@@ -109,6 +109,7 @@ namespace AppGenReceta.DA
                                 FechaRegistro = dr["FechaRegistro"].ToString(),
                                 HoraRegistro = dr["HoraRegistro"].ToString(),
                                 Estado = dr["Estado"].ToString(),
+                                Observaciones = "", // Se llenará en la siguiente consulta
                                 Colores = new List<LIQ_FormulaColorBE>()
                             };
                         }
@@ -180,6 +181,18 @@ namespace AppGenReceta.DA
                                     });
                                 }
                             }
+                        }
+                    }
+
+                    // 4. OBTENER OBSERVACIONES (Workaround por trigger DDL que impide modificar el SP)
+                    if (entidad != null)
+                    {
+                        using (SqlCommand cmdObs = new SqlCommand("SELECT ISNULL(Observaciones, '') FROM LIQ_Formulas WHERE IdFormula = @IdFormula", cnx))
+                        {
+                            cmdObs.CommandType = CommandType.Text;
+                            cmdObs.Parameters.AddWithValue("@IdFormula", idFormula);
+                            object obs = cmdObs.ExecuteScalar();
+                            if (obs != null) entidad.Observaciones = obs.ToString();
                         }
                     }
                 }
@@ -318,7 +331,20 @@ namespace AppGenReceta.DA
 
                     cnx.Open();
                     object res = cmd.ExecuteScalar();
-                    return res != null && Convert.ToInt32(res) > 0;
+                    bool success = res != null && Convert.ToInt32(res) > 0;
+                    
+                    if (success)
+                    {
+                        using (SqlCommand cmdObs = new SqlCommand("UPDATE LIQ_Formulas SET Observaciones = @Obs WHERE IdFormula = @IdFormula", cnx))
+                        {
+                            cmdObs.CommandType = CommandType.Text;
+                            cmdObs.Parameters.AddWithValue("@Obs", entidad.Observaciones ?? "");
+                            cmdObs.Parameters.AddWithValue("@IdFormula", entidad.IdFormula);
+                            cmdObs.ExecuteNonQuery();
+                        }
+                    }
+                    
+                    return success;
                 }
             }
             catch (Exception ex) { throw ex; }

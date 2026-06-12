@@ -43,6 +43,7 @@ namespace AppGenReceta.BE
         // Para control de vista
         public bool EstaCerrado { get; set; }
         public bool IsReadOnly { get; set; }
+        public string Observaciones { get; set; }
 
         // Detalle: Colores e Insumos
         [XmlArray("Colores")]

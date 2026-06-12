@@ -580,6 +580,7 @@ function guardarFormulaCompleta() {
         if (result.value) {
             // Preparar el objeto final con IdFormula
             let datosEnviar = Object.assign({}, recetaMaster);
+            datosEnviar.Observaciones = $("#txtObservacionesFormula").val();
             
             Swal.fire({ title: 'Guardando...', didOpen: function () { Swal.showLoading(); } });
 
