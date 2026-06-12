@@ -156,7 +156,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE PROCEDURE [dbo].[SP_GUARDAR_RECETA_COMPLETA]
-    @NP VARCHAR(20) = '',
+    @Usuario VARCHAR(100) = '',
     @XmlData XML
 AS
 BEGIN
@@ -176,7 +176,7 @@ BEGIN
     BEGIN TRANSACTION    
 		-- 1. Insertar Cabecera usando los datos internos del XML
 		--select * from Visita
-        INSERT INTO AGR_Recetas (NP, OperarioUDP, Tecnica, FechaUDP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Prendas, Ubicacion, Arte, Observaciones, FechaRegistro) 
+        INSERT INTO AGR_Recetas (NP, OperarioUDP, Tecnica, FechaUDP, Cliente, Temporada, Estilo, EstiloPropio, Item, Combo, Prendas, Ubicacion, Arte, Observaciones, FechaRegistro, Usuario) 
         SELECT 
             T.c.value('(NP)[1]', 'VARCHAR(20)'),
             T.c.value('(Operario)[1]', 'VARCHAR(100)'),
@@ -192,7 +192,8 @@ BEGIN
 			T.c.value('(Ubicacion)[1]', 'VARCHAR(50)'), -- Nuevo
 			T.c.value('(Arte)[1]', 'VARCHAR(100)'), -- Nuevo
 			T.c.value('(Observaciones)[1]', 'VARCHAR(800)'), -- Nuevo
-            GETDATE()
+            GETDATE(),
+			@Usuario
         FROM @XmlData.nodes('/VisitaBE') AS T(c);
         
         DECLARE @IdVisita INT = SCOPE_IDENTITY();
