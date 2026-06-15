@@ -266,21 +266,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.Count == 0)
+                            @foreach (var item in Model)
                             {
                                 <tr>
-                                    <td colspan="6" style="padding: 40px 20px; text-align:center; background: #f8fafc;">
-                                        <i class="fas fa-box-open" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
-                                        <h4 style="color: #64748b; font-weight: 600; font-size: 16px; margin-top: 0;">Sin Stock Registrado</h4>
-                                        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">No se encontraron saldos de insumos en el sistema.</p>
-                                    </td>
-                                </tr>
-                            }
-                            else
-                            {
-                                foreach (var item in Model)
-                                {
-                                    <tr>
                                         <td class="text-center align-middle" style="text-align: center !important;">
                                             <div style="font-weight: 800; font-size: 1.2rem;" class="text-primary">
                                                 @item.CodInsumo
@@ -332,7 +320,6 @@
                                         </td>
                                     </tr>
                                 }
-                            }
                         </tbody>
                     </table>
                 </div>
@@ -521,8 +508,8 @@
                 "language": {
                     "sProcessing":     "Procesando...",
                     "sLengthMenu":     "Mostrar _MENU_ registros",
-                    "sZeroRecords":    "No se encontraron resultados",
-                    "sEmptyTable":     "Ningún dato disponible en esta tabla",
+                    "sZeroRecords":    "<div style='padding: 20px;'><i class='fas fa-box-open' style='font-size: 48px; color: #cbd5e1; margin-bottom: 15px;'></i><h4 style='color: #64748b; font-weight: 600; font-size: 16px; margin-top: 0;'>Sin Stock Registrado</h4><p style='font-size: 13px; color: #94a3b8; margin-bottom: 0;'>No se encontraron saldos de insumos en el sistema.</p></div>",
+                    "sEmptyTable":     "<div style='padding: 20px;'><i class='fas fa-box-open' style='font-size: 48px; color: #cbd5e1; margin-bottom: 15px;'></i><h4 style='color: #64748b; font-weight: 600; font-size: 16px; margin-top: 0;'>Sin Stock Registrado</h4><p style='font-size: 13px; color: #94a3b8; margin-bottom: 0;'>No se encontraron saldos de insumos en el sistema.</p></div>",
                     "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
                     "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
                     "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
