@@ -159,6 +159,40 @@
     }
     .tooltip-content-formula .badge-plus { background-color: #2ecc71; }
     .tooltip-content-formula .badge-minus { background-color: #e74c3c; }
+
+    /* Toggle Buttons Sentido UI/UX Premium */
+    .btn-toggle-sentido {
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        padding: 14px 20px !important;
+        border: 2px solid #e2e8f0 !important;
+        background-color: #f8fafc;
+        color: #64748b;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-toggle-sentido:not(.active):hover {
+        background-color: #f1f5f9;
+        border-color: #cbd5e1 !important;
+    }
+
+    .btn-toggle-sentido.ingreso-active.active {
+        background-color: #10b981 !important;
+        border-color: #059669 !important;
+        color: white !important;
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.35) !important;
+        z-index: 2;
+    }
+
+    .btn-toggle-sentido.salida-active.active {
+        background-color: #ef4444 !important;
+        border-color: #dc2626 !important;
+        color: white !important;
+        box-shadow: 0 6px 15px rgba(239, 68, 68, 0.35) !important;
+        z-index: 2;
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -250,6 +284,9 @@
                                         <td class="text-center align-middle" style="text-align: center !important;">
                                             <div style="font-weight: 800; font-size: 1.2rem;" class="text-primary">
                                                 @item.CodInsumo
+                                                @if(item.OrdenFila == 1) {
+                                                    <button type="button" class="btn btn-sm btn-link text-muted btn-ajuste-directo" data-idinsumo="@item.CodInsumo" data-nombre="@item.Descripcion" data-stock="@item.StockActual" data-um="@item.UnidadMedida" title="Ajuste Manual Directo"><i class="fas fa-sliders-h"></i></button>
+                                                }
                                             </div>
                                         </td>
                                         <td class="align-middle" style="font-size: 1.2rem; text-align: left !important;" data-order="@item.OrdenFila-@item.Descripcion">
@@ -260,14 +297,27 @@
                                         </td>
                                         <td class="text-center align-middle" style="font-size: 1.05rem; text-align: center !important;">@item.UnidadMedida</td>
                                         <td class="text-right align-middle" style="text-align: right !important;">
-                                            <div class="fw-bold" style="font-weight: 700; font-size: 1.25rem;">@item.TotalIngresosNeto.ToString("N2")</div>
-                                            <div style="font-size: 0.95rem; color: #6c757d;">@(item.DevolucionesOperativo > 0 ? $"Ini: {item.InicialNeto.ToString("N2")} ({item.StockInicialOriginal.ToString("N2")} + {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)" : $"Inicial: {item.InicialNeto.ToString("N2")}")</div>
-                                            <div style="font-size: 0.95rem; color: #6c757d;">@(item.DevolucionesOperativo > 0 ? $"Rec: {item.RecibidoNeto.ToString("N2")} ({item.StockRecibidoOriginal.ToString("N2")} - {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)" : $"Recibido: {item.RecibidoNeto.ToString("N2")}")</div>
+                                            <div class="fw-bold" style="font-weight: 700; font-size: 1.25rem;">@((item.TotalIngresosNeto + item.AjustesManualesIngreso).ToString("N2"))</div>
+                                            @if (item.DevolucionesOperativo > 0) {
+                                                <div style="font-size: 0.95rem; color: #6c757d;">Ini: @item.InicialNeto.ToString("N2") (@item.StockInicialOriginal.ToString("N2") + @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
+                                                <div style="font-size: 0.95rem; color: #6c757d;">Rec: @item.RecibidoNeto.ToString("N2") (@item.StockRecibidoOriginal.ToString("N2") - @item.DevolucionesOperativo.ToString("N2") Dev.Ope)</div>
+                                            } else {
+                                                <div style="font-size: 0.95rem; color: #6c757d;">Inicial: @item.InicialNeto.ToString("N2")</div>
+                                                <div style="font-size: 0.95rem; color: #6c757d;">Recibido: @item.RecibidoNeto.ToString("N2")</div>
+                                            }
+                                            @if (item.AjustesManualesIngreso > 0) {
+                                                <div class="text-muted small">Aj. Manual: @item.AjustesManualesIngreso.ToString("N2")</div>
+                                            }
                                         </td>
                                         <td class="text-right align-middle" style="text-align: right !important;">
-                                            <div style="font-weight: 700; font-size: 1.25rem; color: #d32f2f;">@((item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral).ToString("N2"))</div>
-                                            <div style="font-size: 0.90rem; color: #6c757d; margin-bottom: 2px;">Consumo: @item.ConsumosTotales.ToString("N2") (Pro: @item.ConsumosProduccion.ToString("N2") | Lab: @item.ConsumosDesarrollo.ToString("N2"))</div>
-                                            <div style="font-size: 0.90rem; color: #6c757d;">Ajustes: @item.AjustesTotales.ToString("N2") | Dev. Central: @item.DevolucionesCentral.ToString("N2")</div>
+                                            <div style="font-weight: 700; font-size: 1.25rem; color: #d32f2f;">@((item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral + item.AjustesManualesSalida).ToString("N2"))</div>
+                                            <div style="font-size: 0.90rem; color: #6c757d; margin-bottom: 2px;">Consumos: @item.ConsumosTotales.ToString("N2") (Pro: @item.ConsumosProduccion.ToString("N2") | Lab: @item.ConsumosDesarrollo.ToString("N2"))</div>
+                                            @if (item.AjustesTotales > 0 || item.AjustesManualesSalida > 0) {
+                                                <div style="font-size: 0.90rem; color: #6c757d;">Ajustes: @((item.AjustesTotales + item.AjustesManualesSalida).ToString("N2")) (NP: @item.AjustesTotales.ToString("N2") | Man: @item.AjustesManualesSalida.ToString("N2"))</div>
+                                            }
+                                            @if (item.DevolucionesCentral > 0) {
+                                                <div style="font-size: 0.90rem; color: #6c757d;">Dev. Central: @item.DevolucionesCentral.ToString("N2")</div>
+                                            }
                                         </td>
                                         <td class="text-right align-middle" style="text-align: right !important;">
                                             <div class="fw-bold" style="font-weight: 800; font-size: 1.25rem; color: #2e7d32;">
@@ -318,6 +368,75 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajuste Manual Directo -->
+<div class="modal fade" id="modalAjusteDirecto" tabindex="-1" role="dialog" aria-labelledby="modalAjusteDirectoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white; padding: 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color: white; opacity: 0.8; font-size: 1.6rem; outline: none; border: none; background: transparent; float: right; margin-top: -3px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalAjusteDirectoLabel" style="font-weight: 700; margin: 0; display: inline-flex; align-items: center;">
+                    <i class="fas fa-sliders-h" style="margin-right: 10px; font-size: 1.3rem;"></i> Ajuste Manual de Inventario Directo
+                </h4>
+            </div>
+            <div class="modal-body" style="padding: 25px; background-color: #fcfdfe;">
+                <form id="formAjusteDirecto">
+                    <!-- Bloque Informativo -->
+                    <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div class="row">
+                            <div class="col-xs-12 mb-2" style="margin-bottom:10px;">
+                                <label style="font-size:0.85rem; color:#6c757d; margin-bottom:2px; display:block;">INSUMO:</label>
+                                <div style="font-weight:700; color:var(--hialpesa-blue); font-size:1.1rem;" id="lblAjusteInsumo">-</div>
+                            </div>
+                            <div class="col-xs-12">
+                                <label style="font-size:0.85rem; color:#6c757d; margin-bottom:2px; display:block;">STOCK ACTUAL EN PLANTA:</label>
+                                <div style="font-weight:700; color:#2e7d32; font-size:1.1rem;" id="lblAjusteStock">- KG</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selector UI/UX Toggle -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="font-weight: 600; color: #495057; display:block; margin-bottom: 8px;">1. SENTIDO DEL AJUSTE:</label>
+                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="width:100%;">
+                            <label class="btn btn-toggle-sentido ingreso-active active" style="border-radius: 8px 0 0 8px;" id="lblOptIngreso">
+                                <input type="radio" name="optTipoAjuste" id="optIngreso" value="Ingreso" autocomplete="off" checked> 
+                                <i class="fas fa-plus-circle"></i> INGRESO (Suma (+))
+                            </label>
+                            <label class="btn btn-toggle-sentido salida-active" style="border-radius: 0 8px 8px 0;" id="lblOptSalida">
+                                <input type="radio" name="optTipoAjuste" id="optSalida" value="Salida" autocomplete="off"> 
+                                <i class="fas fa-minus-circle"></i> SALIDA (Resta (-))
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Input Numérico -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="font-weight: 600; color: #495057; display:block; margin-bottom: 8px;">2. CANTIDAD A AJUSTAR (<span id="lblModalUM">KG</span>):</label>
+                        <input type="number" id="txtAjusteCantidad" class="form-control text-end" style="font-weight:bold; font-size:1.2rem; height:45px;" placeholder="0.00" step="0.01" min="0.01" required>
+                    </div>
+
+                    <!-- Textarea Obligatorio -->
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="font-weight: 600; color: #495057; display:block; margin-bottom: 8px;">3. MOTIVO / SUSTENTO DEL AJUSTE (OBLIGATORIO):</label>
+                        <textarea id="txtAjusteMotivo" class="form-control" rows="3" placeholder="Ingrese la justificación detallada del ajuste aquí..." required style="resize:none; border-radius:8px;"></textarea>
+                    </div>
+                    
+                    <input type="hidden" id="hdnAjusteCodInsumo" />
+                    <input type="hidden" id="hdnAjusteUM" />
+                </form>
+            </div>
+            <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 15px 25px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 8px 20px;">Cancelar</button>
+                <button type="button" id="btnGuardarAjusteDirecto" class="btn btn-primary" style="border-radius: 8px; font-weight: 600; padding: 8px 25px; background-color: var(--hialpesa-blue); border: none;">
+                    <i class="fas fa-save" style="margin-right: 6px;"></i> Registrar Stock
+                </button>
             </div>
         </div>
     </div>
@@ -483,6 +602,99 @@
 
             // Inicializar Tooltips de Bootstrap
             $('[data-toggle="tooltip"]').tooltip();
+
+            // JS: Ajuste Manual Directo
+            $('.btn-ajuste-directo').on('click', function() {
+                var codInsumo = $(this).data('idinsumo');
+                var nombre = $(this).data('nombre');
+                var stock = parseFloat($(this).data('stock')).toFixed(2);
+                var um = $(this).data('um');
+                
+                $('#hdnAjusteCodInsumo').val(codInsumo);
+                $('#hdnAjusteUM').val(um);
+                $('#lblAjusteInsumo').text(codInsumo + ' - ' + nombre);
+                $('#lblAjusteStock').text(stock + ' ' + um);
+                $('#lblModalUM').text(um);
+                
+                // Reset form
+                $('#formAjusteDirecto')[0].reset();
+                $('#optIngreso').closest('label').button('toggle');
+                
+                $('#modalAjusteDirecto').modal('show');
+            });
+
+            $('#btnGuardarAjusteDirecto').on('click', function() {
+                var codInsumo = $('#hdnAjusteCodInsumo').val();
+                var nombre = $('#lblAjusteInsumo').text();
+                var um = $('#hdnAjusteUM').val();
+                var tipoAjuste = $('input[name="optTipoAjuste"]:checked').val();
+                var cantidad = parseFloat($('#txtAjusteCantidad').val());
+                var motivo = $.trim($('#txtAjusteMotivo').val());
+                
+                if (isNaN(cantidad) || cantidad <= 0) {
+                    Swal.fire('Error', 'La cantidad debe ser mayor a 0.', 'error');
+                    return;
+                }
+
+                if (motivo.length < 5) {
+                    Swal.fire('Error', 'Debe ingresar un motivo detallado (mínimo 5 caracteres).', 'error');
+                    return;
+                }
+
+                var textoTipo = tipoAjuste === 'Ingreso' ? 'Ingreso (+)' : 'Salida (-)';
+
+                Swal.fire({
+                    title: '¿Confirmar Ajuste Manual Directo?',
+                    html: `Vas a registrar un <strong>${textoTipo}</strong> de <strong>${cantidad.toFixed(2)} ${um}</strong> para el insumo <strong>${nombre}</strong>.<br><br><span style="color:#d32f2f; font-size:0.9em;">Este cambio alterará el inventario real inmediatamente y quedará registrado.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, aplicar ajuste',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        
+                        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+                        $.post('@Url.Action("RegistrarAjusteDirecto", "Liquidacion")', {
+                            codInsumo: codInsumo,
+                            tipoAjuste: tipoAjuste,
+                            cantidad: cantidad,
+                            um: um,
+                            motivo: motivo
+                        }, function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Éxito',
+                                    text: 'Ajuste directo registrado correctamente.',
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', response.message, 'error');
+                            }
+                        }).fail(function() {
+                            Swal.fire('Error', 'Ocurrió un error en el servidor.', 'error');
+                        });
+                    }
+                });
+            });
+
+            // Forzar UI/UX de Colores Toggle para evitar conflictos de caché
+            function applyToggleColors() {
+                $('.btn-toggle-sentido').css({ 'background-color': '#f8fafc', 'color': '#64748b', 'border-color': '#e2e8f0' });
+                if ($('#optIngreso').is(':checked')) {
+                    $('#lblOptIngreso').css({ 'background-color': '#10b981', 'color': 'white', 'border-color': '#059669' });
+                } else if ($('#optSalida').is(':checked')) {
+                    $('#lblOptSalida').css({ 'background-color': '#ef4444', 'color': 'white', 'border-color': '#dc2626' });
+                }
+            }
+            $('input[name="optTipoAjuste"]').on('change', applyToggleColors);
+            $('#modalAjusteDirecto').on('shown.bs.modal', applyToggleColors);
         });
     </script>
 }

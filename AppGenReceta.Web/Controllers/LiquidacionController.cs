@@ -659,6 +659,53 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        [HttpPost]
+        public JsonResult RegistrarAjusteDirecto(string codInsumo, string tipoAjuste, decimal cantidad, string um, string motivo)
+        {
+            if (Session["NombreUsuario"] == null)
+                return Json(new { error = true, message = "Sesión expirada" });
+
+            try
+            {
+                if (cantidad <= 0)
+                    return Json(new { error = true, message = "La cantidad debe ser mayor a 0." });
+                    
+                if (string.IsNullOrWhiteSpace(motivo) || motivo.Length < 5)
+                    return Json(new { error = true, message = "El motivo debe ser detallado y obligatorio." });
+
+                string fuente = tipoAjuste == "Ingreso" ? "Ingreso" : "Salida";
+                
+                // Conversión de KG a Gramos para la base de datos
+                decimal cantidadDb = cantidad;
+                if (!string.IsNullOrEmpty(um) && um.ToUpper() == "KG")
+                {
+                    cantidadDb = cantidad * 1000;
+                }
+
+                var ope = new LIQ_OperacionBE
+                {
+                    NP = "STOCK-DIR", 
+                    CodInsumo = codInsumo,
+                    TipoOperacion = "Ajuste Directo",
+                    Cantidad = cantidadDb,
+                    Motivo = motivo,
+                    FuenteConsumo = fuente,
+                    Usuario = Session["NombreUsuario"].ToString()
+                };
+
+                bool success = bl.RegistrarOperacion(ope);
+
+                if (success)
+                    return Json(new { success = true });
+                else
+                    return Json(new { error = true, message = "No se pudo registrar el ajuste en la BD." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = true, message = ex.Message });
+            }
+        }
+
         [HttpGet]
         public JsonResult ObtenerMatrizCruzada()
         {

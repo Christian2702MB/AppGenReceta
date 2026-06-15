@@ -33,6 +33,8 @@ namespace AppGenReceta.DA
                             ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesTotales,
                             ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesCentral,
                             ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS DevolucionesOperativo,
+                            ISNULL(O.AjustesManualesIngreso, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesManualesIngreso,
+                            ISNULL(O.AjustesManualesSalida, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END AS AjustesManualesSalida,
                             
                             -- Cálculos Netos Internos
                             (ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS InicialNeto,
@@ -40,9 +42,11 @@ namespace AppGenReceta.DA
 
                             -- Stock Actual (Se anula DevolucionOperativo al usar los netos)
                             ((ISNULL(I.StockActual, 0) + (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) + 
-                            (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) - 
+                            (ISNULL(R.StockRecibido, 0) - (ISNULL(O.DevolucionesOperativo, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) + 
+                            (ISNULL(O.AjustesManualesIngreso, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                             (ISNULL(O.ConsumosTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                             (ISNULL(O.AjustesTotales, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
+                            (ISNULL(O.AjustesManualesSalida, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END) - 
                             (ISNULL(O.DevolucionesCentral, 0) / CASE WHEN I.UnidadMedida = 'KG' THEN 1000.0 ELSE 1.0 END)) AS StockActual,
                             
                             -- Stock Pendiente de Liquidar
@@ -60,7 +64,9 @@ namespace AppGenReceta.DA
                                    SUM(CASE WHEN TipoOperacion = 'Consumo Desarrollo' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS ConsumosDesarrollo,
                                    SUM(CASE WHEN TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada') THEN Cantidad ELSE 0 END) AS AjustesTotales,
                                    SUM(CASE WHEN TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%') THEN Cantidad ELSE 0 END) AS DevolucionesCentral,
-                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo
+                                   SUM(CASE WHEN TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%') THEN Cantidad ELSE 0 END) AS DevolucionesOperativo,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Ingreso' THEN Cantidad ELSE 0 END) AS AjustesManualesIngreso,
+                                   SUM(CASE WHEN TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Salida' THEN Cantidad ELSE 0 END) AS AjustesManualesSalida
                             FROM LIQ_OperacionesDetalle
                             GROUP BY CodInsumo
                         ) O ON I.CodInsumo = O.CodInsumo
@@ -102,6 +108,8 @@ namespace AppGenReceta.DA
                             (ISNULL(Op.AjustesTotales, 0) / 1000.0) AS AjustesTotales,
                             0 AS DevolucionesCentral,
                             0 AS DevolucionesOperativo,
+                            0 AS AjustesManualesIngreso,
+                            0 AS AjustesManualesSalida,
                             
                             (M.Gramos / 1000.0) AS InicialNeto,
                             0 AS RecibidoNeto,
@@ -154,6 +162,8 @@ namespace AppGenReceta.DA
                                 AjustesTotales = Convert.ToDecimal(dr["AjustesTotales"]),
                                 DevolucionesCentral = Convert.ToDecimal(dr["DevolucionesCentral"]),
                                 DevolucionesOperativo = Convert.ToDecimal(dr["DevolucionesOperativo"]),
+                                AjustesManualesIngreso = Convert.ToDecimal(dr["AjustesManualesIngreso"]),
+                                AjustesManualesSalida = Convert.ToDecimal(dr["AjustesManualesSalida"]),
                                 StockActual = Convert.ToDecimal(dr["StockActual"]),
                                 
                                 StockPorLiquidar = Convert.ToDecimal(dr["StockPorLiquidar"]),

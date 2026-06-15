@@ -16,6 +16,8 @@ namespace AppGenReceta.BE
         public decimal AjustesTotales { get; set; }
         public decimal DevolucionesCentral { get; set; }
         public decimal DevolucionesOperativo { get; set; }
+        public decimal AjustesManualesIngreso { get; set; }
+        public decimal AjustesManualesSalida { get; set; }
         public decimal StockActual { get; set; }
         public string FechaModificacion { get; set; }
         
