@@ -596,37 +596,76 @@ namespace AppGenReceta.Web.Controllers
                         ws.Cells[rowIndex, 3].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
                         // Entradas (Multilínea)
-                        decimal totIngresos = item.TotalIngresosNeto;
-                        string ingresosStr;
+                        decimal totIngresos = item.TotalIngresosNeto + item.AjustesManualesIngreso;
+                        ws.Cells[rowIndex, 4].IsRichText = true;
+                        var rtInTotal = ws.Cells[rowIndex, 4].RichText.Add(totIngresos.ToString("N2"));
+                        rtInTotal.Bold = true;
+                        rtInTotal.Size = 12;
+
+                        string ingresosStr = "";
                         if (item.DevolucionesOperativo > 0)
                         {
-                            ingresosStr = $"{totIngresos.ToString("N2")}\nIni: {item.InicialNeto.ToString("N2")} ({item.StockInicialOriginal.ToString("N2")} + {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)\nRec: {item.RecibidoNeto.ToString("N2")} ({item.StockRecibidoOriginal.ToString("N2")} - {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)";
+                            ingresosStr = $"\nIni: {item.InicialNeto.ToString("N2")} ({item.StockInicialOriginal.ToString("N2")} + {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)\nRec: {item.RecibidoNeto.ToString("N2")} ({item.StockRecibidoOriginal.ToString("N2")} - {item.DevolucionesOperativo.ToString("N2")} Dev.Ope)";
                         }
                         else
                         {
-                            ingresosStr = $"{totIngresos.ToString("N2")}\nInicial: {item.InicialNeto.ToString("N2")}\nRecibido: {item.RecibidoNeto.ToString("N2")}";
+                            ingresosStr = $"\nInicial: {item.InicialNeto.ToString("N2")}\nRecibido: {item.RecibidoNeto.ToString("N2")}";
                         }
-                        ws.Cells[rowIndex, 4].Value = ingresosStr;
-                        ws.Cells[rowIndex, 4].Style.WrapText = true; // IMPORTANTÍSIMO PARA QUE NO SE OCULTE DATA
+                        
+                        if (item.AjustesManualesIngreso > 0)
+                        {
+                            ingresosStr += $"\nAj. Manual: {item.AjustesManualesIngreso.ToString("N2")}";
+                        }
+
+                        var rtInDet = ws.Cells[rowIndex, 4].RichText.Add(ingresosStr);
+                        rtInDet.Bold = false;
+                        rtInDet.Size = 11;
+                        rtInDet.Color = System.Drawing.Color.DimGray;
+                        ws.Cells[rowIndex, 4].Style.WrapText = true;
                         ws.Cells[rowIndex, 4].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
                         
                         // Salidas (Multilínea)
-                        decimal totSalidas = item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral;
-                        string salidasStr = $"{totSalidas.ToString("N2")}\nConsumos: {item.ConsumosTotales.ToString("N2")} (Pro: {item.ConsumosProduccion.ToString("N2")} | Lab: {item.ConsumosDesarrollo.ToString("N2")})\nAjustes: {item.AjustesTotales.ToString("N2")} | Dev. Central: {item.DevolucionesCentral.ToString("N2")}";
-                        ws.Cells[rowIndex, 5].Value = salidasStr;
+                        decimal totSalidas = item.ConsumosTotales + item.AjustesTotales + item.DevolucionesCentral + item.AjustesManualesSalida;
+                        ws.Cells[rowIndex, 5].IsRichText = true;
+                        var rtOutTotal = ws.Cells[rowIndex, 5].RichText.Add(totSalidas.ToString("N2"));
+                        rtOutTotal.Bold = true;
+                        rtOutTotal.Size = 12;
+                        if (totSalidas > 0) rtOutTotal.Color = System.Drawing.ColorTranslator.FromHtml("#d32f2f");
+
+                        string salidasStr = $"\nConsumos: {item.ConsumosTotales.ToString("N2")} (Pro: {item.ConsumosProduccion.ToString("N2")} | Lab: {item.ConsumosDesarrollo.ToString("N2")})";
+                        if (item.AjustesTotales > 0 || item.AjustesManualesSalida > 0)
+                        {
+                            salidasStr += $"\nAjustes: {(item.AjustesTotales + item.AjustesManualesSalida).ToString("N2")} (NP: {item.AjustesTotales.ToString("N2")} | Man: {item.AjustesManualesSalida.ToString("N2")})";
+                        }
+                        if (item.DevolucionesCentral > 0)
+                        {
+                            salidasStr += $"\nDev. Central: {item.DevolucionesCentral.ToString("N2")}";
+                        }
+
+                        var rtOutDet = ws.Cells[rowIndex, 5].RichText.Add(salidasStr);
+                        rtOutDet.Bold = false;
+                        rtOutDet.Size = 11;
+                        if (totSalidas > 0) rtOutDet.Color = System.Drawing.ColorTranslator.FromHtml("#d32f2f");
                         ws.Cells[rowIndex, 5].Style.WrapText = true;
                         ws.Cells[rowIndex, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
-                        if (totSalidas > 0) ws.Cells[rowIndex, 5].Style.Font.Color.SetColor(System.Drawing.Color.Red);
 
                         // Stock Actual
-                        string stockActualStr = $"{item.StockActual.ToString("N2")}\nDisponible: {item.StockDisponible.ToString("N2")}\nPor Liquidar: {item.StockPorLiquidar.ToString("N2")}";
-                        ws.Cells[rowIndex, 6].Value = stockActualStr;
+                        ws.Cells[rowIndex, 6].IsRichText = true;
+                        var rtStockTotal = ws.Cells[rowIndex, 6].RichText.Add(item.StockActual.ToString("N2"));
+                        rtStockTotal.Bold = true;
+                        rtStockTotal.Size = 12;
+                        if (item.StockActual > 0) rtStockTotal.Color = System.Drawing.ColorTranslator.FromHtml("#2e7d32");
+                        else if (item.StockActual < 0) rtStockTotal.Color = System.Drawing.ColorTranslator.FromHtml("#d32f2f");
+                        
+                        string stockActualStr = $"\nDisponible: {item.StockDisponible.ToString("N2")}\nPor Liquidar: {item.StockPorLiquidar.ToString("N2")}";
+                        var rtStockDet = ws.Cells[rowIndex, 6].RichText.Add(stockActualStr);
+                        rtStockDet.Bold = false;
+                        rtStockDet.Size = 11;
+                        if (item.StockActual > 0) rtStockDet.Color = System.Drawing.ColorTranslator.FromHtml("#2e7d32");
+                        else if (item.StockActual < 0) rtStockDet.Color = System.Drawing.ColorTranslator.FromHtml("#d32f2f");
+
                         ws.Cells[rowIndex, 6].Style.WrapText = true;
                         ws.Cells[rowIndex, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
-                        if (item.StockActual > 0)
-                            ws.Cells[rowIndex, 6].Style.Font.Color.SetColor(System.Drawing.Color.Green);
-                        else if (item.StockActual < 0)
-                            ws.Cells[rowIndex, 6].Style.Font.Color.SetColor(System.Drawing.Color.Red);
 
                         // Alineación vertical de todas las celdas de la fila
                         ws.Cells[rowIndex, 1, rowIndex, 6].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
@@ -827,12 +866,17 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpPost]
-        public JsonResult ObtenerVistaPreviaReq(int numReq)
+        public JsonResult ObtenerVistaPreviaReq(int numReq, string codOrdPro = null)
         {
             try
             {
                 var detalles = _stockReqBl.ObtenerDetalleRequerimiento(numReq);
-                return Json(new { success = true, data = detalles });
+                List<string> versiones = new List<string>();
+                if (!string.IsNullOrEmpty(codOrdPro))
+                {
+                    versiones = bl.ObtenerVersionesNP(codOrdPro);
+                }
+                return Json(new { success = true, data = detalles, versiones = versiones });
             }
             catch (Exception ex)
             {
@@ -1150,6 +1194,49 @@ namespace AppGenReceta.Web.Controllers
                 string usuario = Session["NombreUsuario"].ToString();
                 var resultado = bl.TerminarNP(np, destinoGlobal, usuario);
                 return Json(new { success = resultado.Exito, message = resultado.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult PredecirSiguienteVersion(string np)
+        {
+            try
+            {
+                var siguienteNP = bl.PredecirSiguienteVersionNP(np);
+                return Json(new { success = true, siguienteNP = siguienteNP }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult GenerarSiguienteVersion(string np, string observacion)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesion expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                var resultado = bl.GenerarSiguienteVersionNP(np, usuario, observacion);
+                
+                string nuevaNP = "";
+                string msg = resultado.Mensaje;
+                
+                if (resultado.Exito && msg.Contains("|"))
+                {
+                    string[] partes = msg.Split('|');
+                    nuevaNP = partes[0];
+                    msg = partes[1];
+                }
+
+                return Json(new { success = resultado.Exito, message = msg, nuevaNP = nuevaNP });
             }
             catch (Exception ex)
             {

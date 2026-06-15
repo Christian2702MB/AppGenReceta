@@ -16,6 +16,15 @@ $(document).ready(function () {
     });
     manejarEstadoFiltros();
 
+    // Ver si la URL tiene el parámetro np
+    let urlParams = new URLSearchParams(window.location.search);
+    let urlNP = urlParams.get('np');
+    if (urlNP) {
+        $('#optNP').prop('checked', true);
+        manejarEstadoFiltros();
+        $('#txtNP').val(urlNP);
+    }
+
     cargarTabla();
 
     $('#btnBuscar').click(function () {
@@ -90,7 +99,7 @@ function abrirVistaPrevia(numReq, codOP, motivo, observaciones) {
     $.ajax({
         url: '/Liquidacion/ObtenerVistaPreviaReq',
         type: 'POST',
-        data: { numReq: numReq },
+        data: { numReq: numReq, codOrdPro: codOP },
         success: function (res) {
             if (res.success) {
                 Swal.close();
@@ -106,6 +115,21 @@ function abrirVistaPrevia(numReq, codOP, motivo, observaciones) {
                         </tr>
                     `);
                 });
+
+                if (res.versiones && res.versiones.length > 1) {
+                    $('#divSelectorVersion').show();
+                    let cbo = $('#cboDestinoVersion');
+                    cbo.empty();
+                    res.versiones.forEach(v => {
+                        cbo.append(`<option value="${v}">${v}</option>`);
+                    });
+                    // The backend sorted them putting active/in process first, so we just select the first one.
+                    cbo.prop('selectedIndex', 0);
+                } else {
+                    $('#divSelectorVersion').hide();
+                    $('#cboDestinoVersion').empty();
+                }
+
                 $('#modalVistaPrevia').modal('show');
             } else {
                 Swal.fire('Error', res.message || 'Ocurrió un error al cargar el detalle.', 'error');
@@ -142,12 +166,17 @@ function confirmarRecepcionFinal() {
                 }
             });
 
+            let finalCodOP = codOP;
+            if ($('#divSelectorVersion').is(':visible')) {
+                finalCodOP = $('#cboDestinoVersion').val();
+            }
+
             $.ajax({
                 url: '/Liquidacion/ConfirmarRecepcion',
                 type: 'POST',
                 data: {
                     numRequerimiento: numReq,
-                    codOrdPro: codOP,
+                    codOrdPro: finalCodOP,
                     motivo: motivo
                 },
                 success: function (res) {

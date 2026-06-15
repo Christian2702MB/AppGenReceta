@@ -3,7 +3,7 @@
     ViewBag.Title = "Editar Fórmula";
     Layout = "~/Views/Shared/_Layout.cshtml";
     string rolActual = ViewBag.RolActual ?? "Visualizador";
-    bool soloLectura = Model.IsReadOnly;
+    bool soloLectura = Model.IsReadOnly || Model.Estado == "Terminado" || Model.Estado == "Liquidado" || Model.Estado == "Cerrada";
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

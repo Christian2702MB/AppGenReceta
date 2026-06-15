@@ -1251,7 +1251,7 @@
 
 <!-- MODAL HABILITAR NP (RECEPCIÓN EN BLANCO) -->
 <div class="modal fade modal-custom" id="habilitarNPModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-sm" role="document" style="max-width: 450px;">
+    <div class="modal-dialog" role="document" style="max-width: 400px;">
         <div class="modal-content">
             <div class="modal-header" style="background-color: #0ea5e9;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -1461,24 +1461,29 @@
         var $container = $("#btnAccionFaseContainer");
         $container.empty();
 
-        if (tipoNP === 'terminada' || estadoId >= 4) return;
-
-        if (estadoId === 1) {
+        if (estadoId === 1 && tipoNP !== 'terminada') {
             $container.append(`
                 <button class="btn btn-sm btn-primary btn-pulse-blue" style="background-color: var(--hialpesa-blue); border-color: var(--hialpesa-blue);" onclick="avanzarEstadoNP('En Proceso', '¿Estás seguro de pasar a En Proceso?', 'Asegúrate de haber registrado todos los consumos. Esto bloqueará nuevos ingresos.')">
                     Avanzar a En Proceso <i class="fas fa-arrow-right ml-1"></i>
                 </button>
             `);
-        } else if (estadoId === 2) {
+        } else if (estadoId === 2 && tipoNP !== 'terminada') {
             $container.append(`
                 <button class="btn btn-sm btn-warning" style="color: #fff; background-color: var(--hialpesa-accent); border-color: var(--hialpesa-accent);" onclick="solicitarLiquidacion()">
                     Solicitar Liquidación <i class="fas fa-arrow-right ml-1"></i>
                 </button>
             `);
-        } else if (estadoId === 3) {
+        } else if (estadoId === 3 && tipoNP !== 'terminada') {
             $container.append(`
                 <button class="btn btn-sm btn-success" onclick="finalizarLiquidacion()">
                     <i class="fas fa-check-circle mr-1"></i> Finalizar Liquidación
+                </button>
+            `);
+        } else if (estadoId === 5 || tipoNP === 'terminada') {
+            // Generación de Siguiente Versión / Lote Parcial
+            $container.append(`
+                <button type="button" class="btn btn-sm btn-success ms-3 btn-crear-version" data-idnp="` + selectedNP + `">
+                    <i class="fas fa-random me-1"></i> Dividir Lote / Crear Versión
                 </button>
             `);
         }
@@ -1506,6 +1511,97 @@
             }
         });
     }
+
+    $(document).on('click', '.btn-crear-version', function() {
+        var npOriginal = $(this).data('idnp');
+        
+        Swal.fire({ title: 'Verificando historial de versiones...', didOpen: () => { Swal.showLoading(); } });
+
+        $.get('@Url.Action("PredecirSiguienteVersion", "Liquidacion")', { np: npOriginal }, function(resPrediccion) {
+            Swal.close();
+            var siguienteNP = resPrediccion.success ? resPrediccion.siguienteNP : (npOriginal + "-VX");
+
+            Swal.fire({
+                title: '¿Generar lote ' + siguienteNP + '?',
+                html: `
+                    <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                        El registro actual se conservará intacto en el historial. La nueva orden iniciará en estado <b>Activa</b>.
+                    </p>
+                    <div style="text-align: left;">
+                        <label style="font-weight: bold; font-size: 13px; color: #333;">Motivo de la división <span style="color: red;">*</span></label>
+                        <textarea id="swal-observacion-version" class="form-control" rows="3" placeholder="Ej. Material adicional solicitado por cliente..."></textarea>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, crear orden',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    var obs = document.getElementById('swal-observacion-version').value.trim();
+                    if (!obs) {
+                        Swal.showValidationMessage('Debe ingresar un motivo u observación.');
+                        return false;
+                    }
+                    return obs;
+                }
+            }).then((result) => {
+            if (result.value || result.isConfirmed) {
+                var observacion = result.value;
+                Swal.fire({ title: 'Generando versión...', didOpen: () => { Swal.showLoading(); } });
+                $.post('@Url.Action("GenerarSiguienteVersion", "Liquidacion")', { np: npOriginal, observacion: observacion }, function(res) {
+                    if (res.success) {
+                        var nuevaNP = res.nuevaNP || (npOriginal + "-VX");
+                        Swal.fire({
+                            title: '¡Versión Generada!',
+                            html: `
+                                <p>Se ha generado exitosamente la orden <b>${nuevaNP}</b>.</p>
+                                <p style="margin-top: 15px; font-size: 14px; color: #555;">¿Cómo deseas proceder con esta nueva versión?</p>
+                            `,
+                            icon: 'success',
+                            showDenyButton: true,
+                            showCancelButton: true,
+                            confirmButtonColor: '#0ea5e9',
+                            denyButtonColor: '#28a745',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="fas fa-truck-loading"></i> Recibir Físico',
+                            denyButtonText: '<i class="fas fa-check-circle"></i> Habilitar en Blanco',
+                            cancelButtonText: 'Cerrar',
+                            allowOutsideClick: false,
+                            width: '500px'
+                        }).then((actionResult) => {
+                            if (actionResult.isConfirmed) {
+                                // Opción 1: Ir a Recepción Física
+                                var baseNP = nuevaNP.indexOf('-V') > -1 ? nuevaNP.substring(0, nuevaNP.indexOf('-V')) : nuevaNP;
+                                window.location.href = '@Url.Action("Requerimientos", "Liquidacion")' + '?np=' + encodeURIComponent(baseNP);
+                            } else if (actionResult.isDenied) {
+                                // Opción 2: Habilitar NP en Blanco automáticamente
+                                Swal.fire({ title: 'Habilitando orden...', didOpen: () => { Swal.showLoading(); } });
+                                $.post('@Url.Action("HabilitarNP", "Liquidacion")', { np: nuevaNP }, function(resHab) {
+                                    if(resHab.success) {
+                                        Swal.fire('¡Éxito!', resHab.message, 'success').then(() => { cargarDataInicial(); });
+                                    } else {
+                                        Swal.fire('Atención', resHab.message, 'warning').then(() => { cargarDataInicial(); });
+                                    }
+                                }).fail(function() {
+                                    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error').then(() => { cargarDataInicial(); });
+                                });
+                            } else {
+                                // Opción 3: Quedarse en la pantalla actual
+                                cargarDataInicial();
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                }).fail(function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+                });
+            }
+        });
+        });
+    });
 
     function solicitarLiquidacion() {
         var item = activeLiquidations[selectedNP];

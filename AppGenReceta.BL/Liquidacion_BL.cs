@@ -229,6 +229,33 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public string PredecirSiguienteVersionNP(string npOriginal)
+        {
+            try
+            {
+                return new Liquidacion_DA().PredecirSiguienteVersionNP(npOriginal);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public LIQ_TransicionResultadoBE GenerarSiguienteVersionNP(string npOriginal, string usuario, string observacion)
+        {
+            try
+            {
+                return new Liquidacion_DA().GenerarSiguienteVersionNP(npOriginal, usuario, observacion);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public List<string> ObtenerVersionesNP(string baseNP)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerVersionesNP(baseNP);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
         public List<LIQ_AuditoriaDevolucionBE> ObtenerAuditoriaDevolucionesCentral(string np)
         {
             try

@@ -412,13 +412,15 @@ namespace AppGenReceta.DA
                         SELECT DISTINCT
                             F.NP, 
                             I.CodigoInsumo,
-                            ISNULL((
-                                SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END
-                                FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo
-                            ), 0) -
-                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) -
-                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) +
-                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0) AS StockOperativoInicial,
+                            (
+                                (ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0)) + 
+                                ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE D.CodInsumo = I.CodigoInsumo), 0) +
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Ingreso'), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Salida'), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0)
+                            ) AS StockOperativoInicial,
                             GETDATE()
                         FROM LIQ_Formulas F
                         INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula

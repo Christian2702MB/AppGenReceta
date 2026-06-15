@@ -18,6 +18,51 @@ namespace AppGenReceta.DA
     {
         private string ConnectionString = ConfigurationManager.ConnectionStrings["AppGenReceta_SQL"].ConnectionString;
 
+        public List<string> ObtenerVersionesNP(string baseNP)
+        {
+            var lista = new List<string>();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                // Extraer base en caso de que pasen algo como I8253-V2
+                string realBase = baseNP;
+                if (realBase.Contains("-V"))
+                {
+                    realBase = realBase.Substring(0, realBase.IndexOf("-V"));
+                }
+
+                // Buscar la base exacta y las versiones (Activas, En Proceso, Pendientes, Liquidadas) -> No terminadas
+                // O mejor, devolver todas las que existen y el JS o el SP decide? El usuario pidio "todas las versiones encontradas" 
+                // pero auto-seleccionar la que este Activa/En Proceso.
+                // Traeremos NP y Estado para preseleccionar? El metodo puede retornar objetos anonimos, pero la firma List<string> es simple.
+                // Hagamos que retorne un JSON object o solo las NPs, y en frontend seleccionamos la última.
+                // "auto-seleccionar la version que se encuentre en estado Activo/En Proceso"
+                string sql = @"
+                    SELECT NP 
+                    FROM LIQ_Formulas 
+                    WHERE (NP = @BaseNP OR NP LIKE @BaseNP + '-V%') 
+                      AND Estado != 'Eliminada'
+                    ORDER BY 
+                      CASE 
+                        WHEN Estado IN ('Activa', 'En Proceso') THEN 1 
+                        WHEN Estado IN ('Pendiente', 'Liquidado') THEN 2
+                        ELSE 3 
+                      END ASC, 
+                      FechaCreacion DESC;
+                ";
+                SqlCommand cmd = new SqlCommand(sql, cnx);
+                cmd.Parameters.AddWithValue("@BaseNP", realBase);
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(dr["NP"].ToString());
+                    }
+                }
+            }
+            return lista;
+        }
+
         /// <summary>
         /// Lista fórmulas para el grid de Mantenimiento, filtradas por rango de fechas.
         /// </summary>
@@ -272,6 +317,9 @@ namespace AppGenReceta.DA
         /// </summary>
         public string CrearRecepcionBlanco(string np, string usuario)
         {
+            string resultado = "ERROR|No se obtuvo respuesta del servidor.";
+            bool exito = false;
+
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
                 using (SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_CrearRecepcionBlanco", cnx))
@@ -288,17 +336,49 @@ namespace AppGenReceta.DA
                             int numReq = Convert.ToInt32(dr["NumRequerimiento"]);
                             if (numReq > 0)
                             {
-                                return "OK|" + dr["Mensaje"].ToString();
+                                resultado = "OK|" + dr["Mensaje"].ToString();
+                                exito = true;
                             }
                             else
                             {
-                                return "ERROR|" + dr["Mensaje"].ToString();
+                                resultado = "ERROR|" + dr["Mensaje"].ToString();
                             }
                         }
                     }
                 }
+
+                if (exito)
+                {
+                    string sqlSnapshot = @"
+                        DELETE FROM LIQ_NP_StockSnapshot WHERE NP = @NP;
+                        INSERT INTO LIQ_NP_StockSnapshot (NP, CodInsumo, StockOperativoInicial, FechaCaptura)
+                        SELECT DISTINCT
+                            F.NP, 
+                            I.CodigoInsumo,
+                            (
+                                (ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0)) + 
+                                ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE D.CodInsumo = I.CodigoInsumo), 0) +
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Ingreso'), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Salida'), 0) -
+                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0)
+                            ) AS StockOperativoInicial,
+                            GETDATE()
+                        FROM LIQ_Formulas F
+                        INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
+                        INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
+                        WHERE F.NP = @NP;
+                    ";
+                    using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cnx))
+                    {
+                        cmdSnap.CommandType = CommandType.Text;
+                        cmdSnap.Parameters.AddWithValue("@NP", np);
+                        cmdSnap.ExecuteNonQuery();
+                    }
+                }
             }
-            return "ERROR|No se obtuvo respuesta del servidor.";
+            return resultado;
         }
 
         /// <summary>
@@ -1220,6 +1300,40 @@ namespace AppGenReceta.DA
             return resultado;
         }
 
+        public LIQ_TransicionResultadoBE GenerarSiguienteVersionNP(string npOriginal, string usuario, string observacion)
+        {
+            var resultado = new LIQ_TransicionResultadoBE();
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand("dbo.LIQ_SP_GenerarSiguienteVersionNP", cnx);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NPOriginal", npOriginal);
+                cmd.Parameters.AddWithValue("@Usuario", usuario);
+                cmd.Parameters.AddWithValue("@Observacion", observacion ?? "");
+
+                SqlParameter pNuevaNP = new SqlParameter("@NuevaNPGerada", SqlDbType.VarChar, 50) { Direction = ParameterDirection.Output };
+                SqlParameter pExito = new SqlParameter("@Exito", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                SqlParameter pMensaje = new SqlParameter("@Mensaje", SqlDbType.VarChar, 500) { Direction = ParameterDirection.Output };
+                
+                cmd.Parameters.Add(pNuevaNP);
+                cmd.Parameters.Add(pExito);
+                cmd.Parameters.Add(pMensaje);
+
+                cnx.Open();
+                cmd.ExecuteNonQuery();
+
+                resultado.Exito = Convert.ToInt32(pExito.Value) == 1;
+                // Devolvemos el mensaje, si fue exito podemos concatenar la nueva NP, o el controlador puede sacarla del mensaje
+                resultado.Mensaje = pMensaje.Value.ToString();
+                
+                if (resultado.Exito)
+                {
+                    resultado.Mensaje = pNuevaNP.Value.ToString() + "|" + resultado.Mensaje;
+                }
+            }
+            return resultado;
+        }
+
         public List<LIQ_AuditoriaDevolucionBE> ObtenerAuditoriaDevolucionesCentral(string np)
         {
             List<LIQ_AuditoriaDevolucionBE> lista = new List<LIQ_AuditoriaDevolucionBE>();
@@ -1248,6 +1362,36 @@ namespace AppGenReceta.DA
             }
             catch (Exception ex) { throw ex; }
             return lista;
+        }
+
+        public string PredecirSiguienteVersionNP(string npOriginal)
+        {
+            string baseNP = npOriginal;
+            if (npOriginal.Contains("-V"))
+            {
+                baseNP = npOriginal.Substring(0, npOriginal.IndexOf("-V"));
+            }
+
+            int currentMaxVersion = 1;
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                string sql = @"
+                    SELECT ISNULL(MAX(
+                        CAST(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP)) AS INT)
+                    ), 1)
+                    FROM LIQ_Formulas 
+                    WHERE NP LIKE @BaseNP + '-V%' AND CHARINDEX('-V', NP) > 0";
+                
+                SqlCommand cmd = new SqlCommand(sql, cnx);
+                cmd.Parameters.AddWithValue("@BaseNP", baseNP);
+                cnx.Open();
+                object result = cmd.ExecuteScalar();
+                if (result != null && result != DBNull.Value)
+                {
+                    currentMaxVersion = Convert.ToInt32(result);
+                }
+            }
+            return baseNP + "-V" + (currentMaxVersion + 1);
         }
     }
 }
