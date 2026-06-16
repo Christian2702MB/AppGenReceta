@@ -1861,10 +1861,10 @@
                     
                     if (selectedNP) {
                         var isTerminada = finishedLiquidations[selectedNP] != null;
-                        selectNP(selectedNP, isTerminada ? 'terminada' : 'activa');
+                        selectNP(selectedNP, isTerminada ? 'terminada' : 'activa', true);
                     } else {
                         let firstKey = Object.keys(activeLiquidations)[0];
-                        if(firstKey) selectNP(firstKey, 'activa');
+                        if(firstKey) selectNP(firstKey, 'activa', false);
                     }
                 });
             });
@@ -1996,7 +1996,7 @@
     }
 
     // ── SELECCIONAR NP Y REDIBUJAR DETALLE (DETAIL VIEW) ──
-    function selectNP(np, tipo = 'activa') {
+    function selectNP(np, tipo = 'activa', keepCurrentTab = false) {
         selectedNP = np;
         
         // Actualizar UI del Sidebar
@@ -2048,8 +2048,10 @@
             $("#tabLinkTratamiento").css({"opacity": "1", "pointer-events": "auto"}).removeAttr("title");
         }
 
-        // Volver a la pestaña principal siempre al cambiar de NP
-        switchMainTab("liquidaciones");
+        // Volver a la pestaña principal si cambiamos manualmente de NP o si pasó a Terminado automáticamente
+        if (!keepCurrentTab || estId === 5) {
+            switchMainTab("liquidaciones");
+        }
 
         // Actualizar Stepper de Progreso
         actualizarStepper(item.estado, tipo);
