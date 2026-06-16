@@ -590,8 +590,8 @@
             // Inicializar Tooltips de Bootstrap
             $('[data-toggle="tooltip"]').tooltip();
 
-            // JS: Ajuste Manual Directo
-            $('.btn-ajuste-directo').on('click', function() {
+            // JS: Ajuste Manual Directo (usando delegación de eventos para DataTables)
+            $('#tblStockActual tbody').on('click', '.btn-ajuste-directo', function() {
                 var codInsumo = $(this).data('idinsumo');
                 var nombre = $(this).data('nombre');
                 var stock = parseFloat($(this).data('stock')).toFixed(2);
