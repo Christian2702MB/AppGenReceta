@@ -2534,7 +2534,8 @@
 
             $("#txtAjusteCantidad").val('').prop("disabled", false);
             $("#txtAjusteMotivo").val('').prop("disabled", false);
-            $("#chkNoAjuste").prop("checked", false);
+            $("#chkNoAjuste").prop("checked", false).prop("disabled", false);
+            $("#chkNoAjuste").closest(".form-group").show();
             $("#ddlAjusteInsumo").html(selectOptionsHtml).prop("disabled", true);
             
             $.get('@Url.Action("ObtenerSaldosInsumo", "Liquidacion")?np=' + np + '&codInsumo=' + codInsumo, function(response) {
@@ -2563,7 +2564,8 @@
         $("#txtMermaColorDesc").val(pantoneDesc);
         $("#txtMermaColorCantidad").val('').prop("disabled", false);
         $("#txtMermaColorVencimiento").val('').prop("disabled", false);
-        $("#chkNoMerma").prop("checked", false);
+        $("#chkNoMerma").prop("checked", false).prop("disabled", false);
+        $("#chkNoMerma").closest(".form-group").show();
         
         cargarHistoricoMermasColor(np, pantoneDesc);
         
@@ -2597,9 +2599,12 @@
                     </tr>`;
                     $tbody.append(row);
                 });
-                
                 if (hasRealMerma) {
-                    $("#chkNoMerma").prop("disabled", true);
+                    $("#chkNoMerma").prop("checked", false).prop("disabled", true);
+                    $("#chkNoMerma").closest(".form-group").slideUp();
+                } else {
+                    $("#chkNoMerma").prop("disabled", false);
+                    $("#chkNoMerma").closest(".form-group").slideDown();
                 }
             }
         }).fail(function() {
@@ -2633,9 +2638,12 @@
                     </tr>`;
                     $tbody.append(row);
                 });
-                
                 if (hasRealAjuste) {
-                    $("#chkNoAjuste").prop("disabled", true);
+                    $("#chkNoAjuste").prop("checked", false).prop("disabled", true);
+                    $("#chkNoAjuste").closest(".form-group").slideUp();
+                } else {
+                    $("#chkNoAjuste").prop("disabled", false);
+                    $("#chkNoAjuste").closest(".form-group").slideDown();
                 }
             }
         }).fail(function() {
