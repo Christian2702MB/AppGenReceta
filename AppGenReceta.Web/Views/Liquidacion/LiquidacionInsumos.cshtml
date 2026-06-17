@@ -742,9 +742,9 @@
             <!-- CONTENIDO TAB 3: TRATAMIENTO SALDOS -->
             <div id="panelTratamiento" class="tab-content-panel" style="display: none;">
                 <div class="table-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-                    <h2 style="margin: 0; font-size: 18px; white-space: nowrap;">Tratamiento de Saldos - <span id="lblSaldosNP" style="color: var(--hialpesa-accent);"></span></h2>
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 600; white-space: nowrap; color: var(--hialpesa-dark);">Tratamiento de Saldos - <span id="lblSaldosNP" style="color: var(--hialpesa-accent);"></span></h4>
                     <div id="headerCierreGlobal" style="display: flex; gap: 15px; align-items: center; display: none; flex-wrap: wrap;">
-                        <button class="btn btn-sm btn-danger btn-pulse" onclick="terminarNPGlobal()" style="font-weight: 700; background-color: #dc2626; border-color: #dc2626; color: white;"><i class="fas fa-arrow-right"></i> Cerrar y Terminar NP</button>
+                        <button class="btn btn-sm btn-pulse" onclick="terminarNPGlobal()" style="font-weight: 600; background-color: #16a34a; border-color: #16a34a; color: white; border-radius: 4px; padding: 6px 12px; font-size: 13px;"><i class="fas fa-check-circle"></i> Cerrar y Terminar NP</button>
                     </div>
                 </div>
                 
@@ -753,18 +753,18 @@
                 </div>
                 
                 <div style="overflow-x:auto;">
-                    <table class="erp-table" id="tablaTratamientoSaldos">
+                    <table class="erp-table table-condensed" id="tablaTratamientoSaldos" style="background-color: white;">
                         <thead>
-                            <tr>
-                                <th class="text-center" style="min-width: 60px; width: 60px; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Código</th>
-                                <th class="text-center" style="min-width: 180px; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Insumo</th>
-                                <th class="text-center" style="min-width: 100px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Stock<br>Recibido <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-center" style="min-width: 90px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Consumo<br><span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-center" style="min-width: 90px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Ajuste<br><span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-center" style="min-width: 100px; white-space: nowrap; color: #0ea5e9; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Saldo<br>Actual <span style="color: #94a3b8; font-weight: normal;">(g)</span></th>
-                                <th class="text-center" style="min-width: 110px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Devolver Alm.<br>Central</th>
-                                <th class="text-center" style="min-width: 110px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Devolver Alm.<br>Operativo</th>
-                                <th id="thAccionCierre" class="text-center" style="min-width: 120px; white-space: nowrap; padding: 12px 10px; vertical-align: middle; font-size: 10.5px;">Acción de Cierre</th>
+                            <tr style="background-color: var(--hialpesa-blue); color: white;">
+                                <th class="text-center" style="min-width: 60px; width: 60px; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Código</th>
+                                <th class="text-left" style="min-width: 180px; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Insumo</th>
+                                <th class="text-right" style="min-width: 100px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Stock<br>Recibido <span style="color: #cbd5e1; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 90px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Consumo<br><span style="color: #cbd5e1; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 90px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Ajuste<br><span style="color: #cbd5e1; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 100px; white-space: nowrap; color: #38bdf8; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Saldo<br>Actual <span style="color: #bae6fd; font-weight: normal;">(g)</span></th>
+                                <th class="text-right" style="min-width: 110px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Devolver Alm.<br>Central</th>
+                                <th class="text-right" style="min-width: 110px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Devolver Alm.<br>Operativo</th>
+                                <th id="thAccionCierre" class="text-center" style="min-width: 120px; white-space: nowrap; padding: 8px 12px; vertical-align: middle; font-size: 11.5px;">Acción de Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2316,12 +2316,12 @@
 
                         $saldosTbody.append(`
                             <tr>
-                                <td><strong>${ins.codigo}</strong></td>
-                                <td>${ins.nombre}</td>
+                                <td class="text-center"><strong>${ins.codigo}</strong></td>
+                                <td class="text-left">${ins.nombre}</td>
                                 <td class="text-right">${(ins.stockRecibido || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.consumidoSolicitud || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.ajusteSolicitud || 0).toFixed(2)}</td>
-                                <td class="text-right text-primary" style="font-size:14px;"><strong>${saldoLiquidar.toFixed(2)}</strong></td>
+                                <td class="text-right" style="color: #0ea5e9; font-size: 14px;"><strong>${saldoLiquidar.toFixed(2)}</strong></td>
                                 <td class="text-right">${(ins.devueltoCentral || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.devueltoOperativo || 0).toFixed(2)}</td>
                                 ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center;">${accionSaldo}</td>`}
