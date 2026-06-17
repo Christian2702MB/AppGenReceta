@@ -431,7 +431,7 @@
 
 <!-- Modal Carga Inicial -->
 <div class="modal fade" id="modalCargaInicial" tabindex="-1" role="dialog" aria-labelledby="modalCargaInicialLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog" role="document" style="max-width: 650px; width: 100%;">
         <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
             <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white; padding: 20px;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color: white; opacity: 0.8; font-size: 1.6rem; outline: none; border: none; background: transparent; float: right; margin-top: -3px;">
@@ -452,15 +452,15 @@
                         </div>
                     </div>
                     <div class="row" style="margin-top: 15px;">
-                        <div class="col-md-4 form-group">
+                        <div class="col-sm-4 form-group">
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Código de Insumo:</label>
                             <input type="text" id="txtCodInsumo" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
-                        <div class="col-md-4 form-group">
+                        <div class="col-sm-4 form-group">
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">U.M. Base:</label>
                             <input type="text" id="txtUM" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
-                        <div class="col-md-4 form-group">
+                        <div class="col-sm-4 form-group">
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Peso a Ingresar:</label>
                             <div class="input-group">
                                 <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="0.01" min="0.01" required style="font-weight: bold; text-align: right; z-index: 0;" />
