@@ -837,8 +837,12 @@
                     </div>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Cantidad a consumir (gr)</label>
-                    <input type="number" class="form-control" id="txtConsumoCantidad" placeholder="0.00" step="0.01" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-size: 16px; font-weight: bold; color: var(--hialpesa-dark);" />
+                    <label>Cantidad a consumir (En Gramos)</label>
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="number" class="form-control text-end conversion-gramos" data-target="lblEqConsumo" data-tipo="salida" id="txtConsumoCantidad" placeholder="Ej: 500" step="1" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-size: 16px; font-weight: bold; color: var(--hialpesa-dark); z-index: 0;" />
+                        <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">g</span>
+                    </div>
+                    <small id="lblEqConsumo" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                 </div>
                 <div style="margin-top: 20px;">
                     <label style="font-size: 11px; color: var(--hialpesa-dark);">Historial de Consumos</label>
@@ -882,16 +886,20 @@
                     <input type="text" class="form-control" id="txtMermaColorDesc" readonly />
                 </div>
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Cantidad (gr) de merma</label>
-                    <input type="number" class="form-control" id="txtMermaColorCantidad" placeholder="0.00" step="0.01" min="0" oninput="if(this.value < 0) this.value = 0;" />
+                    <label>Cantidad de merma (En Gramos)</label>
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="number" class="form-control text-end conversion-gramos" data-target="lblEqMerma" data-tipo="salida" id="txtMermaColorCantidad" placeholder="Ej: 500" step="1" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-weight: bold; z-index: 0;" />
+                        <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">g</span>
+                    </div>
+                    <small id="lblEqMerma" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                 </div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label>Fecha Vencimiento Estimada</label>
                     <input type="date" class="form-control" id="txtMermaColorVencimiento" />
                 </div>
-                <div class="form-group" style="margin-top: 15px;">
-                    <label style="font-weight: normal; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-transform: none; color: #475569;">
-                        <input type="checkbox" id="chkNoMerma" /> No existe merma
+                <div class="form-group" style="margin-top: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 8px; transition: all 0.2s ease;">
+                    <label style="font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0; color: #475569;">
+                        <input type="checkbox" id="chkNoMerma" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" /> <span style="padding-top: 2px;">Marcar si la operación finalizó sin generar merma</span>
                     </label>
                 </div>
                 <hr style="border-top: 1px solid #e2e8f0; margin: 20px 0;">
@@ -973,8 +981,12 @@
                 </div>
 
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Cantidad a ajustar (gr)</label>
-                    <input type="number" class="form-control" id="txtAjusteCantidad" placeholder="0.00" step="0.01" min="0" oninput="if(this.value < 0) this.value = 0;" />
+                    <label>Cantidad a ajustar (En Gramos)</label>
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="number" class="form-control text-end conversion-gramos" data-target="lblEqAjuste" data-tipo="neutro" id="txtAjusteCantidad" placeholder="Ej: 500" step="1" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-weight: bold; z-index: 0;" />
+                        <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">g</span>
+                    </div>
+                    <small id="lblEqAjuste" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
                     <label>Motivo del Ajuste (Obligatorio)</label>
@@ -1081,8 +1093,12 @@
                         <select class="form-control" id="ddlIngresoInsumo"></select>
                     </div>
                     <div class="col-md-5 form-group">
-                        <label>Cantidad adicional (gr)</label>
-                        <input type="number" class="form-control" id="txtIngresoCantidad" placeholder="0.00" step="0.01" min="0" oninput="if(this.value < 0) this.value = 0;" />
+                        <label>Cantidad adicional (En Gramos)</label>
+                        <div class="input-group" style="max-width: 250px;">
+                            <input type="number" class="form-control text-end conversion-gramos" data-target="lblEqIngreso" data-tipo="ingreso" id="txtIngresoCantidad" placeholder="Ej: 500" step="1" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-weight: bold; z-index: 0;" />
+                            <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">g</span>
+                        </div>
+                        <small id="lblEqIngreso" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
@@ -1139,8 +1155,12 @@
                     <select class="form-control" id="ddlDevolucionInsumo"></select>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Cantidad a retornar</label>
-                    <input type="number" class="form-control" id="txtDevolucionCantidad" placeholder="No mayor al saldo disponible" step="0.01" min="0" oninput="if(this.value < 0) this.value = 0;" />
+                    <label>Cantidad a retornar (En Gramos)</label>
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="number" class="form-control text-end conversion-gramos" data-target="lblEqDevolucion" data-tipo="salida" id="txtDevolucionCantidad" placeholder="Ej: 500" step="1" min="0" oninput="if(this.value < 0) this.value = 0;" style="font-weight: bold; z-index: 0;" />
+                        <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">g</span>
+                    </div>
+                    <small id="lblEqDevolucion" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                 </div>
                 
                 <hr style="margin-top:20px; margin-bottom:15px;" />
@@ -3030,6 +3050,66 @@
             }
         });
     }
+
+    // --- UX: Conversión Dinámica de Gramos a Kilos y Alertas Smart ---
+    function actualizarEquivalenciaUX() {
+        $('.conversion-gramos').each(function() {
+            var val = parseFloat($(this).val());
+            var targetId = $(this).data('target');
+            var $lbl = $('#' + targetId);
+            var modalId = $(this).closest('.modal').attr('id');
+
+            if (isNaN(val) || val <= 0) {
+                $lbl.text('');
+                return;
+            }
+
+            var icon = 'fa-exchange-alt';
+            var color = '#0ea5e9'; // Color por defecto (Stock Total / Neutro)
+
+            // Asignar color dinámicamente según la fuente que se está afectando
+            if (modalId === 'consumoModal') {
+                var fuenteConsumo = $("input[name='optFuenteConsumo']:checked").val();
+                if (fuenteConsumo === 'Stock Inicial') color = 'var(--hialpesa-dark)'; // Stock Operativo
+                else if (fuenteConsumo === 'Solicitud Realizada') color = 'var(--hialpesa-accent)'; // Stock Recibido
+                else if (fuenteConsumo === 'Stock Merma') color = '#c2410c'; // Stock Merma
+            } 
+            else if (modalId === 'ajusteModal') {
+                var fuenteAjuste = $("input[name='optFuenteAjuste']:checked").val();
+                if (fuenteAjuste === 'Stock Inicial') color = 'var(--hialpesa-dark)'; // Stock Operativo
+                else if (fuenteAjuste === 'Solicitud Realizada') color = 'var(--hialpesa-accent)'; // Stock Recibido
+                else if (fuenteAjuste === 'Stock Merma') color = '#c2410c'; // Stock Merma
+            }
+            else if (modalId === 'mermaColorModal') {
+                color = '#dc3545'; // Merma es una salida/pérdida (Rojo)
+            }
+            else if (modalId === 'ingresoModal') {
+                var reutilizarMerma = $("#ddlIngresoReutilizarMerma").val();
+                if (reutilizarMerma === '') color = '#28a745'; // Ingreso nuevo (Verde)
+                else color = '#c2410c'; // Reutilizando Merma (Naranja)
+            }
+            else if (modalId === 'devolucionModal') {
+                var tipoDevolucion = $("#ddlTipoDevolucion").val();
+                if (tipoDevolucion === 'Almacén Central') color = '#dc3545'; // Salida definitiva
+                else color = '#8b5cf6'; // Morado (Almacén Operativo interno)
+            }
+            
+            var htmlEq = '<i class="fas ' + icon + '"></i> Equivale a: ' + (val / 1000).toFixed(3) + ' KG';
+            
+            // Smart Warning
+            if (val >= 20000) {
+                htmlEq += ' <span style="color:#d97706; font-size:0.9em; margin-left:10px;"><i class="fas fa-exclamation-triangle"></i> ¡Atención! Son más de 20 Kilos.</span>';
+            }
+
+            $lbl.html(htmlEq).css('color', color);
+        });
+    }
+
+    $('.conversion-gramos').on('input', actualizarEquivalenciaUX);
+    $("input[name='optFuenteConsumo']").on('change', actualizarEquivalenciaUX);
+    $("input[name='optFuenteAjuste']").on('change', actualizarEquivalenciaUX);
+    $("#ddlIngresoReutilizarMerma").on('change', actualizarEquivalenciaUX);
+    $("#ddlTipoDevolucion").on('change', actualizarEquivalenciaUX);
 
 </script>
 }
