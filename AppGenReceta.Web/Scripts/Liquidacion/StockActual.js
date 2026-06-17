@@ -7,6 +7,8 @@ $(document).ready(function () {
         $('#txtDescInsumo').val(null).trigger('change');
         $('#txtCodInsumo').val('');
         $('#txtUM').val('');
+        $('#txtCantInsumo').val('');
+        $('#lblEquivalencia').text('');
         selectedInsumoDescripcion = "";
     });
 
@@ -56,6 +58,22 @@ $(document).ready(function () {
             $('#txtUM').val('');
             selectedInsumoDescripcion = "";
         }
+        $('#txtCantInsumo').trigger('input');
+    });
+
+    // Calcular equivalencia en tiempo real
+    $('#txtCantInsumo').on('input', function() {
+        var UM = ($('#txtUM').val() || '').toUpperCase();
+        var val = parseFloat($(this).val());
+        if (!isNaN(val) && val > 0) {
+            if (UM === 'KG') {
+                $('#lblEquivalencia').html('<i class="fas fa-exchange-alt"></i> Equivale a: ' + (val / 1000).toFixed(4) + ' KG');
+            } else if (UM !== '') {
+                $('#lblEquivalencia').html('<i class="fas fa-exchange-alt"></i> Equivale a: ' + val.toFixed(2) + ' ' + UM);
+            }
+        } else {
+            $('#lblEquivalencia').text('');
+        }
     });
 
     // Presionar Enter en el input de peso
@@ -103,6 +121,13 @@ $(document).ready(function () {
             }
         });
 
+        // Lógica de conversión: Si el usuario ingresa gramos, pero la U.M. base es KG, convertimos a KG
+        var UM_Upper = UM.toUpperCase();
+        var pesoFinal = pesoGramos;
+        if (UM_Upper === 'KG') {
+            pesoFinal = pesoGramos / 1000.0;
+        }
+
         // Enviar la petición POST
         $.ajax({
             url: '/Liquidacion/RegistrarCargaInicial',
@@ -111,7 +136,7 @@ $(document).ready(function () {
                 codInsumo: codInsumo,
                 descripcion: selectedInsumoDescripcion,
                 unidadMedida: UM,
-                pesoGramos: pesoGramos
+                pesoGramos: pesoFinal
             },
             success: function (response) {
                 Swal.close();

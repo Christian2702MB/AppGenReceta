@@ -457,12 +457,16 @@
                             <input type="text" id="txtCodInsumo" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
                         <div class="col-md-4 form-group">
-                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">U.M.:</label>
-                            <input type="text" id="txtUM" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center;" />
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">U.M. Base:</label>
+                            <input type="text" id="txtUM" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
                         <div class="col-md-4 form-group">
-                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Peso:</label>
-                            <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="0.01" min="0.01" required style="font-weight: bold; text-align: right;" />
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Peso a Ingresar:</label>
+                            <div class="input-group">
+                                <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="0.01" min="0.01" required style="font-weight: bold; text-align: right; z-index: 0;" />
+                                <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">Gramos (g)</span>
+                            </div>
+                            <small id="lblEquivalencia" style="display: block; margin-top: 5px; font-weight: 600; color: #28a745 !important;"></small>
                         </div>
                     </div>
                 </form>
