@@ -362,7 +362,7 @@
 
 <!-- Modal Ajuste Manual Directo -->
 <div class="modal fade" id="modalAjusteDirecto" tabindex="-1" role="dialog" aria-labelledby="modalAjusteDirectoLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog" role="document" style="max-width: 550px; width: 100%;">
         <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
             <div class="modal-header" style="background-color: var(--hialpesa-blue); color: white; padding: 20px;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color: white; opacity: 0.8; font-size: 1.6rem; outline: none; border: none; background: transparent; float: right; margin-top: -3px;">
@@ -405,8 +405,12 @@
 
                     <!-- Input Numérico -->
                     <div class="form-group" style="margin-bottom: 20px;">
-                        <label style="font-weight: 600; color: #495057; display:block; margin-bottom: 8px;">2. CANTIDAD A AJUSTAR (<span id="lblModalUM">KG</span>):</label>
-                        <input type="number" id="txtAjusteCantidad" class="form-control text-end" style="font-weight:bold; font-size:1.2rem; height:45px;" placeholder="0.00" step="0.01" min="0.01" required>
+                        <label style="font-weight: 600; color: #495057; display:block; margin-bottom: 8px;">2. CANTIDAD A AJUSTAR (En Gramos):</label>
+                        <div class="input-group" style="max-width: 250px;">
+                            <input type="number" id="txtAjusteCantidad" class="form-control text-end" style="font-weight:bold; font-size:1.3rem; height:45px; z-index: 0;" placeholder="Ej: 500" step="1" min="1" required>
+                            <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057; font-size: 1.1rem; line-height: 1.8;">g</span>
+                        </div>
+                        <small id="lblEquivalenciaAjuste" style="display: block; margin-top: 5px; font-weight: 600;"></small>
                     </div>
 
                     <!-- Textarea Obligatorio -->
@@ -456,14 +460,14 @@
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Código de Insumo:</label>
                             <input type="text" id="txtCodInsumo" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
-                        <div class="col-sm-4 form-group">
+                        <div class="col-sm-3 form-group">
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">U.M. Base:</label>
                             <input type="text" id="txtUM" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; text-align: center; color: var(--hialpesa-blue);" />
                         </div>
-                        <div class="col-sm-4 form-group">
+                        <div class="col-sm-5 form-group">
                             <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Peso a Ingresar:</label>
                             <div class="input-group">
-                                <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="0.01" min="0.01" required style="font-weight: bold; text-align: right; z-index: 0;" />
+                                <input type="number" id="txtCantInsumo" class="form-control" placeholder="Ej: 500" step="1" min="1" required style="font-weight: bold; text-align: right; z-index: 0;" />
                                 <span class="input-group-addon" style="font-weight: bold; background-color: #f8f9fa; color: #495057;">Gramos (g)</span>
                             </div>
                             <small id="lblEquivalencia" style="display: block; margin-top: 5px; font-weight: 600; color: #28a745 !important;"></small>
@@ -610,20 +614,46 @@
                 // Reset form
                 $('#formAjusteDirecto')[0].reset();
                 $('#optIngreso').closest('label').button('toggle');
+                $('#lblEquivalenciaAjuste').text('');
                 
                 $('#modalAjusteDirecto').modal('show');
             });
 
+            function actualizarEquivalenciaAjuste() {
+                var UM = ($('#hdnAjusteUM').val() || '').toUpperCase();
+                var val = parseFloat($('#txtAjusteCantidad').val());
+                var tipoAjuste = $('input[name="optTipoAjuste"]:checked').val();
+                
+                // Colores y iconos basados en el sentido
+                var colorCls = tipoAjuste === 'Ingreso' ? '#28a745' : '#dc3545';
+                var icon = tipoAjuste === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
+
+                if (!isNaN(val) && val > 0) {
+                    var htmlEq = '';
+                    if (UM === 'KG') {
+                        htmlEq = '<i class="fas ' + icon + '"></i> Equivale a: ' + (val / 1000).toFixed(3) + ' KG';
+                    } else if (UM !== '') {
+                        htmlEq = '<i class="fas ' + icon + '"></i> Equivale a: ' + val.toFixed(2) + ' ' + UM;
+                    }
+                    $('#lblEquivalenciaAjuste').html(htmlEq).css('color', colorCls);
+                } else {
+                    $('#lblEquivalenciaAjuste').text('');
+                }
+            }
+
+            $('#txtAjusteCantidad').on('input', actualizarEquivalenciaAjuste);
+            $('input[name="optTipoAjuste"]').on('change', actualizarEquivalenciaAjuste);
+
             $('#btnGuardarAjusteDirecto').on('click', function() {
                 var codInsumo = $('#hdnAjusteCodInsumo').val();
                 var nombre = $('#lblAjusteInsumo').text();
-                var um = $('#hdnAjusteUM').val();
+                var um = ($('#hdnAjusteUM').val() || '').toUpperCase();
                 var tipoAjuste = $('input[name="optTipoAjuste"]:checked').val();
-                var cantidad = parseFloat($('#txtAjusteCantidad').val());
+                var gramos = parseFloat($('#txtAjusteCantidad').val());
                 var motivo = $.trim($('#txtAjusteMotivo').val());
                 
-                if (isNaN(cantidad) || cantidad <= 0) {
-                    Swal.fire('Error', 'La cantidad debe ser mayor a 0.', 'error');
+                if (isNaN(gramos) || gramos <= 0) {
+                    Swal.fire('Error', 'La cantidad en gramos debe ser mayor a 0.', 'error');
                     return;
                 }
 
@@ -632,11 +662,16 @@
                     return;
                 }
 
+                var cantidadFinal = gramos;
+                if (um === 'KG') {
+                    cantidadFinal = gramos / 1000.0;
+                }
+
                 var textoTipo = tipoAjuste === 'Ingreso' ? 'Ingreso (+)' : 'Salida (-)';
 
                 Swal.fire({
                     title: '¿Confirmar Ajuste Manual Directo?',
-                    html: `Vas a registrar un <strong>${textoTipo}</strong> de <strong>${cantidad.toFixed(2)} ${um}</strong> para el insumo <strong>${nombre}</strong>.<br><br><span style="color:#d32f2f; font-size:0.9em;">Este cambio alterará el inventario real inmediatamente y quedará registrado.</span>`,
+                    html: `Vas a registrar un <strong>${textoTipo}</strong> de <strong>${cantidadFinal.toFixed(3)} ${um}</strong> (Ingresado: ${gramos}g) para el insumo <strong>${nombre}</strong>.<br><br><span style="color:#d32f2f; font-size:0.9em;">Este cambio alterará el inventario real inmediatamente y quedará registrado.</span>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#28a745',
@@ -651,7 +686,7 @@
                         $.post('@Url.Action("RegistrarAjusteDirecto", "Liquidacion")', {
                             codInsumo: codInsumo,
                             tipoAjuste: tipoAjuste,
-                            cantidad: cantidad,
+                            cantidad: cantidadFinal,
                             um: um,
                             motivo: motivo
                         }, function(response) {
