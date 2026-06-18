@@ -944,8 +944,8 @@
                             <tr>
                                 <th class="text-center">Código</th>
                                 <th class="text-center">Cant. (g)</th>
-                                <th class="text-center">Vencimiento</th>
                                 <th class="text-center">Registro</th>
+                                <th class="text-center">Vencimiento</th>
                                 <th class="text-center">Estado</th>
                             </tr>
                         </thead>
@@ -1625,10 +1625,10 @@
             var siguienteNP = resPrediccion.success ? resPrediccion.siguienteNP : (npOriginal + "-VX");
 
             Swal.fire({
-                title: '¿Generar lote ' + siguienteNP + '?',
+                title: '¿Generar versión ' + siguienteNP + '?',
                 html: `
                     <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
-                        El registro actual se conservará intacto en el historial. La nueva orden iniciará en estado <b>Activa</b>.
+                        El registro actual se conservará intacto en el historial. La nueva versión iniciará en estado <b>Activa</b>.
                     </p>
                     <div style="text-align: left;">
                         <label style="font-weight: bold; font-size: 13px; color: #333;">Motivo de la división <span style="color: red;">*</span></label>
@@ -1637,9 +1637,9 @@
                 `,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, crear orden',
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, crear versión',
                 cancelButtonText: 'Cancelar',
                 preConfirm: () => {
                     var obs = document.getElementById('swal-observacion-version').value.trim();
@@ -2312,7 +2312,7 @@
                         var isLiquidado = (item.estado || '').toLowerCase() === 'liquidado' || (item.estado || '').toLowerCase() === 'cerrada';
                         var disabledStr = isLiquidado ? '' : 'disabled="disabled"';
                         var styleStr = isLiquidado ? '' : 'opacity: 0.5; pointer-events: none;';
-                        var accionSaldo = `<button class="btn-action-pill btn-dev" style="white-space: normal; line-height: 1.1; padding: 4px 8px; margin: 0 auto; display: block; ${styleStr}" ${disabledStr} onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion', '${col.pantone}', ${saldoLiquidar})"><i class="fas fa-exchange-alt"></i> Devolver<br>Saldo</button>`;
+                        var accionSaldo = `<button class="btn-action-pill btn-dev" style="white-space: normal; line-height: 1.1; padding: 4px 10px; margin: 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-align: left; ${styleStr}" ${disabledStr} onclick="abrirModalOperacion('${item.np}', '${ins.codigo}', 'devolucion', '${col.pantone}', ${saldoLiquidar})"><i class="fas fa-exchange-alt" style="font-size: 14px;"></i> <span>Devolver<br>Saldo</span></button>`;
 
                         $saldosTbody.append(`
                             <tr>
@@ -2697,12 +2697,12 @@
                 data.forEach(function(item) {
                     var isNoMerma = item.Cantidad === 0 && item.CodigoMerma === 'NO_MERMA';
                     if (!isNoMerma) { hasRealMerma = true; }
-                    var stLabel = isNoMerma ? '<span class="label label-default" style="background-color:#94a3b8;">No existe merma</span>' : '<span class="label label-success" style="background-color:#10b981;">Registrado</span>';
+                    var stLabel = isNoMerma ? '<span class="label label-default" style="background-color:#f1f5f9; color:#64748b; border: 1px solid #cbd5e1;">No existe merma</span>' : '<span class="label label-primary" style="background-color:#f0f9ff; color:#0284c7; border: 1px solid #bae6fd;">Registrado</span>';
                     var row = `<tr>
                         <td class="text-center"><strong>${item.CodigoMerma || '-'}</strong></td>
                         <td class="text-center" style="color: #d97706;"><strong>${item.Cantidad.toFixed(2)}</strong></td>
-                        <td class="text-center">${item.FechaVencimiento || '-'}</td>
                         <td class="text-center">${item.FechaRegistro}</td>
+                        <td class="text-center">${item.FechaVencimiento || '-'}</td>
                         <td class="text-center">${stLabel}</td>
                     </tr>`;
                     $tbody.append(row);
