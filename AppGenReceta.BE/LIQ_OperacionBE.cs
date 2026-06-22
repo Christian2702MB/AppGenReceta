@@ -144,6 +144,7 @@ namespace AppGenReceta.BE
     [Serializable]
     public class LIQ_OperacionDetalleBE
     {
+        public int IdOperacion { get; set; }
         public string Fecha { get; set; }
         public string Usuario { get; set; }
         public string Fuente { get; set; }

@@ -1160,16 +1160,23 @@ function abrirModalConsumoDesarrollo(nombreColor, codigoInsumo, descripcion, idI
             // Cargar Historial
             if (res.data.HistorialConsumo && res.data.HistorialConsumo.length > 0) {
                 res.data.HistorialConsumo.forEach(function (h) {
+                    var btnAnular = !window.g_isReadOnly 
+                        ? '<td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-delete-insumo" ' +
+                          'onclick="eliminarConsumoDesarrollo(' + h.IdOperacion + ', ' + h.Cantidad.toFixed(2) + ')" ' +
+                          'title="Anular este consumo"><i class="fa fa-trash"></i></button></td>' 
+                        : '';
                     tbHistorial.append(
                         '<tr>' +
                             '<td class="text-center">' + h.Fecha + '</td>' +
                             '<td class="text-center">' + h.Usuario + '</td>' +
                             '<td class="text-center"><strong>' + h.Cantidad.toFixed(2) + ' gr</strong></td>' +
+                            btnAnular +
                         '</tr>'
                     );
                 });
             } else {
-                tbHistorial.append('<tr><td colspan="3" class="text-center text-muted">No hay consumos previos.</td></tr>');
+                var colSpan = !window.g_isReadOnly ? '4' : '3';
+                tbHistorial.append('<tr><td colspan="' + colSpan + '" class="text-center text-muted">No hay consumos previos.</td></tr>');
             }
         } else {
             $("#lblStockDisponibleDesarrollo").text("0.00 gr");
@@ -1301,7 +1308,122 @@ $(document).on('change', '#ddlColumnaOrigenConsumo', function() {
         // Pequeño feedback visual para indicar que se autocompletó (UI/UX)
         $("#txtCantConsumoDesarrollo").stop().css("background-color", "#fcf8e3").animate({ backgroundColor: "#ffffff" }, 1500);
     }
+    // Auto-focus en el campo de cantidad para agilizar el ingreso
+    $("#txtCantConsumoDesarrollo").focus();
 });
 
-
+// ====================================================================
+// MÓDULO: ANULACIÓN AUDITADA DE CONSUMO DESARROLLO
+// ====================================================================
+function eliminarConsumoDesarrollo(idOperacion, cantidadRestaurar) {
+    // Paso 1: Confirmación inicial
+    Swal.fire({
+        title: '¿Anular este consumo?',
+        html: '<p>Se anulará el registro de <strong>' + cantidadRestaurar.toFixed(2) + ' gr</strong> y el stock será restaurado.</p>' +
+              '<p class="text-muted" style="font-size:12px;"><i class="fa fa-info-circle"></i> El registro no se eliminará de la base de datos, quedará marcado como <em>Consumo Anulado</em> para fines de auditoría.</p>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa fa-check"></i> Sí, anular',
+        cancelButtonText: 'Cancelar'
+    }).then(function(result) {
+        if (result.value) {
+            // Paso 2: Solicitar motivo obligatorio
+            Swal.fire({
+                title: 'Motivo de la Anulación',
+                html: '<p style="font-size:13px; color:#666;">Este campo es <strong>obligatorio</strong>. Ingrese el motivo por el cual se anula este consumo.</p>',
+                input: 'textarea',
+                inputPlaceholder: 'Escriba el motivo aquí...',
+                inputAttributes: {
+                    'aria-label': 'Motivo de anulación',
+                    'maxlength': 500
+                },
+                target: document.getElementById('modalConsumoDesarrollo'),
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa fa-save"></i> Confirmar Anulación',
+                confirmButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                inputValidator: function(value) {
+                    if (!value || value.trim().length < 5) {
+                        return 'El motivo debe tener al menos 5 caracteres.';
+                    }
+                }
+            }).then(function(result2) {
+                if (result2.value) {
+                    var motivo = result2.value;
+                    
+                    // Paso 3: Ejecutar AJAX hacia el backend
+                    $.ajax({
+                        url: '/Home/EliminarConsumoDesarrollo',
+                        type: 'POST',
+                        data: { idOperacion: idOperacion, motivo: motivo },
+                        success: function(res) {
+                            if (res.success) {
+                                // Cerrar modal para forzar recarga limpia de stock al reabrir
+                                $("#modalConsumoDesarrollo").modal("hide");
+                                
+                                // Actualizar recetaMaster (restar cantidad)
+                                var nombreColor = $("#hdnColorDesarrollo").val();
+                                var codInsumo = $("#hdnCodInsumoDesarrollo").val();
+                                var idInsumo = $("#hdnIdInsumoDesarrollo").val();
+                                
+                                var colorObj = recetaMaster.Colores.find(function(c) { return c.Nombre === nombreColor; });
+                                if (colorObj) {
+                                    var insumosList = colorObj.Insumos || colorObj.insumos;
+                                    if (insumosList) {
+                                        var insumoObj = insumosList.find(function(i) { 
+                                            return (i.IDInsumo == idInsumo || i.IdInsumo == idInsumo || i.CodigoInsumo === codInsumo); 
+                                        });
+                                        if (insumoObj) {
+                                            insumoObj.ConsumoDesarrollo = Math.max(0, (insumoObj.ConsumoDesarrollo || 0) - cantidadRestaurar);
+                                        }
+                                    }
+                                }
+                                
+                                // Actualizar DOM directamente (restar del badge)
+                                var panelColor = $("h4").filter(function() {
+                                    return $(this).text().indexOf("Color Pantone:") > -1 && $(this).text().indexOf(nombreColor) > -1;
+                                }).closest('.panel');
+                                
+                                var rowInsumo = panelColor.find("tr[data-idinsumo='" + idInsumo + "']");
+                                if (rowInsumo.length === 0) {
+                                    rowInsumo = panelColor.find("td:contains('" + codInsumo + "')").closest('tr');
+                                }
+                                
+                                if (rowInsumo.length > 0) {
+                                    var badgeBtn = rowInsumo.find("button[title='Registrar Consumo'] .badge");
+                                    if (badgeBtn.length > 0) {
+                                        var textVal = badgeBtn.text().replace(" gr", "").trim();
+                                        var currentVal = parseFloat(textVal) || 0;
+                                        var newVal = Math.max(0, currentVal - cantidadRestaurar);
+                                        badgeBtn.text(newVal.toFixed(2) + " gr");
+                                        
+                                        // Efecto visual rojo indicando la resta
+                                        badgeBtn.closest("button").stop().css("background-color", "#dc3545").animate({ backgroundColor: "#f0ad4e" }, 1500, function() {
+                                            $(this).css("background-color", ""); 
+                                        });
+                                    }
+                                }
+                                
+                                Swal.fire({
+                                    title: '¡Anulado!',
+                                    text: 'El consumo de ' + cantidadRestaurar.toFixed(2) + ' gr fue anulado. El stock ha sido restaurado.',
+                                    icon: 'success',
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                Swal.fire('Error', res.message || 'No se pudo anular el consumo', 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Ocurrió un error de conexión con el servidor', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
 

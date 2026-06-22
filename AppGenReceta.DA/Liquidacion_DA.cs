@@ -916,6 +916,7 @@ namespace AppGenReceta.DA
         @StockGlobalReal AS StockGlobal;
         
     SELECT 
+        IdOperacion,
         FechaRegistro,
         UsuarioRegistro,
         CASE 
@@ -958,6 +959,7 @@ namespace AppGenReceta.DA
                         {
                             saldos.HistorialConsumo.Add(new LIQ_OperacionDetalleBE
                             {
+                                IdOperacion = Convert.ToInt32(dr["IdOperacion"]),
                                 Fecha = Convert.ToDateTime(dr["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm"),
                                 Usuario = dr["UsuarioRegistro"].ToString(),
                                 Fuente = dr["FuenteConsumo"] != DBNull.Value ? dr["FuenteConsumo"].ToString() : "N/A",
@@ -968,6 +970,31 @@ namespace AppGenReceta.DA
                 }
             }
             return saldos;
+        }
+
+        /// <summary>
+        /// Soft-Delete: Cambia el TipoOperacion a 'Consumo Anulado' para restaurar stock sin borrar el registro.
+        /// </summary>
+        public bool AnularOperacion(int idOperacion, string motivo, string usuario)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                string sql = @"
+                    UPDATE LIQ_OperacionesDetalle 
+                    SET TipoOperacion = 'Consumo Anulado',
+                        Motivo = 'ANULADO: ' + @Motivo + ' | Por: ' + @Usuario + ' | Fecha: ' + CONVERT(VARCHAR(20), GETDATE(), 120)
+                    WHERE IdOperacion = @IdOperacion
+                      AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo');
+                ";
+                SqlCommand cmd = new SqlCommand(sql, cnx);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@IdOperacion", idOperacion);
+                cmd.Parameters.AddWithValue("@Motivo", motivo ?? "");
+                cmd.Parameters.AddWithValue("@Usuario", usuario ?? "");
+                cnx.Open();
+                int rows = cmd.ExecuteNonQuery();
+                return rows > 0;
+            }
         }
 
         public List<LIQ_NPPendienteBE> ObtenerNPsPendientes()

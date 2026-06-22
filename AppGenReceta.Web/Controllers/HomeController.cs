@@ -494,6 +494,29 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpPost]
+        public JsonResult EliminarConsumoDesarrollo(int idOperacion, string motivo)
+        {
+            try
+            {
+                if (Session["NombreUsuario"] == null)
+                    return Json(new { success = false, message = "Sesión expirada" });
+
+                string usuario = Session["NombreUsuario"].ToString();
+                var bl = new Liquidacion_BL();
+                bool res = bl.AnularOperacion(idOperacion, motivo, usuario);
+
+                if (res)
+                    return Json(new { success = true, message = "El consumo fue anulado correctamente." });
+                else
+                    return Json(new { success = false, message = "No se encontró la operación o ya fue anulada." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
         // =====================================================================
 
         #region Corregir SCTR

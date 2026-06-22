@@ -132,6 +132,15 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public bool AnularOperacion(int idOperacion, string motivo, string usuario)
+        {
+            try
+            {
+                return new Liquidacion_DA().AnularOperacion(idOperacion, motivo, usuario);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
         public List<LIQ_NPPendienteBE> ObtenerNPsPendientes()
         {
             try
