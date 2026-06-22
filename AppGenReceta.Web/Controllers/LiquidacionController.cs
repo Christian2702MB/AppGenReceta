@@ -769,6 +769,24 @@ namespace AppGenReceta.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public JsonResult ObtenerAuditoriaAnulaciones()
+        {
+            try
+            {
+                // Validación estricta de seguridad
+                if (Session["RolUsuario"] == null || (Session["RolUsuario"].ToString() != "Administrador" && Session["RolUsuario"].ToString() != "Liquidador"))
+                    return Json(new { success = false, message = "Acceso denegado. Solo administradores y liquidadores pueden ver auditorías." }, JsonRequestBehavior.AllowGet);
+
+                var lista = bl.ListarAuditoriaAnulaciones();
+                return Json(new { success = true, data = lista }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         // ==========================================
         // SUB-MÓDULO: REQUERIMIENTOS Y RECEPCIÓN
         // ==========================================

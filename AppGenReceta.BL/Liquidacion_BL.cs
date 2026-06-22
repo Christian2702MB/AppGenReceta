@@ -273,5 +273,14 @@ namespace AppGenReceta.BL
             }
             catch (Exception ex) { throw ex; }
         }
+
+        public List<LIQ_AuditoriaAnulacionBE> ListarAuditoriaAnulaciones()
+        {
+            try
+            {
+                return new Liquidacion_DA().ListarAuditoriaAnulaciones();
+            }
+            catch (Exception ex) { throw ex; }
+        }
     }
 }

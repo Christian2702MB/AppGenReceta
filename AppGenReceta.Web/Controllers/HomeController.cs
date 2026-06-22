@@ -130,7 +130,7 @@ namespace AppGenReceta.Web.Controllers
 
         [HttpGet]
         [NoCache]
-        public ActionResult MantenimientoVisitas(string start = null, string end = null)
+        public ActionResult MantenimientoVisitas(string start = null, string end = null, bool verEliminados = false)
         {
             VisitaBL visitaBL = new VisitaBL();
             List<VisitaBE> lstVisitas;
@@ -148,12 +148,20 @@ namespace AppGenReceta.Web.Controllers
 
                     ViewBag.FechaInicio = start;
                     ViewBag.FechaFin = end;
+                    ViewBag.VerEliminados = verEliminados;
 
                     // Formatear a dd/MM/yyyy para la Base de Datos
                     string fechaInicioDB = DateTime.ParseExact(start, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
                     string fechaFinDB = DateTime.ParseExact(end, "yyyy-MM-dd", null).ToString("dd/MM/yyyy");
 
-                    lstVisitas = visitaBL.ListarRecetasGeneradas(fechaInicioDB, fechaFinDB);
+                    if (verEliminados && Session["RolUsuario"] != null && Session["RolUsuario"].ToString() == "Administrador")
+                    {
+                        lstVisitas = visitaBL.ListarRecetasEliminadas(fechaInicioDB, fechaFinDB);
+                    }
+                    else
+                    {
+                        lstVisitas = visitaBL.ListarRecetasGeneradas(fechaInicioDB, fechaFinDB);
+                    }
                 }
                 else
                 {
@@ -758,6 +766,12 @@ namespace AppGenReceta.Web.Controllers
                         // Buscamos la información real de la receta usando el ID
                         item = visitaBL.ObtenerRecetaPorId(Convert.ToInt32(id));
                         
+                        if (item == null)
+                        {
+                            item = new VisitaBE();
+                            TempData["ErrorMsg"] = "La receta no pudo ser cargada. Es posible que esté eliminada y el procedimiento almacenado actual no la retorne.";
+                        }
+
                         // Implementación de caché para Conceptos (expira en 1 hora) para optimizar carga
                         var cacheConceptos = System.Web.HttpContext.Current.Cache["ListaConceptos"];
                         if (cacheConceptos == null)

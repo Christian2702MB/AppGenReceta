@@ -139,6 +139,11 @@ namespace AppGenReceta.BL
             return new VisitaDA().ListarRecetasGeneradas(fechaInicio, fechaFin);
         }
 
+        public List<VisitaBE> ListarRecetasEliminadas(string fechaInicio, string fechaFin)
+        {
+            return new VisitaDA().ListarRecetasEliminadas(fechaInicio, fechaFin);
+        }
+
         //agregado 11/03/2026
         public List<string> ListarConceptos()
         {

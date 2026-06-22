@@ -95,6 +95,11 @@ namespace AppGenReceta.BE
 
         public string Observaciones { get; set; }
 
+        // Propiedades para auditoría de recetas eliminadas
+        public string UsuarioEliminacion { get; set; }
+        public string FechaEliminacion { get; set; }
+        public string MotivoEliminacion { get; set; }
+
         [XmlArray("Colores")]
         [XmlArrayItem("ColorBE")]
         public List<ColorBE> Colores { get; set; }

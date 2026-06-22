@@ -348,14 +348,37 @@
         </div>
         
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
-            @if (rolActual == "Administrador" || rolActual == "Editor")
+            @if (ViewBag.VerEliminados == true)
             {
-                <a href="@Url.Action("Visita", "Home")" class="btn-header-new">
-                    <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Nueva Receta
+                <a href="@Url.Action("MantenimientoVisitas", "Home")" class="btn-header-back" title="Volver a Recetas Activas">
+                    <i class="fas fa-arrow-left" style="margin-right: 8px; font-size: 1.1rem;"></i> Recetas Activas
                 </a>
+            }
+            else
+            {
+                if (rolActual == "Administrador" || rolActual == "Editor")
+                {
+                    <a href="@Url.Action("Visita", "Home")" class="btn-header-new">
+                        <i class="fas fa-plus-circle" style="margin-right: 8px; font-size: 1.1rem;"></i> Nueva Receta
+                    </a>
+                }
+                if (rolActual == "Administrador")
+                {
+                    <a href="@Url.Action("MantenimientoVisitas", "Home", new { verEliminados = true })" class="btn-header-back" style="color: #dc3545; border-color: #f5c6cb; background-color: #f8d7da;" title="Ver Papelera">
+                        <i class="fas fa-trash-alt" style="margin-right: 8px; font-size: 1.1rem;"></i> Papelera
+                    </a>
+                }
             }
         </div>
     </div>
+
+    @if (ViewBag.VerEliminados == true)
+    {
+        <div class="alert alert-danger" style="border-left: 6px solid #dc3545; background-color: #f8d7da; color: #721c24; margin-bottom: 20px;">
+            <i class="fas fa-trash-restore" style="margin-right: 10px; font-size: 1.2rem;"></i>
+            <strong>MODO PAPELERA:</strong> Está visualizando las recetas que han sido eliminadas del sistema.
+        </div>
+    }
 
     <!-- Panel de Filtros y Búsqueda Consolidado -->
     <div class="panel panel-default shadow-sm mb-4" style="border: 1px solid #e2e8f0; border-top: 4px solid #0ea5e9; border-radius: 8px;">
@@ -390,6 +413,11 @@
                             <i class="fas fa-filter text-info" style="margin-right: 6px; transition: color 0.3s;"></i> Filtrar
                         </button>
                     </div>
+
+                    @if (ViewBag.VerEliminados == true)
+                    {
+                        <input type="hidden" name="verEliminados" value="true" />
+                    }
 
                 </div>
             </form>
@@ -441,13 +469,35 @@
                                 </td>
                                 <td class="text-center" style="vertical-align: middle;">
                                     <div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: nowrap;">
-                                        @if (rolActual == "Editor")
+                                        @if (ViewBag.VerEliminados == true)
                                         {
+                                            <a href="#" class="btn-ghost-action" style="color:#721c24;" title="Info Eliminación: @item.MotivoEliminacion por @item.UsuarioEliminacion el @item.FechaEliminacion" onclick="Swal.fire('Info de Eliminación', '<strong>Usuario:</strong> @item.UsuarioEliminacion<br/><strong>Fecha:</strong> @item.FechaEliminacion<br/><strong>Motivo:</strong> @item.MotivoEliminacion', 'info'); return false;">
+                                                <i class="fas fa-info-circle"></i>
+                                            </a>
+                                            <a href="#" class="btn-ghost-action btn-ver-modal" 
+                                               data-cliente="@item.Cliente"
+                                               data-temporada="@item.Temporada"
+                                               data-estilo="@item.Estilo"
+                                               data-estilopropio="@item.EstiloPropio"
+                                               data-combo="@item.ComboCabecera"
+                                               data-item="@item.Item"
+                                               data-fechareg="@item.FechaRegistro"
+                                               data-usuelimina="@item.UsuarioEliminacion"
+                                               data-fecelimina="@item.FechaEliminacion"
+                                               data-motivo="@item.MotivoEliminacion"
+                                               title="Visualizar Cabecera">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            if (rolActual == "Editor")
+                                            {
                                             <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita" class="btn-ghost-action btn-ghost-edit" title="Editar">
                                                 <i class="fas fa-pen"></i> Editar
                                             </a>
                                         }
-                                        @if (rolActual == "Administrador")
+                                        if (rolActual == "Administrador")
                                         {
                                             <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita" class="btn-ghost-action btn-ghost-edit" title="Editar">
                                                 <i class="fas fa-pen"></i>
@@ -466,11 +516,12 @@
                                                 </ul>
                                             </div>
                                         }
-                                        @if (rolActual == "Visualizador")
+                                        if (rolActual == "Visualizador")
                                         {
                                             <a href="/Home/VisitaCorregirSCTR/@item.hdnIdVisita?preadonly=true" class="btn-ghost-action" title="Visualizar">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                        }
                                         }
                                     </div>
                                 </td>
@@ -481,6 +532,58 @@
             }
         </div>
     </div>
+</div>
+
+<!-- Modal Detalle Eliminado -->
+<div class="modal fade" id="modalDetalleEliminado" tabindex="-1" role="dialog" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background-color: #dc3545; color: white; border-bottom: none;">
+        <h5 class="modal-title" id="modalDetalleLabel"><i class="fas fa-trash-alt mr-2"></i> Detalle de Receta Eliminada</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 1; text-shadow: none;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 25px; background-color: #f8f9fa;">
+          <div class="row">
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Cliente</label>
+                  <div class="font-weight-bold" id="lblDetCliente" style="color: var(--hialpesa-blue); font-size: 1.1rem;"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Temporada</label>
+                  <div class="font-weight-bold" id="lblDetTemporada"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Estilo (Cliente / Propio)</label>
+                  <div class="font-weight-bold" id="lblDetEstilo"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Combo</label>
+                  <div class="font-weight-bold" id="lblDetCombo"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Item</label>
+                  <div class="font-weight-bold" id="lblDetItem"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label class="text-muted small mb-1">Fecha de Registro</label>
+                  <div class="font-weight-bold" id="lblDetFechaReg"></div>
+              </div>
+          </div>
+          <hr style="border-color: #e2e8f0;">
+          <h6 class="text-danger mb-3"><i class="fas fa-info-circle mr-1"></i> Información de Eliminación</h6>
+          <div class="p-3 rounded" style="background-color: #fff; border: 1px solid #f5c6cb;">
+              <p class="mb-1"><strong>Eliminado por:</strong> <span id="lblDetUsuElimina"></span></p>
+              <p class="mb-1"><strong>Fecha:</strong> <span id="lblDetFecElimina"></span></p>
+              <p class="mb-0"><strong>Motivo:</strong> <span id="lblDetMotivo" class="text-danger"></span></p>
+          </div>
+      </div>
+      <div class="modal-footer" style="border-top: none; background-color: #f8f9fa;">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px;">Cerrar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 @*}*@
@@ -574,6 +677,26 @@
                 }
             }
         }
+
+        $(document).ready(function() {
+            $('.btn-ver-modal').click(function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                $('#lblDetCliente').text(btn.data('cliente'));
+                $('#lblDetTemporada').text(btn.data('temporada'));
+                var estilo = btn.data('estilo') || '';
+                var propio = btn.data('estilopropio') || '';
+                $('#lblDetEstilo').text(estilo + (propio ? ' / ' + propio : ''));
+                $('#lblDetCombo').text(btn.data('combo'));
+                $('#lblDetItem').text(btn.data('item'));
+                $('#lblDetFechaReg').text(btn.data('fechareg'));
+                $('#lblDetUsuElimina').text(btn.data('usuelimina'));
+                $('#lblDetFecElimina').text(btn.data('fecelimina'));
+                $('#lblDetMotivo').text(btn.data('motivo'));
+                
+                $('#modalDetalleEliminado').modal('show');
+            });
+        });
 
     </script>
 }

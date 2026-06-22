@@ -1437,5 +1437,51 @@ namespace AppGenReceta.DA
             }
             return baseNP + "-V" + (currentMaxVersion + 1);
         }
+
+        public List<LIQ_AuditoriaAnulacionBE> ListarAuditoriaAnulaciones()
+        {
+            List<LIQ_AuditoriaAnulacionBE> lista = new List<LIQ_AuditoriaAnulacionBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    string sql = @"
+                        SELECT 
+                            IdOperacion, NP, CodInsumo, DescripcionInsumo, NombreColor, 
+                            IdVisita, CantidadAnulada, FuenteConsumo, UsuarioAnulacion, 
+                            FechaAnulacion, MotivoAnulacion, TrazaOriginalSistema 
+                        FROM VW_LIQ_ConsumosAnulados 
+                        ORDER BY FechaAnulacion DESC";
+                        
+                    SqlCommand cmd = new SqlCommand(sql, cnx);
+                    cmd.CommandType = CommandType.Text;
+                    cnx.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new LIQ_AuditoriaAnulacionBE
+                            {
+                                IdOperacion = Convert.ToInt32(dr["IdOperacion"]),
+                                NP = dr["NP"].ToString(),
+                                CodInsumo = dr["CodInsumo"].ToString(),
+                                DescripcionInsumo = dr["DescripcionInsumo"].ToString(),
+                                NombreColor = dr["NombreColor"] != DBNull.Value ? dr["NombreColor"].ToString() : "",
+                                IdVisita = dr["IdVisita"] != DBNull.Value ? Convert.ToInt32(dr["IdVisita"]) : (int?)null,
+                                CantidadAnulada = Convert.ToDecimal(dr["CantidadAnulada"]),
+                                FuenteConsumo = dr["FuenteConsumo"].ToString(),
+                                UsuarioAnulacion = dr["UsuarioAnulacion"].ToString(),
+                                FechaAnulacion = Convert.ToDateTime(dr["FechaAnulacion"]),
+                                MotivoAnulacion = dr["MotivoAnulacion"].ToString(),
+                                TrazaOriginalSistema = dr["TrazaOriginalSistema"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
     }
 }

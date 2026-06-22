@@ -1189,5 +1189,65 @@ namespace AppGenReceta.DA
             return resultadoCompleto;
         }
 
+        public List<VisitaBE> ListarRecetasEliminadas(string fechaInicio, string fechaFin)
+        {
+            List<VisitaBE> lista = new List<VisitaBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    string sql = @"
+                        SELECT 
+                            IdRecetaEliminada, NP, OperarioUDP, Tecnica,
+                            CONVERT(VARCHAR, FechaUDP, 103) AS FechaUDP,
+                            Concepto, Ubicacion, Combo, Cliente, Estilo, Prendas,
+                            Temporada, Item, EstiloPropio, MotivoEliminacion, UsuarioEliminacion,
+                            CONVERT(VARCHAR, FechaEliminacion, 103) + ' ' + CONVERT(VARCHAR, FechaEliminacion, 108) AS FechaEliminacion
+                        FROM AGR_RecetasEliminadas
+                        WHERE CAST(FechaEliminacion AS DATE) BETWEEN @FechaInicio AND @FechaFin
+                        ORDER BY FechaEliminacion DESC";
+
+                    SqlCommand cmd = new SqlCommand(sql, cnx);
+                    
+                    DateTime fInicio = DateTime.ParseExact(fechaInicio, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                    DateTime fFin = DateTime.ParseExact(fechaFin, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+                    cmd.Parameters.AddWithValue("@FechaInicio", fInicio);
+                    cmd.Parameters.AddWithValue("@FechaFin", fFin);
+
+                    cnx.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            lista.Add(new VisitaBE
+                            {
+                                hdnIdVisita = Convert.ToInt32(dr["IdRecetaEliminada"]),
+                                Dato = dr["IdRecetaEliminada"].ToString(),
+                                NP = dr["NP"].ToString(),
+                                Operario = dr["OperarioUDP"].ToString(),
+                                Tecnica = dr["Tecnica"].ToString(),
+                                FechaUDP = dr["FechaUDP"].ToString(),
+                                Observaciones = dr["Concepto"].ToString(),
+                                Ubicacion = dr["Ubicacion"].ToString(),
+                                ComboCabecera = dr["Combo"].ToString(),
+                                Cliente = dr["Cliente"].ToString(),
+                                Estilo = dr["Estilo"].ToString(),
+                                PrendasReq = dr["Prendas"].ToString(),
+                                Temporada = dr["Temporada"].ToString(),
+                                Item = dr["Item"].ToString(),
+                                EstiloPropio = dr["EstiloPropio"].ToString(),
+                                MotivoEliminacion = dr["MotivoEliminacion"].ToString(),
+                                UsuarioEliminacion = dr["UsuarioEliminacion"].ToString(),
+                                FechaEliminacion = dr["FechaEliminacion"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { throw ex; }
+            return lista;
+        }
+
     }
 }

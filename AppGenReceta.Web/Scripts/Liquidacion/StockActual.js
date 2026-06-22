@@ -395,3 +395,56 @@ $(document).ready(function () {
         });
     }
 });
+
+// FUNCIÓN GLOBAL: Abrir Auditoría de Anulaciones
+var tblAuditoriaAnulaciones = null;
+function abrirAuditoriaAnulaciones() {
+    $('#modalAuditoriaAnulaciones').modal('show');
+    
+    if (tblAuditoriaAnulaciones) {
+        tblAuditoriaAnulaciones.ajax.reload();
+        return;
+    }
+    
+    tblAuditoriaAnulaciones = $('#tblAuditoriaAnulaciones').DataTable({
+        "ajax": {
+            "url": "/Liquidacion/ObtenerAuditoriaAnulaciones",
+            "type": "GET",
+            "datatype": "json",
+            "error": function (xhr, error, thrown) {
+                var msg = "Error al cargar la auditoría.";
+                if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                Swal.fire('Acceso Denegado', msg, 'error');
+                $('#modalAuditoriaAnulaciones').modal('hide');
+            }
+        },
+        "columns": [
+            { "data": "IdOperacion", "className": "text-center" },
+            { "data": "DescripcionInsumo", "render": function(data, type, row) {
+                return '<span title="'+row.CodInsumo+'">'+data+'</span>';
+            }},
+            { "data": "NombreColor" },
+            { "data": "CantidadAnulada", "className": "text-right font-weight-bold text-danger", "render": $.fn.dataTable.render.number(',', '.', 2, '', ' gr') },
+            { "data": "FuenteConsumo" },
+            { "data": "MotivoAnulacion", "render": function(data, type, row) {
+                return '<div style="max-width:200px; white-space:normal; color:#d35400;">' + data + '</div>';
+            }},
+            { "data": "UsuarioAnulacion", "className": "text-center" },
+            { "data": "FechaAnulacionTexto", "className": "text-center" }
+        ],
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+        },
+        "order": [[ 7, "desc" ]], // Ordenar por fecha desc
+        "pageLength": 10,
+        "dom": '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        "buttons": [
+            {
+                extend: 'excelHtml5',
+                text: '<i class="fas fa-file-excel mr-1"></i> Exportar a Excel',
+                className: 'btn btn-success btn-sm mb-2 shadow-sm',
+                title: 'Auditoría de Consumos Anulados Laboratorio - ' + new Date().toLocaleDateString()
+            }
+        ]
+    });
+}
