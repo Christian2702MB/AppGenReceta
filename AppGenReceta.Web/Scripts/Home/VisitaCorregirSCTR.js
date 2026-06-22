@@ -1251,7 +1251,7 @@ $(document).on('change', '#ddlColumnaOrigenConsumo', function() {
         $("#txtCantConsumoDesarrollo").val(val).trigger('change');
         
         // Pequeño feedback visual para indicar que se autocompletó (UI/UX)
-        $("#txtCantConsumoDesarrollo").stop().css("background-color", "#d4edda").animate({ backgroundColor: "#ffffff" }, 1500);
+        $("#txtCantConsumoDesarrollo").stop().css("background-color", "#fcf8e3").animate({ backgroundColor: "#ffffff" }, 1500);
     }
 });
 
