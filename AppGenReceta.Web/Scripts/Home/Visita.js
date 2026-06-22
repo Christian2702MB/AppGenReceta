@@ -573,6 +573,19 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
                 $('#txtEstiloPropio').prop('disabled', true).trigger('change.select2');
             }
 
+            // Re-configurar Select2 para txtCombo dinámicamente según la regla de negocio:
+            // Si trae estilos (tieneEstilos = true), NO es modificable libremente (tags: false).
+            // Si NO trae estilos (tieneEstilos = false), SÍ es modificable libremente (tags: true).
+            if ($('#txtCombo').hasClass("select2-hidden-accessible")) {
+                $('#txtCombo').select2('destroy');
+            }
+            $('#txtCombo').select2({
+                placeholder: "Seleccione o escriba...",
+                allowClear: true,
+                width: '100%',
+                tags: !tieneEstilos
+            });
+
             var tieneCombos = data.Combos && data.Combos.length > 0;
             if (tieneCombos) {
                 $.each(data.Combos, function (index, item) {
