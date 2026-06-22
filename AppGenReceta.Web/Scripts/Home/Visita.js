@@ -287,10 +287,17 @@ $(document).ready(function () {
         // Inicializar campos no-pivot como Select2 básico (sin AJAX, bloqueados)
         // Optimización: Diferir inicialización de Select2 básicos en modo ITEM
         setTimeout(function() {
-            $('#txtCliente, #txtTemporada, #txtCombo, #txtUbicacion, #txtTecnica').select2({
+            $('#txtCliente, #txtTemporada, #txtUbicacion, #txtTecnica').select2({
                 placeholder: "Seleccione o escriba...",
                 allowClear: true,
                 width: '100%'
+            });
+            // Habilitar tags (escritura libre) SOLO para Combo en este modo de registro
+            $('#txtCombo').select2({
+                placeholder: "Seleccione o escriba...",
+                allowClear: true,
+                width: '100%',
+                tags: true
             });
         }, 100);
 
@@ -573,7 +580,9 @@ function autocompletarCabeceraDesdeItem(itemSeleccionado) {
                 });
                 $('#txtCombo').prop('disabled', false).trigger('change.select2');
             } else {
-                $('#txtCombo').prop('disabled', true).trigger('change.select2');
+                // IMPORTANTE: En el modo Item, el combo debe estar habilitado para permitir 
+                // escribir valores nuevos mediante 'tags', incluso si no hay combos previos.
+                $('#txtCombo').prop('disabled', false).trigger('change.select2');
             }
 
             Swal.fire({
