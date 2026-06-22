@@ -613,8 +613,9 @@ function actualizarVistaColores() {
                         </div>
                     </div>
                 </div>
-                <div class="panel-body">
-                    <table class="table table-condensed table-hover">
+                <div class="panel-body" style="padding: 0;">
+                    <div class="table-responsive" style="border: none; margin-bottom: 0;">
+                        <table class="table table-condensed table-hover" style="margin-bottom: 0; white-space: nowrap;">
                         <thead>
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
@@ -640,8 +641,9 @@ function actualizarVistaColores() {
                         </div>
                     </div>
                 </div>
-                <div class="panel-body">
-                    <table class="table table-condensed table-hover">
+                <div class="panel-body" style="padding: 0;">
+                    <div class="table-responsive" style="border: none; margin-bottom: 0;">
+                        <table class="table table-condensed table-hover" style="margin-bottom: 0; white-space: nowrap;">
                         <thead>
                             <tr class="active">
                                 <th style="width: 15%">Código</th>
@@ -688,6 +690,7 @@ function actualizarVistaColores() {
         htmlColor += `
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>`;
 
@@ -1224,13 +1227,58 @@ function guardarConsumoDesarrollo() {
                     timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
-                    Swal.fire({
-                        title: 'Actualizando Datos',
-                        text: 'Por favor espere...',
-                        allowOutsideClick: false,
-                        didOpen: () => { Swal.showLoading(); }
-                    });
-                    cargarDatosParaEdicion($("#hdnIdVisita").val());
+                    // Actualización local sin recargar desde BD (evita borrar columnas temporales en pantalla)
+                    var idInsumo = $("#hdnIdInsumoDesarrollo").val();
+                    var codInsumo = $("#hdnCodInsumoDesarrollo").val();
+                    var nombreColor = $("#hdnColorDesarrollo").val();
+                    var cantidadSumar = parseFloat($("#txtCantConsumoDesarrollo").val()) || 0;
+                    
+                    // 1. Actualizar en recetaMaster
+                    var colorObj = recetaMaster.Colores.find(function(c) { return c.Nombre === nombreColor; });
+                    if (colorObj) {
+                        var insumosList = colorObj.Insumos || colorObj.insumos;
+                        if (insumosList) {
+                            var insumoObj = insumosList.find(function(i) { 
+                                return (i.IDInsumo == idInsumo || i.IdInsumo == idInsumo || i.CodigoInsumo === codInsumo); 
+                            });
+                            if (insumoObj) {
+                                insumoObj.ConsumoDesarrollo = (insumoObj.ConsumoDesarrollo || 0) + cantidadSumar;
+                            }
+                        }
+                    }
+                    
+                    // 2. Actualizar en el DOM directamente
+                    var panelColor = $("h4").filter(function() {
+                        return $(this).text().indexOf("Color Pantone:") > -1 && $(this).text().indexOf(nombreColor) > -1;
+                    }).closest('.panel');
+                    
+                    var rowInsumo = panelColor.find("tr[data-idinsumo='" + idInsumo + "']");
+                    if (rowInsumo.length === 0) {
+                        rowInsumo = panelColor.find("td:contains('" + codInsumo + "')").closest('tr');
+                    }
+                    
+                    if (rowInsumo.length > 0) {
+                        var badgeBtn = rowInsumo.find("button[title='Registrar Consumo'] .badge");
+                        if (badgeBtn.length > 0) {
+                            var textVal = badgeBtn.text().replace(" gr", "").trim();
+                            var currentVal = parseFloat(textVal) || 0;
+                            var newVal = currentVal + cantidadSumar;
+                            badgeBtn.text(newVal.toFixed(2) + " gr");
+                            
+                            // Efecto visual de confirmación sin romper color base
+                            badgeBtn.closest("button").stop().css("background-color", "#28a745").animate({ backgroundColor: "#f0ad4e" }, 1500, function() {
+                                $(this).css("background-color", ""); 
+                            });
+                        } else {
+                            // Si está en modo ReadOnly (aunque no debería poder registrar)
+                            var badgeLabel = rowInsumo.find(".label-warning");
+                            if (badgeLabel.length > 0) {
+                                var txt = badgeLabel.text().replace(" gr", "").trim();
+                                var currentValRO = parseFloat(txt) || 0;
+                                badgeLabel.html('<i class="fa fa-flask"></i> ' + (currentValRO + cantidadSumar).toFixed(2) + " gr");
+                            }
+                        }
+                    }
                 });
             } else {
                 Swal.fire("Error", res.message || "No se pudo registrar el consumo", "error");
