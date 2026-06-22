@@ -1095,6 +1095,55 @@ function abrirModalConsumoDesarrollo(nombreColor, codigoInsumo, descripcion, idI
     $("#txtMotivoConsumoDesarrollo").val('');
     $("#lblStockDisponibleDesarrollo").html('<i class="fa fa-spinner fa-spin text-primary"></i> <span style="font-size:16px;">Cargando...</span>');
 
+    // =========================================================================
+    // NUEVA LÓGICA: Extraer columnas de la grilla (DOM) en tiempo real
+    // =========================================================================
+    var ddl = $("#ddlColumnaOrigenConsumo");
+    ddl.empty();
+    ddl.append('<option value="">-- Seleccione una columna --</option>');
+
+    // Ubicar la fila exacta en el DOM basándonos en nombreColor e idInsumo
+    // (Buscamos h4 exacto para evitar conflictos de colores parciales)
+    var panelColor = $("h4").filter(function() {
+        return $(this).text().indexOf("Color Pantone:") > -1 && $(this).text().indexOf(nombreColor) > -1;
+    }).closest('.panel');
+    
+    var rowInsumo = panelColor.find("tr[data-idinsumo='" + idInsumo + "']");
+    if (rowInsumo.length === 0) {
+        // Fallback por código de insumo
+        rowInsumo = panelColor.find("td:contains('" + codigoInsumo + "')").closest('tr');
+    }
+
+    if (rowInsumo.length > 0) {
+        // 1. Extraer STRIKE OFF (Está en la columna 3 base-0)
+        var tdStrikeOff = rowInsumo.find('td').eq(3);
+        var valStrikeOff = tdStrikeOff.text().trim();
+        var numStrikeOff = parseFloat(valStrikeOff);
+        if (!isNaN(numStrikeOff)) {
+            ddl.append('<option value="' + numStrikeOff.toFixed(2) + '">STRIKE OFF (' + numStrikeOff.toFixed(2) + ')</option>');
+        }
+
+        // 2. Extraer Pruebas dinámicas (columnas posteriores)
+        var theadThs = panelColor.find('table thead tr th');
+        var tdsPrueba = rowInsumo.find('td.td-prueba');
+        
+        tdsPrueba.each(function() {
+            var td = $(this);
+            var index = td.index();
+            var th = theadThs.eq(index);
+            var nombrePrueba = th.text().trim();
+            var input = td.find('input[type="number"]');
+            var valPrueba = input.val();
+            var numPrueba = parseFloat(valPrueba);
+            
+            if (nombrePrueba && !isNaN(numPrueba)) {
+                // Agregar al combo con el nombre de la prueba y su valor referencial
+                ddl.append('<option value="' + numPrueba.toFixed(2) + '">' + nombrePrueba + ' (' + numPrueba.toFixed(2) + ')</option>');
+            }
+        });
+    }
+    // =========================================================================
+
     // Consultar stock
     $.get("/Home/ObtenerSaldosDesarrolloInsumo", { np: np, codInsumo: codigoInsumo, nombreColor: nombreColor, idVisita: idVisita }, function (res) {
         var tbHistorial = $("#tbHistorialConsumoDesarrollo");
@@ -1193,6 +1242,18 @@ function guardarConsumoDesarrollo() {
         }
     });
 }
+
+// Evento para sugerir cantidad al cambiar el combo de columnas
+$(document).on('change', '#ddlColumnaOrigenConsumo', function() {
+    var val = $(this).val();
+    if(val) {
+        // Llena el input de cantidad a consumir
+        $("#txtCantConsumoDesarrollo").val(val).trigger('change');
+        
+        // Pequeño feedback visual para indicar que se autocompletó (UI/UX)
+        $("#txtCantConsumoDesarrollo").stop().css("background-color", "#d4edda").animate({ backgroundColor: "#ffffff" }, 1500);
+    }
+});
 
 
 
