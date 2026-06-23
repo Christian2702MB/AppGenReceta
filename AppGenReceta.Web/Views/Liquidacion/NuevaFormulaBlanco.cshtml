@@ -5,7 +5,11 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
+    :root {
+        --hialpesa-blue: #002D72;
+        --hialpesa-accent: #004085; /* Azul Profundo para página hija */
+    }
+    
     .swal2-footer { text-align: center !important; }
     .form-group .select2-container, .col-md-8 .select2-container, .col-md-4 .select2-container { width: 100% !important; display: block; }
     .select2-container .select2-selection--single { height: 34px !important; padding: 3px 6px; border: 1px solid #ccc !important; border-radius: 4px; display: flex; align-items: center; }
@@ -21,7 +25,7 @@
 <div class="container-fluid py-4" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 15px;">
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div style="flex: 1 1 auto; margin-bottom: 5px;">
-            <h1 style="margin: 0; color: #002D72; font-weight: 800; font-size: 26px; border-left: 6px solid #17a2b8; padding-left: 15px;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 26px; border-left: 6px solid var(--hialpesa-accent); padding-left: 15px;">
                 Fórmula en Blanco
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
@@ -43,8 +47,8 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid #07238a;">
-                    <span style="padding-left: 10px; border-left: 5px solid #07238a; color: #07238a;">Datos de la Cabecera</span>
+                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid var(--hialpesa-accent);">
+                    <span style="padding-left: 10px; border-left: 5px solid var(--hialpesa-accent); color: var(--hialpesa-accent);">Datos de la Cabecera</span>
                 </h2>
                 
                 <div class="row">
@@ -166,7 +170,7 @@
                 <hr />
 
                 <table id="tablaMaestra" class="table table-bordered">
-                    <thead style="background-color: #07238a; color: white;">
+                    <thead style="background-color: var(--hialpesa-accent); color: white;">
                         <tr>
                             <th>Color Pantone (Clic para seleccionar)</th>
                             <th>Insumos del Color</th>
@@ -177,8 +181,8 @@
                     </tbody>
                 </table>
 
-                <div id="panelInsumos" class="panel panel-info" style="display:none; border: 2px solid #07238a;">
-                    <div class="panel-heading">Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
+                <div id="panelInsumos" class="panel panel-info" style="display:none; border: 2px solid var(--hialpesa-accent);">
+                    <div class="panel-heading" style="background-color: #f4f8fa; color: var(--hialpesa-accent); border-bottom: 1px solid var(--hialpesa-accent);">Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-8">

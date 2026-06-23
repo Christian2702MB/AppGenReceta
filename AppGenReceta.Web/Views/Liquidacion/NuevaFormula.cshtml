@@ -1,6 +1,6 @@
 @model List<AppGenReceta.BE.LIQ_RecetaDisponibleBE>
 @{
-    ViewBag.Title = "Asignar Fórmula";
+    ViewBag.Title = "Fórmula desde Receta";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -14,6 +14,7 @@
 
     :root {
         --hialpesa-blue: #002D72;
+        --hialpesa-accent: #004085; /* Azul Profundo para página hija */
         --hialpesa-gold: #f39c12;
     }
 
@@ -40,7 +41,7 @@
     }
 
     .btn-formular {
-        background: #27ae60;
+        background: var(--hialpesa-accent);
         color: white;
         border: none;
         border-radius: 20px;
@@ -52,10 +53,10 @@
     }
 
     .btn-formular:hover {
-        background: #1e8449;
+        background: var(--hialpesa-blue);
         color: white;
         transform: scale(1.05);
-        box-shadow: 0 2px 5px rgba(39,174,96,0.3);
+        box-shadow: 0 2px 5px rgba(0, 45, 114, 0.3);
     }
 
     .btn-header-back {
@@ -124,12 +125,11 @@
         box-shadow: inset 0 -1px 0 #dee2e6;
     }
 
-    /* ── Modal de Preview ── */
     .modal-preview .modal-dialog { max-width: 85%; }
     .modal-preview .modal-header {
         background: var(--hialpesa-blue);
         color: white;
-        border-radius: 0;
+        border-bottom: 4px solid var(--hialpesa-accent);
     }
     .modal-preview .modal-title { font-weight: 700; }
 
@@ -202,7 +202,7 @@
     }
 
     .btn-confirmar-formula {
-        background: #27ae60;
+        background: var(--hialpesa-accent);
         color: white;
         border: none;
         border-radius: 8px;
@@ -213,10 +213,10 @@
     }
 
     .btn-confirmar-formula:hover {
-        background: #1e8449;
+        background: var(--hialpesa-blue);
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(39,174,96,0.3);
+        box-shadow: 0 6px 15px rgba(0, 45, 114, 0.3);
     }
 
     /* Búsqueda global */
@@ -250,8 +250,8 @@
     <!-- Header -->
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 10px;">
-            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px;">
-                Estructurar Mezcla desde Receta
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid var(--hialpesa-accent); padding-left: 15px;">
+                Fórmula desde Receta
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
                 Seleccione una receta base para importar sus componentes e iniciar la dosificación de planta.
@@ -438,7 +438,7 @@
 
             // Colores e Insumos
             if (data.Colores && data.Colores.length > 0) {
-                html += '<div style="border-left: 5px solid #e67e22; padding-left: 15px; margin: 20px 0 15px 0;">';
+                html += '<div style="border-left: 5px solid var(--hialpesa-accent); padding-left: 15px; margin: 20px 0 15px 0;">';
                 html += '<h4 style="color: #333; font-weight: 700;">Detalle de Receta</h4>';
                 html += '</div>';
 
@@ -446,7 +446,7 @@
                     var color = data.Colores[c];
                     html += '<div class="color-section-preview">';
                     html += '<div class="color-header-preview">';
-                    html += '<h5><i class="fas fa-tint mr-1" style="color:#e67e22;"></i> Color Pantone: ' + (color.Nombre || '') + '</h5>';
+                    html += '<h5><i class="fas fa-tint mr-1" style="color: var(--hialpesa-accent);"></i> Color Pantone: ' + (color.Nombre || '') + '</h5>';
                     html += '</div>';
 
                     html += '<table class="insumos-table-preview">';

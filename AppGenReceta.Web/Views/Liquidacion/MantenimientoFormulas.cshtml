@@ -15,6 +15,7 @@
 
     :root {
         --hialpesa-blue: #002D72;
+        --hialpesa-accent: #0d6efd; /* Azul vibrante para página padre */
         --hialpesa-gold: #f39c12;
         --bg-light: #f8f9fa;
     }
@@ -158,7 +159,7 @@
     <!-- Título y Botones de Acción -->
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="flex: 1 1 auto; margin-bottom: 15px;">
-            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #17a2b8; padding-left: 15px; letter-spacing: -0.5px;">
+            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid var(--hialpesa-accent); padding-left: 15px; letter-spacing: -0.5px;">
                 Fórmulas de Producción
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Diseñe y adapte las mezclas de producción a partir de las recetas base de laboratorio.</p>
@@ -179,20 +180,20 @@
     </div>
 
     <!-- Panel de Filtros -->
-    <div class="panel panel-default shadow-sm mb-4" style="border: 1px solid #17a2b8; border-left: 6px solid #17a2b8; border-radius: 8px;">
+    <div class="panel panel-default shadow-sm mb-4" style="border: 1px solid var(--hialpesa-accent); border-left: 6px solid var(--hialpesa-accent); border-radius: 8px;">
         <div class="panel-body" style="padding: 15px;">
             <form method="get" action="@Url.Action("MantenimientoFormulas", "Liquidacion")">
                 <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px;">
                     <div style="flex: 1; min-width: 200px;">
-                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-alt text-info mr-1"></i> Fecha de Inicio</label>
+                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-alt text-primary mr-1"></i> Fecha de Inicio</label>
                         <input type="date" class="form-control" name="start" value="@ViewBag.FechaInicio" required />
                     </div>
                     <div style="flex: 1; min-width: 200px;">
-                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-check text-info mr-1"></i> Fecha de Fin</label>
+                        <label class="font-weight-bold text-muted mb-1"><i class="fas fa-calendar-check text-primary mr-1"></i> Fecha de Fin</label>
                         <input type="date" class="form-control" name="end" value="@ViewBag.FechaFin" required />
                     </div>
                     <div style="flex: 0 0 auto; min-width: auto; padding-bottom: 2px;">
-                        <button type="submit" class="btn btn-info px-4 mb-0" style="border-radius: 6px;">
+                        <button type="submit" class="btn btn-primary px-4 mb-0" style="border-radius: 6px;">
                             <i class="fas fa-search mr-2"></i> Filtrar Fórmulas
                         </button>
                     </div>
@@ -291,14 +292,14 @@
                                     <div class="btn-group">
                                         @if (rolActual == "Liquidador")
                                         {
-                                            <a href="@Url.Action("EditarFormula", "Liquidacion", new { id = item.IdFormula })" class="btn btn-success btn-sm">
+                                            <a href="@Url.Action("EditarFormula", "Liquidacion", new { id = item.IdFormula })" class="btn btn-primary btn-sm">
                                                 <i class="fas fa-edit"></i> Editar
                                             </a>
                                         }
                                         @if (rolActual == "Administrador")
                                         {
                                             <div class="mb-2" style="margin-bottom: 5px;">
-                                                <a href="@Url.Action("EditarFormula", "Liquidacion", new { id = item.IdFormula })" class="btn btn-success btn-sm btn-fijo" style="margin-right: 4px;">
+                                                <a href="@Url.Action("EditarFormula", "Liquidacion", new { id = item.IdFormula })" class="btn btn-primary btn-sm btn-fijo" style="margin-right: 4px;">
                                                     <i class="fas fa-edit"></i> Editar
                                                 </a>
                                                 <button class="btn btn-danger btn-sm btn-fijo" onclick="eliminarFormula(@item.IdFormula)">

@@ -209,14 +209,16 @@
 <div class="container-fluid py-4">
     <!-- Título y Botones de Acción -->
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
-        <div style="flex: 1 1 auto; margin-bottom: 15px;">
+        <div style="flex: 1; min-width: 300px; max-width: 50%; margin-bottom: 15px;">
             <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 28px; border-left: 6px solid #27ae60; padding-left: 15px; letter-spacing: -0.5px;">
                 Gestión de Stock
             </h1>
-            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">Monitoree los saldos en tiempo real y la disponibilidad de insumos dentro de la planta.</p>
+            <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px; line-height: 1.4;">
+                Monitoree los saldos en tiempo real y la<br>disponibilidad de insumos dentro de la planta.
+            </p>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; justify-content: flex-end;">
             <a href="@Url.Action("Index", "Liquidacion")" class="btn-header-back">
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar al Menú
             </a>
