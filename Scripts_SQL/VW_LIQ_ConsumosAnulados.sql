@@ -32,8 +32,8 @@ SELECT
 FROM 
     [dbo].[LIQ_OperacionesDetalle] OD
 LEFT JOIN 
-    (SELECT DISTINCT CodigoInsumo, Descripcion FROM LIQ_FormulaInsumos) I 
-    ON OD.CodInsumo = I.CodigoInsumo
+    LIQ_STK_StockInsumos I 
+    ON OD.CodInsumo = I.CodInsumo
 WHERE 
     OD.TipoOperacion = 'Consumo Anulado';
 GO

@@ -419,18 +419,28 @@ function abrirAuditoriaAnulaciones() {
             }
         },
         "columns": [
-            { "data": "IdOperacion", "className": "text-center" },
+            { "data": "IdOperacion", "className": "text-center", "render": function(data) {
+                return '<span class="badge badge-secondary" style="font-size:0.9em; background-color:#6c757d;">' + data + '</span>';
+            }},
+            { "data": "CodInsumo", "className": "text-center font-weight-bold" },
             { "data": "DescripcionInsumo", "render": function(data, type, row) {
                 return '<span title="'+row.CodInsumo+'">'+data+'</span>';
             }},
-            { "data": "NombreColor" },
+            { "data": "NombreColor", "className": "text-center" },
             { "data": "CantidadAnulada", "className": "text-right font-weight-bold text-danger", "render": $.fn.dataTable.render.number(',', '.', 2, '', ' gr') },
-            { "data": "FuenteConsumo" },
             { "data": "MotivoAnulacion", "render": function(data, type, row) {
-                return '<div style="max-width:200px; white-space:normal; color:#d35400;">' + data + '</div>';
+                return '<div style="white-space:normal; color:#d35400;">' + data + '</div>';
             }},
-            { "data": "UsuarioAnulacion", "className": "text-center" },
-            { "data": "FechaAnulacionTexto", "className": "text-center" }
+            { "data": "UsuarioAnulacion", "className": "text-center", "render": function(data) {
+                return '<div style="font-size:0.85em; line-height:1.2;">' + data + '</div>';
+            }},
+            { "data": "FechaAnulacionTexto", "className": "text-center", "render": function(data) {
+                if(data && data.indexOf(' ') > -1) {
+                    var parts = data.split(' ');
+                    return '<div style="line-height: 1.1;"><span style="font-weight:bold; color:#2c3e50; font-size:0.95em;">' + parts[0] + '</span><br/><span style="font-size:0.8em; color:#7f8c8d;"><i class="far fa-clock"></i> ' + parts[1] + '</span></div>';
+                }
+                return data;
+            }}
         ],
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"

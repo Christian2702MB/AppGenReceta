@@ -1447,11 +1447,29 @@ namespace AppGenReceta.DA
                 {
                     string sql = @"
                         SELECT 
-                            IdOperacion, NP, CodInsumo, DescripcionInsumo, NombreColor, 
-                            IdVisita, CantidadAnulada, FuenteConsumo, UsuarioAnulacion, 
-                            FechaAnulacion, MotivoAnulacion, TrazaOriginalSistema 
-                        FROM VW_LIQ_ConsumosAnulados 
-                        ORDER BY FechaAnulacion DESC";
+                            OD.IdOperacion,
+                            OD.NP,
+                            OD.CodInsumo,
+                            ISNULL(I.Descripcion, 'N/A') AS DescripcionInsumo,
+                            OD.NombreColor,
+                            OD.IdVisita,
+                            OD.Cantidad AS CantidadAnulada,
+                            OD.FuenteConsumo,
+                            OD.UsuarioRegistro AS UsuarioAnulacion,
+                            OD.FechaRegistro AS FechaAnulacion,
+                            CASE 
+                                WHEN OD.Motivo LIKE 'ANULADO: % | Por:%' 
+                                THEN SUBSTRING(OD.Motivo, 10, CHARINDEX(' | Por:', OD.Motivo) - 10)
+                                ELSE OD.Motivo 
+                            END AS MotivoAnulacion,
+                            OD.Motivo AS TrazaOriginalSistema
+                        FROM 
+                            LIQ_OperacionesDetalle OD
+                        LEFT JOIN 
+                            LIQ_STK_StockInsumos I ON OD.CodInsumo = I.CodInsumo
+                        WHERE 
+                            OD.TipoOperacion = 'Consumo Anulado'
+                        ORDER BY OD.FechaRegistro DESC";
                         
                     SqlCommand cmd = new SqlCommand(sql, cnx);
                     cmd.CommandType = CommandType.Text;

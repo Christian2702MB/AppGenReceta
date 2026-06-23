@@ -195,8 +195,14 @@
     }
 
     #tblAuditoriaAnulaciones tbody td {
-        font-size: 1.05rem;
+        font-size: 1.15rem;
         vertical-align: middle;
+    }
+
+    #tblAuditoriaAnulaciones thead th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        white-space: nowrap;
     }
 </style>
 
@@ -517,14 +523,14 @@
                     <table id="tblAuditoriaAnulaciones" class="table table-striped table-bordered table-hover" style="width:100%; font-size: 0.9rem;">
                         <thead style="background-color: #f4f8fa; border-top: 3px solid #34495e;">
                             <tr>
-                                <th>ID Ope.</th>
+                                <th style="width: 5%;">ID</th>
+                                <th style="width: 8%;">Código</th>
                                 <th>Insumo</th>
-                                <th>Color</th>
-                                <th>Cant. Anulada</th>
-                                <th>Fuente</th>
-                                <th>Motivo Anulación</th>
-                                <th>Usuario Anuló</th>
-                                <th>Fecha Anulación</th>
+                                <th style="width: 8%;">Color</th>
+                                <th style="width: 10%;">Cant. Anulada</th>
+                                <th style="width: 30%;">Motivo Anulación</th>
+                                <th style="width: 12%;">Usuario Anuló</th>
+                                <th style="width: 8%;">Fecha</th>
                             </tr>
                         </thead>
                         <tbody>
