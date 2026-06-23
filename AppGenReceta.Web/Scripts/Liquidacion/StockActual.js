@@ -67,9 +67,9 @@ $(document).ready(function () {
         var val = parseFloat($(this).val());
         if (!isNaN(val) && val > 0) {
             if (UM === 'KG') {
-                $('#lblEquivalencia').html('<i class="fas fa-exchange-alt"></i> Equivale a: ' + (val / 1000).toFixed(3) + ' KG');
+                $('#lblEquivalencia').html('<i class="fas fa-arrow-up"></i> Equivale a: ' + (val / 1000).toFixed(3) + ' KG');
             } else if (UM !== '') {
-                $('#lblEquivalencia').html('<i class="fas fa-exchange-alt"></i> Equivale a: ' + val.toFixed(2) + ' ' + UM);
+                $('#lblEquivalencia').html('<i class="fas fa-arrow-up"></i> Equivale a: ' + val.toFixed(2) + ' ' + UM);
             }
         } else {
             $('#lblEquivalencia').text('');
