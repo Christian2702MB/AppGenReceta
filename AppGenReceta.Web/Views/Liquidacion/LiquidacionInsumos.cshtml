@@ -2191,6 +2191,7 @@
             `);
         } else {
             var haySaldos = false;
+            var saldosAgregados = [];
 
             item.colores.forEach(function(col) {
                 var colorHtml = `
@@ -2280,19 +2281,21 @@
                             </div>
                         </td>
                         <td style="vertical-align: middle;">
-                            <div style="font-weight: bold; color: #475569; font-size: 14px; text-align: right; margin-bottom: 2px;">${ins.consumidoTotal.toFixed(2)}</div>
+                            <div style="font-weight: bold; color: #475569; font-size: 14px; text-align: right; margin-bottom: 2px;">${ins.consumido.toFixed(2)}</div>
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
                                 <div><span style="opacity: 0.75;">Ini:</span> ${(ins.consumidoInicial || 0).toFixed(0)}</div>
                                 <div><span style="opacity: 0.75;">Rec:</span> ${(ins.consumidoSolicitud || 0).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Global:</span> ${ins.consumidoTotal.toFixed(0)}</div>
                             </div>
                         </td>
                         <!-- <td class="text-right">${(ins.devuelto || 0).toFixed(2)}</td> -->
                         <!-- <td class="text-right text-warning"><strong>${(ins.merma || 0).toFixed(2)}</strong></td> -->
                         <td style="vertical-align: middle;">
-                            <div style="font-weight: bold; color: #475569; font-size: 14px; text-align: right; margin-bottom: 2px;">${ins.ajusteTotal.toFixed(2)}</div>
+                            <div style="font-weight: bold; color: #475569; font-size: 14px; text-align: right; margin-bottom: 2px;">${ins.ajuste.toFixed(2)}</div>
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
                                 <div><span style="opacity: 0.75;">Ini:</span> ${(ins.ajusteInicial || 0).toFixed(0)}</div>
                                 <div><span style="opacity: 0.75;">Rec:</span> ${(ins.ajusteSolicitud || 0).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Global:</span> ${ins.ajusteTotal.toFixed(0)}</div>
                             </div>
                         </td>
                         <td style="vertical-align: middle;">
@@ -2306,8 +2309,10 @@
                     </tr>`;
 
                     // Llenar tabla de Tratamiento de Saldos
-                    var saldoLiquidar = ins.stockRecibido - ins.consumidoSolicitud - (ins.ajusteSolicitud || 0) - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
-                    if (saldoLiquidar > 0 || (ins.devueltoCentral || 0) > 0 || (ins.devueltoOperativo || 0) > 0) {
+                    if (!saldosAgregados.includes(ins.codigo)) {
+                        saldosAgregados.push(ins.codigo);
+                        var saldoLiquidar = ins.stockRecibidoGlobal - ins.consumidoSolicitudGlobal - (ins.ajusteSolicitudGlobal || 0) - (ins.devueltoCentral || 0) - (ins.devueltoOperativo || 0);
+                        if (saldoLiquidar > 0 || (ins.devueltoCentral || 0) > 0 || (ins.devueltoOperativo || 0) > 0) {
                         haySaldos = true;
                         var isLiquidado = (item.estado || '').toLowerCase() === 'liquidado' || (item.estado || '').toLowerCase() === 'cerrada';
                         var disabledStr = isLiquidado ? '' : 'disabled="disabled"';
@@ -2318,15 +2323,16 @@
                             <tr>
                                 <td class="text-center"><strong>${ins.codigo}</strong></td>
                                 <td class="text-left">${ins.nombre}</td>
-                                <td class="text-right">${(ins.stockRecibido || 0).toFixed(2)}</td>
-                                <td class="text-right">${(ins.consumidoSolicitud || 0).toFixed(2)}</td>
-                                <td class="text-right">${(ins.ajusteSolicitud || 0).toFixed(2)}</td>
+                                <td class="text-right">${(ins.stockRecibidoGlobal || 0).toFixed(2)}</td>
+                                <td class="text-right">${(ins.consumidoSolicitudGlobal || 0).toFixed(2)}</td>
+                                <td class="text-right">${(ins.ajusteSolicitudGlobal || 0).toFixed(2)}</td>
                                 <td class="text-right" style="color: #0ea5e9; font-size: 14px;"><strong>${saldoLiquidar.toFixed(2)}</strong></td>
                                 <td class="text-right">${(ins.devueltoCentral || 0).toFixed(2)}</td>
                                 <td class="text-right">${(ins.devueltoOperativo || 0).toFixed(2)}</td>
                                 ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center;">${accionSaldo}</td>`}
                             </tr>
                         `);
+                        }
                     }
                 });
 

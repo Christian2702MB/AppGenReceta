@@ -127,6 +127,11 @@ namespace AppGenReceta.BE
         public decimal StockOperativo { get; set; }
         public decimal StockTotal { get; set; }
         
+        public decimal StockRecibidoGlobal { get; set; }
+        public decimal StockOperativoGlobal { get; set; }
+        public decimal ConsumidoSolicitudGlobal { get; set; }
+        public decimal AjusteSolicitudGlobal { get; set; }
+        
         public string Trazabilidad { get; set; }
         public bool BloqueoAjuste { get; set; }
     }

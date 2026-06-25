@@ -40,7 +40,7 @@ namespace AppGenReceta.DA
                     SELECT NP 
                     FROM LIQ_Formulas 
                     WHERE (NP = @BaseNP OR NP LIKE @BaseNP + '-V%') 
-                      AND Estado != 'Eliminada'
+                      AND Estado NOT IN ('Eliminada', 'Terminado', 'Cerrada')
                     ORDER BY 
                       CASE 
                         WHEN Estado IN ('Activa', 'En Proceso') THEN 1 
@@ -607,15 +607,23 @@ namespace AppGenReceta.DA
                   AND EsPrincipal = 1
             ), 0) * CASE WHEN ISNUMERIC(F.Prendas) = 1 THEN CAST(F.Prendas AS DECIMAL(18,2)) ELSE 1 END AS Requerido,
 			        
-            -- Stock Recibido (Calculado como BaseRecibido de recepciones, acumulativo)
+            -- Stock Recibido Global
             ISNULL((
                 SELECT SUM(D.CantidadRecibida * 1000.00) 
                 FROM LIQ_REQ_Recepciones R
                 INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
                 WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
-            ), 0) AS StockRecibido,
+            ), 0) AS StockRecibidoGlobal,
+
+            -- Stock Recibido (Distribuido proporcionalmente por colores que usan el insumo)
+            ISNULL((
+                SELECT SUM(D.CantidadRecibida * 1000.00) 
+                FROM LIQ_REQ_Recepciones R
+                INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento
+                WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo
+            ), 0) / ISNULL(NULLIF((SELECT COUNT(*) FROM LIQ_FormulaInsumos I3 INNER JOIN LIQ_FormulaColores C3 ON I3.IdFormulaColor = C3.IdFormulaColor WHERE C3.IdFormula = F.IdFormula AND I3.CodigoInsumo = I.CodigoInsumo), 0), 1) AS StockRecibido,
             
-            -- Stock Operativo (Calculado como BaseInicial - Consumos, Ajustes y Devoluciones GLOBALES, priorizando la foto histórica si existe)
+            -- Stock Operativo Global (Calculado como BaseInicial - Consumos, Ajustes y Devoluciones GLOBALES, priorizando la foto histórica si existe)
             COALESCE(
                 (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
                 ISNULL((
@@ -630,7 +638,24 @@ namespace AppGenReceta.DA
                 ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) -
                 ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0) +
                 ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0)
-            ) AS StockOperativo,
+            ) AS StockOperativoGlobal,
+
+            -- Stock Operativo (Distribuido proporcionalmente)
+            COALESCE(
+                (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
+                ISNULL((
+                    SELECT TOP 1 CASE 
+                        WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
+                        ELSE ISNULL(StockActual, 0)
+                    END
+                    FROM LIQ_STK_StockInsumos
+                    WHERE CodInsumo = I.CodigoInsumo
+                ), 0) -
+                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) -
+                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0) -
+                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0) +
+                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0)
+            ) / ISNULL(NULLIF((SELECT COUNT(*) FROM LIQ_FormulaInsumos I3 INNER JOIN LIQ_FormulaColores C3 ON I3.IdFormulaColor = C3.IdFormulaColor WHERE C3.IdFormula = F.IdFormula AND I3.CodigoInsumo = I.CodigoInsumo), 0), 1) AS StockOperativo,
 			        
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
@@ -639,9 +664,14 @@ namespace AppGenReceta.DA
             ISNULL((SELECT SUM(Gramos) FROM LIQ_MER_MermasColor WHERE NP = F.NP AND NombreColor = C.NombreColor), 0) AS Merma,
             ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor AND FuenteConsumo != 'Stock Merma'), 0) AS Ajuste,
             
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0) AS ConsumidoInicial,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitud,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS AjusteSolicitud,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial' AND NombreColor = C.NombreColor), 0) AS ConsumidoInicial,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS ConsumidoSolicitud,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS AjusteSolicitud,
+            
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS ConsumidoTotalGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido') AND FuenteConsumo != 'Stock Merma'), 0) AS AjusteTotalGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitudGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS AjusteSolicitudGlobal,
 
             ISNULL((SELECT TOP 1 Motivo FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo ORDER BY IdOperacion DESC), 'Entrega Inicial') AS Trazabilidad,
             
@@ -673,15 +703,19 @@ namespace AppGenReceta.DA
         
         StockOperativo, 
         StockRecibido, 
+        StockOperativoGlobal,
+        StockRecibidoGlobal,
         (StockOperativo + StockRecibido) AS StockTotal,
         
         ConsumidoInicial,
         ConsumidoSolicitud,
-        (ConsumidoInicial + ConsumidoSolicitud) AS ConsumidoTotal,
+        ConsumidoTotalGlobal AS ConsumidoTotal,
+        ConsumidoSolicitudGlobal,
+        AjusteSolicitudGlobal,
         
         (Ajuste - AjusteSolicitud) AS AjusteInicial,
         AjusteSolicitud,
-        Ajuste AS AjusteTotal,
+        AjusteTotalGlobal AS AjusteTotal,
         
         (StockOperativo - ConsumidoInicial - (Ajuste - AjusteSolicitud)) AS SaldoInicial,
         (StockRecibido - ConsumidoSolicitud - AjusteSolicitud) AS SaldoSolicitud,
@@ -760,17 +794,21 @@ namespace AppGenReceta.DA
                                         
                                         StockRecibido = Convert.ToDecimal(dr["StockRecibido"]),
                                         StockOperativo = Convert.ToDecimal(dr["StockOperativo"]),
+                                        StockRecibidoGlobal = Convert.ToDecimal(dr["StockRecibidoGlobal"]),
+                                        StockOperativoGlobal = Convert.ToDecimal(dr["StockOperativoGlobal"]),
                                         StockTotal = Convert.ToDecimal(dr["StockTotal"]),
                                         
                                         ConsumidoInicial = Convert.ToDecimal(dr["ConsumidoInicial"]),
                                         ConsumidoSolicitud = Convert.ToDecimal(dr["ConsumidoSolicitud"]),
                                         ConsumidoTotal = Convert.ToDecimal(dr["ConsumidoTotal"]),
-                                        Consumido = Convert.ToDecimal(dr["ConsumidoTotal"]),
+                                        ConsumidoSolicitudGlobal = Convert.ToDecimal(dr["ConsumidoSolicitudGlobal"]),
+                                        Consumido = consumido,
                                         
                                         AjusteInicial = Convert.ToDecimal(dr["AjusteInicial"]),
                                         AjusteSolicitud = Convert.ToDecimal(dr["AjusteSolicitud"]),
                                         AjusteTotal = Convert.ToDecimal(dr["AjusteTotal"]),
-                                        Ajuste = Convert.ToDecimal(dr["AjusteTotal"]),
+                                        AjusteSolicitudGlobal = Convert.ToDecimal(dr["AjusteSolicitudGlobal"]),
+                                        Ajuste = ajuste,
                                         
                                         SaldoInicial = Convert.ToDecimal(dr["SaldoInicial"]),
                                         SaldoSolicitud = Convert.ToDecimal(dr["SaldoSolicitud"]),
