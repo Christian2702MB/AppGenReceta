@@ -1992,6 +1992,10 @@
                             loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
                             stockRecibido: i.StockRecibido,
                             stockOperativo: i.StockOperativo,
+                            stockRecibidoGlobal: i.StockRecibidoGlobal || 0,
+                            stockOperativoGlobal: i.StockOperativoGlobal || 0,
+                            consumidoSolicitudGlobal: i.ConsumidoSolicitudGlobal || 0,
+                            ajusteSolicitudGlobal: i.AjusteSolicitudGlobal || 0,
                             devueltoCentral: i.DevueltoCentral || 0,
                             devueltoOperativo: i.DevueltoOperativo || 0,
                             bloqueoAjuste: i.BloqueoAjuste,
@@ -2278,6 +2282,7 @@
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
                                 <div><span style="opacity: 0.75;">Ini:</span> ${(ins.stockOperativo || 0).toFixed(0)}</div>
                                 <div><span style="opacity: 0.75;">Rec:</span> ${(ins.stockRecibido || 0).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Glob:</span> ${((ins.stockOperativoGlobal || 0) + (ins.stockRecibidoGlobal || 0)).toFixed(0)}</div>
                             </div>
                         </td>
                         <td style="vertical-align: middle;">
@@ -2285,7 +2290,7 @@
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
                                 <div><span style="opacity: 0.75;">Ini:</span> ${(ins.consumidoInicial || 0).toFixed(0)}</div>
                                 <div><span style="opacity: 0.75;">Rec:</span> ${(ins.consumidoSolicitud || 0).toFixed(0)}</div>
-                                <div><span style="opacity: 0.75;">Global:</span> ${ins.consumidoTotal.toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Glob:</span> ${ins.consumidoTotal.toFixed(0)}</div>
                             </div>
                         </td>
                         <!-- <td class="text-right">${(ins.devuelto || 0).toFixed(2)}</td> -->
@@ -2295,14 +2300,15 @@
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
                                 <div><span style="opacity: 0.75;">Ini:</span> ${(ins.ajusteInicial || 0).toFixed(0)}</div>
                                 <div><span style="opacity: 0.75;">Rec:</span> ${(ins.ajusteSolicitud || 0).toFixed(0)}</div>
-                                <div><span style="opacity: 0.75;">Global:</span> ${ins.ajusteTotal.toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Glob:</span> ${ins.ajusteTotal.toFixed(0)}</div>
                             </div>
                         </td>
                         <td style="vertical-align: middle;">
                             <div style="font-weight: bold; color: #475569; font-size: 14px; text-align: right; margin-bottom: 2px;">${Math.max(0, ins.saldoTotal).toFixed(2)}</div>
                             <div class="text-muted" style="font-size: 10.3px; text-align: right; line-height: 1.2;">
-                                <div><span style="opacity: 0.75;">Ini:</span> ${Math.max(0, ins.saldoInicial).toFixed(0)}</div>
-                                <div><span style="opacity: 0.75;">Rec:</span> ${Math.max(0, ins.saldoSolicitud).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Ini:</span> ${Math.max(0, ins.saldoInicial || 0).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Rec:</span> ${Math.max(0, ins.saldoSolicitud || 0).toFixed(0)}</div>
+                                <div><span style="opacity: 0.75;">Glob:</span> ${Math.max(0, (ins.stockOperativoGlobal || 0) + (ins.stockRecibidoGlobal || 0) - (ins.consumidoTotal || 0) - (ins.ajusteTotal || 0)).toFixed(0)}</div>
                             </div>
                         </td>
                         ${(item.estado === 'Terminado') ? '' : `<td style="text-align: center; white-space: nowrap;">${accionesHtml}</td>`}

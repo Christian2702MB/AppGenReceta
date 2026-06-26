@@ -76,19 +76,24 @@ namespace AppGenReceta.DA
                                 SUM(Base.Recibido - Base.Consumido - Base.Ajustado - Base.Devuelto) AS SaldoPendiente
                             FROM (
                                 SELECT 
-                                    I.CodigoInsumo AS CodInsumo,
-                                    F.NP,
+                                    Dist.CodInsumo,
+                                    Dist.NP,
                                     ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) 
                                             FROM LIQ_REQ_Recepciones R 
                                             INNER JOIN LIQ_REQ_RecepcionesDetalle D ON R.NumRequerimiento = D.NumRequerimiento 
-                                            WHERE R.CodOrdPro = F.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
-                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
-                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
-                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
-                                FROM LIQ_Formulas F
-                                INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
-                                INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                                WHERE F.Estado != 'Cerrada'
+                                            WHERE R.CodOrdPro = Dist.NP AND D.CodInsumo = Dist.CodInsumo), 0) AS Recibido,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
+                                    ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
+                                FROM (
+                                    SELECT DISTINCT
+                                        I.CodigoInsumo AS CodInsumo,
+                                        F.NP
+                                    FROM LIQ_Formulas F
+                                    INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
+                                    INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
+                                    WHERE F.Estado != 'Cerrada'
+                                ) Dist
                             ) Base
                             GROUP BY Base.CodInsumo
                         ) Pendientes ON I.CodInsumo = Pendientes.CodInsumo
@@ -427,14 +432,19 @@ namespace AppGenReceta.DA
                                     SELECT SUM(ISNULL(Base.Recibido, 0) - ISNULL(Base.Consumido, 0) - ISNULL(Base.Ajustado, 0) - ISNULL(Base.Devuelto, 0))
                                     FROM (
                                         SELECT 
-                                            ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE R.CodOrdPro = F2.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
-                                        FROM LIQ_Formulas F2
-                                        INNER JOIN LIQ_FormulaColores C2 ON F2.IdFormula = C2.IdFormula
-                                        INNER JOIN LIQ_FormulaInsumos FI2 ON C2.IdFormulaColor = FI2.IdFormulaColor
-                                        WHERE F2.Estado != 'Cerrada' AND FI2.CodigoInsumo = I.CodigoInsumo
+                                            ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE R.CodOrdPro = Dist.NP AND D.CodInsumo = Dist.CodInsumo), 0) AS Recibido,
+                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
+                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
+                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = Dist.NP AND CodInsumo = Dist.CodInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
+                                        FROM (
+                                            SELECT DISTINCT
+                                                FI2.CodigoInsumo AS CodInsumo,
+                                                F2.NP
+                                            FROM LIQ_Formulas F2
+                                            INNER JOIN LIQ_FormulaColores C2 ON F2.IdFormula = C2.IdFormula
+                                            INNER JOIN LIQ_FormulaInsumos FI2 ON C2.IdFormulaColor = FI2.IdFormulaColor
+                                            WHERE F2.Estado != 'Cerrada' AND FI2.CodigoInsumo = I.CodigoInsumo
+                                        ) Dist
                                     ) Base
                                 ), 0)
                             ) AS StockOperativoInicial,
