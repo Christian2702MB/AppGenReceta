@@ -19,7 +19,7 @@
 
     .main-wrapper {
         width: 100%;
-        padding: 40px 0;
+        padding: 5px 0 20px 0;
         display: flex;
         justify-content: center;
     }
@@ -92,6 +92,8 @@
     .card-liquidaciones .card-icon { color: #8e44ad; }
     .card-liquidaciones:hover { border-bottom: 5px solid #8e44ad; }
 
+    .card-movimientos:hover { border-bottom: 5px solid #2c3e50 !important; }
+
     /* Badge "Próximamente" */
     .badge-prox {
         position: absolute;
@@ -115,7 +117,7 @@
 
     .page-title-section {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 25px;
     }
 
     .page-title-section h1 {
@@ -139,7 +141,14 @@
             <p>Panel central para la administración del inventario, formulación química y control de producción en planta.</p>
         </div>
 
-        <div class="row">
+        @{
+            string rolUsuario = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "";
+            bool esAprobador = (rolUsuario == "Aprobador Insumos" || rolUsuario == "Aprobador Mermas");
+        }
+
+        @if (!esAprobador)
+        {
+            <div class="row">
 
             <!-- 1. Stock Actual (ACTIVO) -->
             <div class="col-md-5 col-sm-6" style="padding: 10px;">
@@ -193,5 +202,26 @@
             </div>
 
         </div>
+        }
+
+        <!-- 5. Gestión de Movimientos -->
+        <div class="row mt-2 justify-content-center">
+            <div class="col-md-10 col-sm-12" style="padding: 10px;">
+                <a href="@Url.Action("Index", "Movimientos")" class="menu-card shadow-sm d-flex flex-row align-items-center position-relative p-4 card-movimientos" style="flex-direction: row !important; text-align: left !important; justify-content: flex-start;">
+                    <div class="card-icon" style="margin-bottom: 0; margin-right: 25px; color: #2c3e50;">
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                    <div class="card-info" style="flex-grow: 1;">
+                        <h3 style="margin-bottom: 5px;">Gestión y Aprobación de Movimientos</h3>
+                        <p style="max-width: none; margin: 0;">Bandeja unificada para el seguimiento de solicitudes enviadas, corrección de movimientos observados y autorización de devoluciones al ERP.</p>
+                    </div>
+                    @if (ViewBag.MovimientosPendientes != null && (int)ViewBag.MovimientosPendientes > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill position-absolute" style="top: 15px; right: 15px; font-size: 0.9rem; padding: 6px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">@ViewBag.MovimientosPendientes</span>
+                    }
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
