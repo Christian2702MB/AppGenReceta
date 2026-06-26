@@ -1,0 +1,169 @@
+<!-- MODAL NUEVO MOVIMIENTO DE GESTIÓN DE PEDIDOS -->
+<div class="modal fade" id="modalPedidos" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog" style="width: 90%; max-width: 1200px;">
+        <div class="modal-content" style="border-radius: 6px; overflow: hidden; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+            <div class="modal-header" style="background-color: #002D72; color: white; padding: 15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1; text-shadow: none;">
+                    <span aria-hidden="true" style="font-size: 24px;">&times;</span>
+                </button>
+                <h4 class="modal-title" style="color: white; font-weight: bold; margin: 0; font-size: 18px;">
+                    <i class="fas fa-file-invoice" style="margin-right: 8px;"></i>Nuevo Movimiento de Gestión de Pedidos
+                </h4>
+            </div>
+            <div class="modal-body" style="background-color: #f8f9fa; padding: 20px;">
+                <div class="panel panel-default" style="margin-bottom: 20px; border-radius: 6px; border: 1px solid #dee2e6;">
+                    <div class="panel-body" style="padding: 15px;">
+                        <div class="row">
+                            <div class="col-md-4 form-group" style="margin-bottom: 0;">
+                                <label style="font-weight: 600; color: #6c757d;"><i class="fas fa-calendar-alt text-primary" style="margin-right: 5px;"></i> Desde</label>
+                                <input type="date" class="form-control" id="txtFiltroDesdePedidos" value="2026-05-01" />
+                            </div>
+                            <div class="col-md-4 form-group" style="margin-bottom: 0;">
+                                <label style="font-weight: 600; color: #6c757d;"><i class="fas fa-calendar-check text-primary" style="margin-right: 5px;"></i> Hasta</label>
+                                <input type="date" class="form-control" id="txtFiltroHastaPedidos" value="2026-05-20" />
+                            </div>
+                            <div class="col-md-4 form-group" style="margin-bottom: 0; padding-top: 25px;">
+                                <button type="button" class="btn btn-primary" style="width: 100%; background-color: #002D72; border: none; font-weight: bold;" onclick="buscarNPsPedidos()">
+                                    <i class="fas fa-search" style="margin-right: 5px;"></i> Buscar NPs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel panel-default" style="border-radius: 6px; margin-bottom: 0; border: 1px solid #dee2e6;">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="tablaNPsPedidos" style="margin-bottom: 0;">
+                            <thead style="background-color: #f1f5f9;">
+                                <tr>
+                                    <th style="width: 50px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chkAllNPsPedidos" onclick="toggleAllNPsPedidos(this)" /></th>
+                                    <th style="color: var(--hialpesa-blue); vertical-align: middle;">NP</th>
+                                    <th style="color: var(--hialpesa-blue); vertical-align: middle;">Cliente</th>
+                                    <th style="color: var(--hialpesa-blue); vertical-align: middle;">Temporada</th>
+                                    <th style="color: var(--hialpesa-blue); vertical-align: middle;">Estilo</th>
+                                    <th style="color: var(--hialpesa-blue); vertical-align: middle;">Estilo Propio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted" style="padding: 30px;">
+                                        Utilice el botón "Buscar NPs" para cargar los requerimientos pendientes del ERP.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0">
+                <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary font-weight-bold px-4" style="background-color: #002D72;" onclick="generarMovimientoPedidos()">
+                    <i class="fas fa-cogs mr-2"></i> Generar Movimiento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalPedidos() {
+        $("#chkAllNPsPedidos").prop("checked", false);
+        $("#modalPedidos").modal("show");
+        buscarNPsPedidos(); // Cargar automáticamente al abrir el modal
+    }
+
+    function buscarNPsPedidos() {
+        Swal.fire({
+            title: 'Buscando órdenes...',
+            text: 'Consultando NPs pendientes en el ERP Hialpesa',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Usamos el endpoint que ya existe en LiquidacionController
+        $.get('@Url.Action("ObtenerNPsPendientes", "Liquidacion")', function(data) {
+            Swal.close();
+            if(data.error) {
+                Swal.fire('Error', data.error, 'error');
+            } else {
+                renderNPsPedidos(data);
+            }
+        }).fail(function() {
+            Swal.fire('Error', 'Fallo de conexión al buscar NPs en el ERP.', 'error');
+        });
+    }
+
+    function renderNPsPedidos(data) {
+        var tbody = $("#tablaNPsPedidos tbody");
+        tbody.empty();
+
+        if (!data || data.length === 0) {
+            tbody.append('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-info-circle mr-2"></i>No se encontraron NPs pendientes en este rango de fechas.</td></tr>');
+            return;
+        }
+
+        $.each(data, function(index, item) {
+            tbody.append(
+                '<tr>' +
+                '<td class="text-center"><input type="checkbox" class="chk-np-pedido" data-np="' + item.NP + '" /></td>' +
+                '<td class="font-weight-bold text-dark">' + item.NP + '</td>' +
+                '<td>' + (item.Cliente || '-') + '</td>' +
+                '<td>' + (item.Temporada || '-') + '</td>' +
+                '<td>' + (item.Estilo || '-') + '</td>' +
+                '<td>' + (item.EstiloPropio || '-') + '</td>' +
+                '</tr>'
+            );
+        });
+    }
+
+    function toggleAllNPsPedidos(master) {
+        $(".chk-np-pedido").prop("checked", $(master).prop("checked"));
+    }
+
+    function generarMovimientoPedidos() {
+        var selectedKeys = [];
+        $(".chk-np-pedido:checked").each(function() {
+            selectedKeys.push($(this).data("np"));
+        });
+
+        if (selectedKeys.length === 0) {
+            Swal.fire({ title: 'Atención', text: 'Por favor, seleccione al menos un requerimiento (NP) para procesar.', icon: 'warning', confirmButtonColor: '#002D72' });
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Generar Movimientos?',
+            text: "Se extraerá el detalle de fórmulas de las " + selectedKeys.length + " NPs seleccionadas y se enviarán como solicitud de movimiento.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#002D72',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, generar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí en el futuro se enviará la petición AJAX al MovimientosController para grabar en LIQ_MOV_SolicitudesMovimiento.
+                // Por ahora, simulamos el éxito.
+                Swal.fire({
+                    title: 'Procesando...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                setTimeout(function() {
+                    $("#modalPedidos").modal("hide");
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Las solicitudes de movimiento han sido generadas y agregadas a la bandeja.',
+                        icon: 'success',
+                        confirmButtonColor: '#002D72'
+                    }).then(() => {
+                        location.reload(); // Recargar la bandeja de movimientos
+                    });
+                }, 1500);
+            }
+        });
+    }
+</script>

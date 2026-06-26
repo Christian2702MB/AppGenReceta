@@ -1,0 +1,231 @@
+<div class="modal fade" id="modalCrearMovimiento" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog" style="width: 90%; max-width: 1200px;">
+        <div class="modal-content" style="border-radius: 6px; overflow: hidden; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+            <div class="modal-header" style="background-color: #002D72; color: white; padding: 15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1; text-shadow: none;">
+                    <span aria-hidden="true" style="font-size: 24px;">&times;</span>
+                </button>
+                <h4 class="modal-title" style="color: white; font-weight: bold; margin: 0; font-size: 18px;">
+                    <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Nueva Solicitud de Movimiento
+                </h4>
+            </div>
+            <div class="modal-body" style="background-color: #f8f9fa; padding: 20px;">
+                <form id="frmNuevoMovimiento">
+                    <div class="panel panel-default" style="border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 20px;">
+                        <div class="panel-body" style="padding: 15px;">
+                            <div class="row">
+                                <div class="col-md-3 form-group">
+                                    <label style="font-weight: 600;">Tipo Movimiento</label>
+                                    <select class="form-control" id="cboTipoMovimiento" name="TipoMovimiento" required onchange="cambioTipoMovimiento()">
+                                        <option value="">[Seleccionar]</option>
+                                        <option value="Saldo NP">Saldo Sobrante NP (Devolución)</option>
+                                        <option value="Stock Operativo">Stock Operativo (Ajuste)</option>
+                                        <option value="Merma">Mermas (Reasignación)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <label style="font-weight: 600;">Bandeja Aprobador</label>
+                                    <select class="form-control" id="cboTipoAprobador" name="TipoAprobador" required>
+                                        <option value="">[Seleccionar]</option>
+                                        <option value="Aprobador Insumos">Aprobador Insumos</option>
+                                        <option value="Aprobador Mermas">Aprobador Mermas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label style="font-weight: 600;">Almacén Origen</label>
+                                    <input type="text" class="form-control" id="txtAlmacen" name="Almacen" value="60" required readonly />
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label style="font-weight: 600;">Observaciones Generales</label>
+                                    <input type="text" class="form-control" id="txtObservaciones" name="Observaciones" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default" style="border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 0;">
+                        <div class="panel-heading" style="background-color: white; border-bottom: 1px solid #dee2e6;">
+                            <h4 class="panel-title" style="color: #002D72; font-weight: bold;"><i class="fas fa-box-open" style="margin-right: 8px;"></i>Detalle de Insumos</h4>
+                        </div>
+                        <div class="panel-body" style="padding: 15px;">
+                            <!-- Fila de ingreso rápido -->
+                            <div class="row" style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+                                <div class="col-md-2 form-group" id="divNP" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">NP / OT</label>
+                                    <input type="text" class="form-control input-sm" id="txtNPDet" placeholder="Ej: I8386">
+                                </div>
+                                <div class="col-md-2 form-group" id="divMerma" style="display:none; margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">Cód. Merma</label>
+                                    <input type="text" class="form-control input-sm" id="txtCodMerma" placeholder="MER-2026-0076">
+                                </div>
+                                <div class="col-md-2 form-group" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">Cód. Insumo (Destino)</label>
+                                    <input type="text" class="form-control input-sm" id="txtCodInsumo" placeholder="TS000280">
+                                </div>
+                                <div class="col-md-3 form-group" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">Descripción Insumo</label>
+                                    <input type="text" class="form-control input-sm" id="txtDescInsumo">
+                                </div>
+                                <div class="col-md-2 form-group" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">Lote</label>
+                                    <input type="text" class="form-control input-sm" id="txtLote">
+                                </div>
+                                <div class="col-md-1 form-group" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">U.M.</label>
+                                    <input type="text" class="form-control input-sm" id="txtUM" value="KG">
+                                </div>
+                                <div class="col-md-1 form-group" style="margin-bottom: 0;">
+                                    <label style="color: #6c757d; font-size: 12px; font-weight: 600;">Cant.</label>
+                                    <input type="number" class="form-control input-sm" id="txtCant" step="0.0001">
+                                </div>
+                                <div class="col-md-1 form-group text-right" style="margin-bottom: 0; padding-top: 22px;">
+                                    <button type="button" class="btn btn-sm btn-success" style="width: 100%;" onclick="agregarFila()">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered table-condensed" id="tbNuevoDetalle" style="margin-bottom: 0;">
+                                    <thead style="background-color: #f1f5f9;">
+                                        <tr>
+                                            <th>Ref. (NP/Merma)</th>
+                                            <th>Cód. Insumo</th>
+                                            <th>Descripción</th>
+                                            <th>Lote</th>
+                                            <th>Cant.</th>
+                                            <th>UM</th>
+                                            <th style="width: 50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="font-weight: bold;">Cancelar</button>
+                <button type="button" class="btn btn-primary" style="background-color: #002D72; font-weight: bold; border: none; padding: 6px 20px;" onclick="guardarSolicitud()">
+                    <i class="fas fa-save" style="margin-right: 8px;"></i>Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let detalleMovimiento = [];
+
+    function cambioTipoMovimiento() {
+        let tipo = $('#cboTipoMovimiento').val();
+        $('#divNP').hide();
+        $('#divMerma').hide();
+
+        if (tipo === 'Saldo NP') {
+            $('#divNP').show();
+            $('#cboTipoAprobador').val('Aprobador Insumos');
+        } else if (tipo === 'Merma') {
+            $('#divMerma').show();
+            $('#cboTipoAprobador').val('Aprobador Mermas');
+        } else if (tipo === 'Stock Operativo') {
+            $('#cboTipoAprobador').val('Aprobador Insumos');
+        }
+    }
+
+    function agregarFila() {
+        let tipo = $('#cboTipoMovimiento').val();
+        if (!tipo) {
+            Swal.fire('Atención', 'Seleccione primero el Tipo de Movimiento', 'warning');
+            return;
+        }
+
+        let item = {
+            NP: $('#txtNPDet').val(),
+            CodMermaOrigen: $('#txtCodMerma').val(),
+            CodItem: $('#txtCodInsumo').val(),
+            NombreItem: $('#txtDescInsumo').val(),
+            Lote: $('#txtLote').val(),
+            UM: $('#txtUM').val(),
+            Cantidad: parseFloat($('#txtCant').val() || 0)
+        };
+
+        if (!item.CodItem || item.Cantidad <= 0) {
+            Swal.fire('Atención', 'Ingrese Código de Insumo y Cantidad mayor a cero.', 'warning');
+            return;
+        }
+
+        detalleMovimiento.push(item);
+        renderizarTabla();
+        
+        // Limpiar inputs
+        $('#txtCodInsumo, #txtDescInsumo, #txtLote, #txtCant, #txtCodMerma, #txtNPDet').val('');
+    }
+
+    function eliminarFila(index) {
+        detalleMovimiento.splice(index, 1);
+        renderizarTabla();
+    }
+
+    function renderizarTabla() {
+        let tbody = $('#tbNuevoDetalle tbody');
+        tbody.empty();
+        $.each(detalleMovimiento, function(i, d) {
+            let ref = d.CodMermaOrigen ? d.CodMermaOrigen : (d.NP ? d.NP : '-');
+            tbody.append(`
+                <tr>
+                    <td>${ref}</td>
+                    <td>${d.CodItem}</td>
+                    <td>${d.NombreItem}</td>
+                    <td>${d.Lote || '-'}</td>
+                    <td><strong>${d.Cantidad.toFixed(4)}</strong></td>
+                    <td>${d.UM}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(${i})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function guardarSolicitud() {
+        if (!$('#frmNuevoMovimiento')[0].checkValidity()) {
+            $('#frmNuevoMovimiento')[0].reportValidity();
+            return;
+        }
+
+        if (detalleMovimiento.length === 0) {
+            Swal.fire('Error', 'Debe agregar al menos un insumo al detalle.', 'error');
+            return;
+        }
+
+        let dataReq = {
+            TipoMovimiento: $('#cboTipoMovimiento').val(),
+            TipoAprobador: $('#cboTipoAprobador').val(),
+            Almacen: $('#txtAlmacen').val(),
+            Observaciones: $('#txtObservaciones').val(),
+            Detalles: detalleMovimiento
+        };
+
+        $.ajax({
+            url: '@Url.Action("Registrar", "Movimientos")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dataReq),
+            success: function(res) {
+                if (res.success) {
+                    Swal.fire('¡Registrado!', 'La solicitud ha sido enviada al aprobador con éxito.', 'success')
+                        .then(() => {
+                            location.reload();
+                        });
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            }
+        });
+    }
+</script>

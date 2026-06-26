@@ -103,6 +103,10 @@ namespace AppGenReceta.Web.Controllers
                         {
                             result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("Index", "Liquidacion") };
                         }
+                        else if (usuarioLogueado.NombreRol == "Aprobador Mermas" || usuarioLogueado.NombreRol == "Aprobador Insumos")
+                        {
+                            result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("Index", "Movimientos") };
+                        }
                         else
                         {
                             result = new { result = "success", title = "Satisfactorio", message = "Ingresó Correctamente.", action = Url.Action("MenuProveedor", "Home") };

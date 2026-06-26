@@ -13,6 +13,7 @@
     .btn { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1; position: relative; }
     .table .btn:hover { transform: scale(1.05) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .select2-results__option, .select2-selection__rendered { font-size: 11.5px !important; }
 
     /* VARIABLES GLOBALES (Gold Standard de Hialpesa) */
     :root {
@@ -596,7 +597,7 @@
                 <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Regresar
             </a>
             <button class="btn-outline-hialpesa" onclick="abrirModalHabilitarNP()"><i class="fas fa-check-circle" style="color:#0ea5e9;"></i> Habilitar NP</button>
-            <button class="btn-primary-hialpesa" onclick="abrirNuevaLiquidacion()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
+
         </div>
     </div>
 
@@ -713,8 +714,12 @@
 
             <!-- CONTENIDO TAB 2: MERMAS -->
             <div id="panelMermas" class="tab-content-panel" style="display: none;">
-                <div class="table-title">
-                    <h2>Inventario de Mermas (Stock secundario en producción)</h2>
+                <div class="table-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <h2 style="margin: 0;">Inventario de Mermas (Stock secundario en producción)</h2>
+                    <div class="input-group" style="width: 300px;">
+                        <span class="input-group-addon bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="txtBusquedaMermas" class="form-control" placeholder="Buscar mermas..." onkeyup="filtrarMermas()">
+                    </div>
                 </div>
                 
                 <div style="overflow-x:auto;">
@@ -838,11 +843,11 @@
                 <!-- Contenedor Dinámico Merma -->
                 <div id="contenedor-merma" style="display: none; background: #fff7ed; border: 1px solid #fed7aa; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                     <div class="row">
-                        <div class="col-md-6 form-group" style="margin-bottom: 0;">
+                        <div class="col-md-12 form-group" style="margin-bottom: 15px;">
                             <label style="color: #c2410c; font-size: 11px; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-sync-alt"></i> ¿REUTILIZAR MERMA EXISTENTE?</label>
-                            <select class="form-control" id="ddlMermaReutilizar" style="border-color: #fdba74; background-color: white;"></select>
+                            <select class="form-control" id="ddlMermaReutilizar" style="width: 100%; border-color: #fdba74; background-color: white;"></select>
                         </div>
-                        <div class="col-md-6 form-group" style="margin-bottom: 0;">
+                        <div class="col-md-12 form-group" style="margin-bottom: 0;">
                             <label style="color: #c2410c; font-size: 11px; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-comment-dots"></i> MOTIVO OBLIGATORIO</label>
                             <textarea class="form-control" id="txtMotivoMerma" rows="1" placeholder="Ej. Daño en mezcla..." style="border-color: #fdba74; resize: vertical;"></textarea>
                         </div>
@@ -1018,7 +1023,7 @@
                 <div id="contenedor-merma-ajuste" style="display: none; background: #fff7ed; border: 1px solid #fdba74; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label style="color: #c2410c; font-size: 11px; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-sync-alt"></i> ¿AJUSTAR SOBRE MERMA EXISTENTE?</label>
-                        <select class="form-control" id="ddlMermaReutilizarAjuste" style="border-color: #fdba74; background-color: white;"></select>
+                        <select class="form-control" id="ddlMermaReutilizarAjuste" style="width: 100%; border-color: #fdba74; background-color: white;"></select>
                     </div>
                 </div>
 
@@ -1354,7 +1359,7 @@
 
 <!-- MODAL HABILITAR NP (RECEPCIÓN EN BLANCO) -->
 <div class="modal fade modal-custom" id="habilitarNPModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document" style="max-width: 400px;">
+    <div class="modal-dialog" role="document" style="max-width: 520px;">
         <div class="modal-content">
             <div class="modal-header" style="background-color: #0ea5e9;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -2424,6 +2429,31 @@
         });
     }
 
+    function filtrarMermas() {
+        var input = document.getElementById("txtBusquedaMermas");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("tablaMermasStock");
+        var tr = table.getElementsByTagName("tr");
+        
+        for (var i = 1; i < tr.length; i++) {
+            // Ignorar la fila de "No hay stock" si está presente
+            if (tr[i].getElementsByTagName("td")[0].colSpan > 1) continue;
+            
+            var td = tr[i].getElementsByTagName("td");
+            var mostrar = false;
+            for (var j = 0; j < td.length; j++) {
+                if (td[j]) {
+                    var texto = td[j].textContent || td[j].innerText;
+                    if (texto.toUpperCase().indexOf(filter) > -1) {
+                        mostrar = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = mostrar ? "" : "none";
+        }
+    }
+
     // ── CARGAR LISTADO DE NPS PENDIENTES EN EL MODAL NUEVA LIQUIDACIÓN (AJAX) ──
     function renderNPsPendientes(dataArray) {
         var $tbody = $("#tablaNPsPendientes tbody");
@@ -2548,7 +2578,7 @@
             $("#txtSaldoTotal").val("Cargando...");
             
             // Poblar mermas disponibles
-            var mermaOptions = '<option value="">Seleccione una merma...</option>';
+            var mermaOptions = '<option value="">Seleccione o busque una merma...</option>';
             if (typeof mermasStock !== 'undefined') {
                 var hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -2563,11 +2593,33 @@
                     var estaVencida = (fVencDate && fVencDate < hoy);
                     
                     if (m.cantDisponible > 0 && !estaVencida) {
-                        mermaOptions += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo} - ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
+                        var txtNP = (m.npOrigen && m.npOrigen !== 'S/O') ? ` / NP: ${m.npOrigen}` : '';
+                        mermaOptions += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo}${txtNP} / ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
                     }
                 });
             }
             $("#ddlMermaReutilizar").html(mermaOptions);
+            
+            if ($("#ddlMermaReutilizar").hasClass("select2-hidden-accessible")) {
+                $("#ddlMermaReutilizar").select2("destroy");
+            }
+            var formatMerma = function (state) {
+                if (!state.id) return state.text;
+                var text = state.text;
+                text = text.replace(/^(MER-[^\s]+)/, '<b>$1</b>');
+                text = text.replace(/(\(Disp: .*?\))$/, '<b>$1</b>');
+                return $('<span>' + text + '</span>');
+            };
+            $("#ddlMermaReutilizar").select2({
+                dropdownParent: $('#consumoModal'),
+                minimumInputLength: 3,
+                templateResult: formatMerma,
+                templateSelection: formatMerma,
+                language: {
+                    inputTooShort: function () { return "Por favor ingrese 3 o más caracteres"; },
+                    noResults: function () { return "No se encontraron mermas"; }
+                }
+            });
             $("#txtMotivoMerma").val("");
             $("input[name='optFuenteConsumo'][value='Stock Inicial']").prop("checked", true).trigger('change');
             
@@ -2629,7 +2681,7 @@
             $("#txtAjusteSaldoTotal").val("Cargando...");
             
             // Poblar mermas disponibles para ajuste
-            var mermaOptionsAjuste = '<option value="">Seleccione una merma...</option>';
+            var mermaOptionsAjuste = '<option value="">Seleccione o busque una merma...</option>';
             if (typeof mermasStock !== 'undefined') {
                 var hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -2644,11 +2696,33 @@
                     var estaVencida = (fVencDate && fVencDate < hoy);
                     
                     if (m.cantDisponible > 0 && !estaVencida) {
-                        mermaOptionsAjuste += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo} - ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
+                        var txtNP = (m.npOrigen && m.npOrigen !== 'S/O') ? ` / NP: ${m.npOrigen}` : '';
+                        mermaOptionsAjuste += `<option value="${m.codigo}" data-stock="${m.cantDisponible}">${m.codigo}${txtNP} / ${m.descripcion} (Disp: ${m.cantDisponible.toFixed(2)} g)</option>`;
                     }
                 });
             }
             $("#ddlMermaReutilizarAjuste").html(mermaOptionsAjuste);
+            
+            if ($("#ddlMermaReutilizarAjuste").hasClass("select2-hidden-accessible")) {
+                $("#ddlMermaReutilizarAjuste").select2("destroy");
+            }
+            var formatMerma = function (state) {
+                if (!state.id) return state.text;
+                var text = state.text;
+                text = text.replace(/^(MER-[^\s]+)/, '<b>$1</b>');
+                text = text.replace(/(\(Disp: .*?\))$/, '<b>$1</b>');
+                return $('<span>' + text + '</span>');
+            };
+            $("#ddlMermaReutilizarAjuste").select2({
+                dropdownParent: $('#ajusteModal'),
+                minimumInputLength: 3,
+                templateResult: formatMerma,
+                templateSelection: formatMerma,
+                language: {
+                    inputTooShort: function () { return "Por favor ingrese 3 o más caracteres"; },
+                    noResults: function () { return "No se encontraron mermas"; }
+                }
+            });
             $("input[name='optFuenteAjuste'][value='Stock Inicial']").prop("checked", true).trigger('change');
 
             $("#txtAjusteCantidad").val('').prop("disabled", false);
