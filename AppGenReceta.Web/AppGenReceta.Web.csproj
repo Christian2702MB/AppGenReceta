@@ -519,9 +519,6 @@
     <Content Include="Content\assets\plugins\bootstrap-select\js\i18n\defaults-zh_CN.min.js" />
     <Content Include="Content\assets\plugins\bootstrap-select\js\i18n\defaults-zh_TW.js" />
     <Content Include="Content\assets\plugins\bootstrap-select\js\i18n\defaults-zh_TW.min.js" />
-    <Content Include="Content\assets\plugins\bootstrap\css\bootstrap.min.css" />
-    <Content Include="Content\assets\plugins\bootstrap\fonts\glyphicons-halflings-regular.svg" />
-    <Content Include="Content\assets\plugins\bootstrap\js\bootstrap.min.js" />
     <Content Include="Content\assets\plugins\jquery-datatable\buttons\buttons.bootstrap4.min.js" />
     <Content Include="Content\assets\plugins\jquery-datatable\buttons\buttons.colVis.min.js" />
     <Content Include="Content\assets\plugins\jquery-datatable\buttons\buttons.flash.min.js" />
@@ -688,10 +685,6 @@
     <Content Include="Content\assets\fonts\Material-Design-Iconic-Font.woff2" />
     <Content Include="Content\assets\plugins\bootstrap-select\css\bootstrap-select.css.map" />
     <Content Include="Content\assets\plugins\bootstrap-select\js\bootstrap-select.js.map" />
-    <Content Include="Content\assets\plugins\bootstrap\fonts\glyphicons-halflings-regular.eot" />
-    <Content Include="Content\assets\plugins\bootstrap\fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="Content\assets\plugins\bootstrap\fonts\glyphicons-halflings-regular.woff" />
-    <Content Include="Content\assets\plugins\bootstrap\fonts\glyphicons-halflings-regular.woff2" />
     <Content Include="Content\assets\plugins\select2\select2.jquery.json" />
     <Content Include="Content\assets\plugins\select2\select2_locale_en.js.template" />
     <Content Include="appsettings.json" />
