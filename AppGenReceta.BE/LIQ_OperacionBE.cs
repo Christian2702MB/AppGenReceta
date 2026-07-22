@@ -66,6 +66,7 @@ namespace AppGenReceta.BE
     public class LIQ_LiquidacionConsolidadaBE
     {
         public string NP { get; set; }
+        public string Item { get; set; }
         public string Cliente { get; set; }
         public string Estilo { get; set; }
         public string Temporada { get; set; }

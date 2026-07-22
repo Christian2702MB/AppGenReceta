@@ -13,10 +13,10 @@ GO
 --              manteniendo intacta la original para auditoría.
 -- =========================================================================================
 CREATE PROCEDURE [dbo].[LIQ_SP_GenerarSiguienteVersionNP]
-    @NPOriginal VARCHAR(50),
+    @NPOriginal VARCHAR(100),
     @Usuario VARCHAR(50),
     @Observacion VARCHAR(500),
-    @NuevaNPGerada VARCHAR(50) OUTPUT,
+    @NuevaNPGerada VARCHAR(100) OUTPUT,
     @Exito INT OUTPUT,
     @Mensaje VARCHAR(500) OUTPUT
 AS
@@ -33,7 +33,7 @@ BEGIN
         END
 
         -- 2. Determinar el nuevo sufijo de versión
-        DECLARE @BaseNP VARCHAR(50);
+        DECLARE @BaseNP VARCHAR(100);
         DECLARE @CurrentMaxVersion INT = 1;
 
         -- Extraer la base (ej. 'I8253' de 'I8253-V2')
@@ -61,7 +61,7 @@ BEGIN
         END
 
         DECLARE @NextVersion INT = @CurrentMaxVersion + 1;
-        DECLARE @NuevaNP VARCHAR(50) = @BaseNP + '-V' + CAST(@NextVersion AS VARCHAR(10));
+        DECLARE @NuevaNP VARCHAR(100) = @BaseNP + '-V' + CAST(@NextVersion AS VARCHAR(10));
 
         -- Validar colisión (sanity check)
         IF EXISTS (SELECT 1 FROM LIQ_Formulas WHERE NP = @NuevaNP)

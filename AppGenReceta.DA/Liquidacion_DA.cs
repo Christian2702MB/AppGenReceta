@@ -280,11 +280,14 @@ namespace AppGenReceta.DA
             using (SqlConnection cnx = new SqlConnection(ConnectionString))
             {
                 string sql = @"
-                    SELECT F.NP, C.NombreColor AS Cliente, F.Estilo 
+                    SELECT F.NP, F.Item, C.NombreColor AS Cliente, F.Estilo 
                     FROM LIQ_Formulas F 
                     LEFT JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula AND C.NombreColor <> ''
                     WHERE F.Estado <> 'Eliminada'
-                      AND NOT EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP)
+                      AND NOT EXISTS (
+                          SELECT 1 FROM LIQ_REQ_Recepciones R 
+                          WHERE R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
+                      )
                 ";
                 using (SqlCommand cmd = new SqlCommand(sql, cnx))
                 {
@@ -295,12 +298,16 @@ namespace AppGenReceta.DA
                         while (dr.Read())
                         {
                             string np = dr["NP"].ToString();
-                            if (!npSet.Contains(np))
+                            string itemStr = dr["Item"] != DBNull.Value ? dr["Item"].ToString() : "";
+                            string npClave = string.IsNullOrEmpty(itemStr) || itemStr == "0000" ? np : np + "-" + itemStr;
+                            
+                            if (!npSet.Contains(npClave))
                             {
-                                npSet.Add(np);
+                                npSet.Add(npClave);
                                 lista.Add(new LIQ_NPSinRecepcionBE
                                 {
                                     NP = np,
+                                    Item = itemStr,
                                     Cliente = dr["Cliente"]?.ToString(),
                                     Estilo = dr["Estilo"]?.ToString()
                                 });
@@ -350,10 +357,11 @@ namespace AppGenReceta.DA
                 if (exito)
                 {
                     string sqlSnapshot = @"
-                        DELETE FROM LIQ_NP_StockSnapshot WHERE NP = @NP;
-                        INSERT INTO LIQ_NP_StockSnapshot (NP, CodInsumo, StockOperativoInicial, FechaCaptura)
+                        DELETE FROM LIQ_NP_StockSnapshot WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP;
+                        INSERT INTO LIQ_NP_StockSnapshot (NP, Item, CodInsumo, StockOperativoInicial, FechaCaptura)
                         SELECT DISTINCT
                             F.NP, 
+                            ISNULL(F.Item, '0000'),
                             I.CodigoInsumo,
                             (
                                 -- 1. Tomamos el STOCK ACTUAL GLOBAL
@@ -385,7 +393,7 @@ namespace AppGenReceta.DA
                         FROM LIQ_Formulas F
                         INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
                         INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                        WHERE F.NP = @NP;
+                        WHERE (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END) = @NP;
                     ";
                     using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cnx))
                     {
@@ -576,7 +584,7 @@ namespace AppGenReceta.DA
 
     -- Resultado 1: Cabeceras
     SELECT 
-        F.IdFormula, F.NP, F.Cliente, F.Estilo, F.Temporada, F.EstiloPropio, F.Estado, 
+        F.IdFormula, F.NP, F.Item, F.Cliente, F.Estilo, F.Temporada, F.EstiloPropio, F.Estado, 
         CONVERT(VARCHAR(10), F.FechaCreacion, 103) AS FechaCreacion,
         ISNULL(F.FechaCierre, '--') AS FechaCierre
     FROM LIQ_Formulas F
@@ -586,12 +594,16 @@ namespace AppGenReceta.DA
           (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
           (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
       )
-      AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP);
+      AND EXISTS (
+          SELECT 1 FROM LIQ_REQ_Recepciones R 
+          WHERE R.CodOrdPro = F.NP OR R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
+      );
 
     -- Resultado 2: Colores e Insumos con Saldos Consolidados
     ;WITH CTE_Base AS (
         SELECT 
             F.NP,
+            F.Item,
             C.NombreColor AS Pantone,
             I.CodigoInsumo,
             I.Descripcion AS NombreInsumo,
@@ -625,7 +637,7 @@ namespace AppGenReceta.DA
             
             -- Stock Operativo Global (Calculado como BaseInicial - Consumos, Ajustes y Devoluciones GLOBALES, priorizando la foto histórica si existe)
             COALESCE(
-                (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
+                (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND ISNULL(SS.Item, '0000') = ISNULL(F.Item, '0000') AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
                 ISNULL((
                     SELECT TOP 1 CASE 
                         WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
@@ -642,7 +654,7 @@ namespace AppGenReceta.DA
 
             -- Stock Operativo (Distribuido proporcionalmente)
             COALESCE(
-                (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
+                (SELECT TOP 1 SS.StockOperativoInicial FROM LIQ_NP_StockSnapshot SS WHERE SS.NP = F.NP AND ISNULL(SS.Item, '0000') = ISNULL(F.Item, '0000') AND SS.CodInsumo = I.CodigoInsumo ORDER BY SS.FechaCaptura DESC),
                 ISNULL((
                     SELECT TOP 1 CASE 
                         WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0
@@ -696,10 +708,13 @@ namespace AppGenReceta.DA
               (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
               (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
           )
-          AND EXISTS (SELECT 1 FROM LIQ_REQ_Recepciones R WHERE R.CodOrdPro = F.NP)
+          AND EXISTS (
+              SELECT 1 FROM LIQ_REQ_Recepciones R 
+              WHERE R.CodOrdPro = F.NP OR R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
+          )
     )
     SELECT 
-        NP, Pantone, CodigoInsumo, NombreInsumo, Tecnica, UM, Requerido,
+        NP, Item, Pantone, CodigoInsumo, NombreInsumo, Tecnica, UM, Requerido,
         
         StockOperativo, 
         StockRecibido, 
@@ -742,6 +757,7 @@ namespace AppGenReceta.DA
                             lista.Add(new LIQ_LiquidacionConsolidadaBE
                             {
                                 NP = dr["NP"].ToString(),
+                                Item = dr["Item"] != DBNull.Value ? dr["Item"].ToString() : "",
                                 Cliente = dr["Cliente"].ToString(),
                                 Estilo = dr["Estilo"].ToString(),
                                 Temporada = dr["Temporada"].ToString(),
@@ -759,9 +775,10 @@ namespace AppGenReceta.DA
                             while (dr.Read())
                             {
                                 string np = dr["NP"].ToString();
+                                string itemStr = dr["Item"] != DBNull.Value ? dr["Item"].ToString() : "";
                                 string pantone = dr["Pantone"].ToString();
 
-                                var cabecera = lista.Find(x => x.NP == np);
+                                var cabecera = lista.Find(x => x.NP == np && (x.Item == itemStr || (string.IsNullOrEmpty(x.Item) && string.IsNullOrEmpty(itemStr))));
                                 if (cabecera != null)
                                 {
                                     var color = cabecera.Colores.Find(c => c.Pantone == pantone);
@@ -922,7 +939,7 @@ namespace AppGenReceta.DA
     DECLARE @SnapshotStock DECIMAL(18,4) = NULL;
     SELECT TOP 1 @SnapshotStock = StockOperativoInicial 
     FROM LIQ_NP_StockSnapshot 
-    WHERE NP = @NP AND CodInsumo = @CodInsumo 
+    WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP AND CodInsumo = @CodInsumo 
     ORDER BY FechaCaptura DESC;
     
     DECLARE @StockOperativoBase DECIMAL(18,4);
@@ -1393,7 +1410,7 @@ namespace AppGenReceta.DA
                 cmd.Parameters.AddWithValue("@Usuario", usuario);
                 cmd.Parameters.AddWithValue("@Observacion", observacion ?? "");
 
-                SqlParameter pNuevaNP = new SqlParameter("@NuevaNPGerada", SqlDbType.VarChar, 50) { Direction = ParameterDirection.Output };
+                SqlParameter pNuevaNP = new SqlParameter("@NuevaNPGerada", SqlDbType.VarChar, 100) { Direction = ParameterDirection.Output };
                 SqlParameter pExito = new SqlParameter("@Exito", SqlDbType.Int) { Direction = ParameterDirection.Output };
                 SqlParameter pMensaje = new SqlParameter("@Mensaje", SqlDbType.VarChar, 500) { Direction = ParameterDirection.Output };
                 

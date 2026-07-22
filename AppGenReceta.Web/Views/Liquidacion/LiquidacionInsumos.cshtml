@@ -1395,7 +1395,8 @@
             
             if(res && res.length > 0) {
                 res.forEach(function(item) {
-                    $ddl.append('<option value="' + item.NP + '">' + item.NP + ' - ' + (item.Cliente || 'SIN CLIENTE') + ' (' + (item.Estilo || 'SIN ESTILO') + ')</option>');
+                    var displayNp = item.Item && item.Item !== '0000' && item.Item.length > 0 && item.NP.indexOf(item.Item) === -1 ? item.NP + '-' + item.Item : item.NP;
+                    $ddl.append('<option value="' + displayNp + '">' + displayNp + ' - ' + (item.Cliente || 'SIN CLIENTE') + ' (' + (item.Estilo || 'SIN ESTILO') + ')</option>');
                 });
             } else {
                 $ddl.append('<option value="" disabled>No hay NPs pendientes de habilitar</option>');
@@ -1983,8 +1984,9 @@
         var dict = {};
         if (datosBackend && datosBackend.length) {
             datosBackend.forEach(function(item) {
-                dict[item.NP] = {
-                    np: item.NP, cliente: item.Cliente, estilo: item.Estilo, temporada: item.Temporada, estiloPropio: item.EstiloPropio,
+                var displayNp = item.Item && item.Item !== '0000' && item.Item.length > 0 && item.NP.indexOf(item.Item) === -1 ? item.NP + '-' + item.Item : item.NP;
+                dict[displayNp] = {
+                    np: displayNp, cliente: item.Cliente, estilo: item.Estilo, temporada: item.Temporada, estiloPropio: item.EstiloPropio,
                     estado: item.Estado, creacion: item.Creacion, cierre: item.Cierre,
                     colores: item.Colores.map(c => ({
                         pantone: c.Pantone,
@@ -2465,11 +2467,12 @@
         }
 
         dataArray.forEach(function(item) {
+            var displayNp = item.Item && item.Item !== '0000' && item.Item.length > 0 && item.NP.indexOf(item.Item) === -1 ? item.NP + '-' + item.Item : item.NP;
             var row = `<tr>
                 <td style="text-align: center;">
-                    <input type="checkbox" class="chk-np-pendiente" data-np="${item.NP}" />
+                    <input type="checkbox" class="chk-np-pendiente" data-np="${displayNp}" />
                 </td>
-                <td><strong>${item.NP}</strong></td>
+                <td><strong>${displayNp}</strong></td>
                 <td>${item.Cliente}</td>
                 <td>${item.Temporada}</td>
                 <td>${item.Estilo}</td>

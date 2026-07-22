@@ -138,6 +138,7 @@ namespace AppGenReceta.BE
     public class LIQ_NPSinRecepcionBE
     {
         public string NP { get; set; }
+        public string Item { get; set; }
         public string Cliente { get; set; }
         public string Estilo { get; set; }
     }

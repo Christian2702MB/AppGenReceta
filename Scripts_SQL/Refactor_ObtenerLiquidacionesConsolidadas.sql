@@ -14,7 +14,7 @@ BEGIN
 
     -- Resultado 1: Cabeceras
     SELECT 
-        F.IdFormula, F.NP, F.Cliente, F.Estilo, F.Temporada, F.EstiloPropio, F.Estado, 
+        F.IdFormula, F.NP, F.Item, F.Cliente, F.Estilo, F.Temporada, F.EstiloPropio, F.Estado, 
         CONVERT(VARCHAR(10), F.FechaCreacion, 103) AS FechaCreacion,
         ISNULL(F.FechaCierre, '--') AS FechaCierre
     FROM LIQ_Formulas F

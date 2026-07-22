@@ -410,12 +410,13 @@ namespace AppGenReceta.DA
                     // -------------------------------------------------------------
                     string sqlSnapshot = @"
                         -- Eliminar la foto anterior si existiera para tomar una nueva (se actualiza solo con nuevas recepciones)
-                        DELETE FROM LIQ_NP_StockSnapshot WHERE NP = @NP;
+                        DELETE FROM LIQ_NP_StockSnapshot WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP;
 
                         -- Tomar la foto actual del stock operativo global para todos los insumos de la fórmula de esta NP
-                        INSERT INTO LIQ_NP_StockSnapshot (NP, CodInsumo, StockOperativoInicial, FechaCaptura)
+                        INSERT INTO LIQ_NP_StockSnapshot (NP, Item, CodInsumo, StockOperativoInicial, FechaCaptura)
                         SELECT DISTINCT
                             F.NP, 
+                            ISNULL(F.Item, '0000'),
                             I.CodigoInsumo,
                             (
                                 -- 1. Tomamos el STOCK ACTUAL GLOBAL
@@ -452,7 +453,7 @@ namespace AppGenReceta.DA
                         FROM LIQ_Formulas F
                         INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
                         INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                        WHERE F.NP = @NP;
+                        WHERE (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END) = @NP;
                     ";
                     using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cn))
                     {
