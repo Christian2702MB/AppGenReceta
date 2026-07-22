@@ -139,5 +139,31 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = "Error: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        // POST: Movimientos/GenerarMovimientoSTK
+        [HttpPost]
+        public JsonResult GenerarMovimientoSTK(string observaciones, DateTime fechaMovimiento, List<string> npsSeleccionadas)
+        {
+            string rolActual = Session["RolUsuario"] != null ? Session["RolUsuario"].ToString() : "";
+            // Usamos Cod_Usuario que es el id corto requerido por la base de datos
+            if (Session["Cod_Usuario"] == null)
+            {
+                return Json(new { success = false, message = "La sesión ha expirado. Por favor, inicie sesión nuevamente." });
+            }
+
+            try
+            {
+                string usuario = Session["Cod_Usuario"].ToString();
+                
+                // Ejecutar el SP de STK pasando las observaciones, la fecha y el usuario actual
+                _movimientoBL.EjecutarMovimientoSTK(observaciones, fechaMovimiento, usuario, npsSeleccionadas);
+
+                return Json(new { success = true, message = "Movimiento generado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al ejecutar SP_LG_MOVISTK: " + ex.Message });
+            }
+        }
     }
 }

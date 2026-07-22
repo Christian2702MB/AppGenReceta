@@ -186,5 +186,41 @@ namespace AppGenReceta.DA
             }
             return lista;
         }
+
+        public void EjecutarMovimientoSTK(string observaciones, DateTime fechaMovimiento, string usuario, List<string> nps)
+        {
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                // Concatenar NPs al inicio de las observaciones
+                string obsFinal = observaciones ?? "";
+                if (nps != null && nps.Count > 0)
+                {
+                    string npString = string.Join(", ", nps);
+                    obsFinal = string.IsNullOrWhiteSpace(obsFinal) ? npString : npString + " - " + obsFinal;
+                }
+
+                // Truncar si es muy largo para evitar errores SQL (ej. max 200 chars)
+                if (obsFinal.Length > 200) obsFinal = obsFinal.Substring(0, 200);
+
+                string sql = @"
+                    EXEC SP_LG_MOVISTK  'I', '60', '', '188', '', '', '', '', '60', @usuario, '', @observaciones, @fechaMovimiento, '' ,'N','','0', 0,'','',''
+                ";
+                using (SqlCommand cmd = new SqlCommand(sql, cnx))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@observaciones", obsFinal);
+                    cmd.Parameters.AddWithValue("@fechaMovimiento", fechaMovimiento.ToString("dd/MM/yyyy"));
+                    
+                    // Asegurar que el usuario no sobrepase la longitud del parámetro en la BD (ej. 10 chars)
+                    string userClean = string.IsNullOrWhiteSpace(usuario) ? "USER" : usuario;
+                    if (userClean.Length > 10) userClean = userClean.Substring(0, 10);
+                    
+                    cmd.Parameters.AddWithValue("@usuario", userClean);
+
+                    cnx.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

@@ -33,5 +33,10 @@ namespace AppGenReceta.BL
         {
             return da.ObtenerDetalles(idSolicitud);
         }
+
+        public void EjecutarMovimientoSTK(string observaciones, DateTime fechaMovimiento, string usuario, List<string> nps)
+        {
+            da.EjecutarMovimientoSTK(observaciones, fechaMovimiento, usuario, nps);
+        }
     }
 }

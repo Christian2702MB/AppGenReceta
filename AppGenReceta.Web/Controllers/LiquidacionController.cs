@@ -1017,6 +1017,38 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpGet]
+        public JsonResult ObtenerInsumosSobrantesNP(string np)
+        {
+            try
+            {
+                // Obtenemos los consolidados en estado Terminado (que son los que pasan a devolución)
+                var consolidados = bl.ObtenerLiquidacionesConsolidadas("Terminado");
+                var npData = consolidados.FirstOrDefault(x => x.NP == np);
+                
+                if (npData == null)
+                    return Json(new { success = false, message = "NP no encontrada o no está en estado Terminado." }, JsonRequestBehavior.AllowGet);
+
+                var insumosSobrantes = npData.Colores
+                    .SelectMany(c => c.Insumos)
+                    .GroupBy(i => new { i.Codigo, i.Nombre, i.UM })
+                    .Select(g => new {
+                        CodInsumo = g.Key.Codigo,
+                        Descripcion = g.Key.Nombre,
+                        UM = g.Key.UM,
+                        SaldoDevolver = g.Sum(x => x.SaldoSolicitud)
+                    })
+                    .Where(x => x.SaldoDevolver > 0)
+                    .ToList();
+
+                return Json(new { success = true, data = insumosSobrantes }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
         public JsonResult ObtenerNPsSinRecepcion()
         {
             try

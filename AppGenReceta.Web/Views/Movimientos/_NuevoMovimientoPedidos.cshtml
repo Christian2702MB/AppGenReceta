@@ -11,7 +11,9 @@
                 </h4>
             </div>
             <div class="modal-body" style="background-color: #f8f9fa; padding: 20px;">
-                <div class="panel panel-default" style="margin-bottom: 20px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <!-- PASO 1: SELECCIÓN -->
+                <div id="step1-pedidos">
+                    <div class="panel panel-default" style="margin-bottom: 20px; border-radius: 6px; border: 1px solid #dee2e6;">
                     <div class="panel-body" style="padding: 15px;">
                         <div class="row">
                             <div class="col-md-4 form-group" style="margin-bottom: 0;">
@@ -37,6 +39,7 @@
                             <thead style="background-color: #f1f5f9;">
                                 <tr>
                                     <th style="width: 50px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chkAllNPsPedidos" onclick="toggleAllNPsPedidos(this)" /></th>
+                                    <th style="width: 40px;"></th>
                                     <th style="color: var(--hialpesa-blue); vertical-align: middle;">NP</th>
                                     <th style="color: var(--hialpesa-blue); vertical-align: middle;">Cliente</th>
                                     <th style="color: var(--hialpesa-blue); vertical-align: middle;">Temporada</th>
@@ -46,7 +49,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted" style="padding: 30px;">
+                                    <td colspan="7" class="text-center text-muted" style="padding: 30px;">
                                         Utilice el botón "Buscar NPs" para cargar los requerimientos pendientes del ERP.
                                     </td>
                                 </tr>
@@ -55,10 +58,72 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light border-top-0">
+                </div> <!-- END PASO 1 -->
+
+                <!-- PASO 2: CONFIRMACIÓN -->
+                <div id="step2-movimiento" style="display: none;">
+                    <div class="alert alert-info" style="background-color: #e8f4fd; border-color: #d0e7fa; color: #002D72; border-radius: 6px;">
+                        <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                        <strong>Preparando movimiento</strong> para <span id="lblCountNPs" class="badge" style="background-color: #002D72; margin: 0 5px;">0</span> requerimientos seleccionados.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="panel panel-default" style="border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 15px;">
+                                <div class="panel-heading" style="background-color: #fff; border-bottom: 1px solid #dee2e6; font-weight: bold; color: #495057;">
+                                    <i class="fas fa-truck-loading text-primary" style="margin-right: 5px;"></i> Tipo de Movimiento
+                                </div>
+                                <div class="panel-body" style="padding: 12px 15px;">
+                                    <span class="label label-primary" style="background-color: #002D72; font-size: 13px; padding: 5px 10px; display: inline-block; width: 100%; text-align: left; white-space: normal;">
+                                        188 - Salida x Transferencias Items a almacén QYC General
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="panel panel-default" style="border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 15px;">
+                                <div class="panel-heading" style="background-color: #fff; border-bottom: 1px solid #dee2e6; font-weight: bold; color: #495057;">
+                                    <i class="fas fa-building text-primary" style="margin-right: 5px;"></i> Centro de Costo
+                                </div>
+                                <div class="panel-body" style="padding: 12px 15px;">
+                                    <span class="label label-default" style="background-color: #6c757d; font-size: 13px; padding: 5px 10px; display: inline-block; width: 100%; text-align: left;">
+                                        60 - Estampados
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default" style="border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 0;">
+                        <div class="panel-body" style="padding: 15px;">
+                            <div class="row">
+                                <div class="col-md-4 form-group" style="margin-bottom: 0;">
+                                    <label style="font-weight: 600; color: #6c757d;"><i class="fas fa-calendar-day text-primary" style="margin-right: 5px;"></i> Fecha de Movimiento</label>
+                                    <input type="date" id="txtFechaMovSTK" class="form-control" style="border-radius: 4px;" />
+                                </div>
+                                <div class="col-md-8 form-group" style="margin-bottom: 0;">
+                                    <label style="font-weight: 600; color: #6c757d;"><i class="fas fa-comment-alt text-primary" style="margin-right: 5px;"></i> Observaciones</label>
+                                    <textarea id="txtObservacionesSTK" class="form-control" rows="2" style="border-radius: 4px; resize: none;" placeholder="Ingrese alguna observación adicional (opcional)..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- END PASO 2 -->
+            </div>
+            
+            <div class="modal-footer bg-light border-top-0" id="footer-step1">
                 <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary font-weight-bold px-4" style="background-color: #002D72;" onclick="generarMovimientoPedidos()">
-                    <i class="fas fa-cogs mr-2"></i> Generar Movimiento
+                    Siguiente <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+            
+            <div class="modal-footer bg-light border-top-0" id="footer-step2" style="display: none;">
+                <button type="button" class="btn btn-outline-secondary font-weight-bold" onclick="volverPaso1Pedidos()">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver a Selección
+                </button>
+                <button type="button" class="btn btn-success font-weight-bold px-4" onclick="ejecutarMovimientoSTK()">
+                    <i class="fas fa-check mr-2"></i> Confirmar y Ejecutar
                 </button>
             </div>
         </div>
@@ -68,6 +133,13 @@
 <script>
     function abrirModalPedidos() {
         $("#chkAllNPsPedidos").prop("checked", false);
+        
+        // Reset a Paso 1
+        $("#step2-movimiento").hide();
+        $("#footer-step2").hide();
+        $("#step1-pedidos").show();
+        $("#footer-step1").show();
+        
         $("#modalPedidos").modal("show");
         buscarNPsPedidos(); // Cargar automáticamente al abrir el modal
     }
@@ -100,14 +172,15 @@
         tbody.empty();
 
         if (!data || data.length === 0) {
-            tbody.append('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-info-circle mr-2"></i>No se encontraron NPs pendientes en este rango de fechas.</td></tr>');
+            tbody.append('<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-info-circle mr-2"></i>No se encontraron NPs pendientes en este rango de fechas.</td></tr>');
             return;
         }
 
         $.each(data, function(index, item) {
             tbody.append(
-                '<tr>' +
+                '<tr data-np="' + item.NP + '">' +
                 '<td class="text-center"><input type="checkbox" class="chk-np-pedido" data-np="' + item.NP + '" /></td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-light btn-expand-np" onclick="toggleDetalleNP(this, \'' + item.NP + '\')" style="padding: 2px 6px; border-radius: 50%;"><i class="fas fa-plus text-primary"></i></button></td>' +
                 '<td class="font-weight-bold text-dark">' + item.NP + '</td>' +
                 '<td>' + (item.Cliente || '-') + '</td>' +
                 '<td>' + (item.Temporada || '-') + '</td>' +
@@ -122,6 +195,52 @@
         $(".chk-np-pedido").prop("checked", $(master).prop("checked"));
     }
 
+    function toggleDetalleNP(btn, np) {
+        var tr = $(btn).closest('tr');
+        var icon = $(btn).find('i');
+        
+        if (tr.next().hasClass('child-row')) {
+            // Ya está expandido, cerrarlo
+            tr.next().remove();
+            icon.removeClass('fa-minus text-danger').addClass('fa-plus text-primary');
+        } else {
+            // Expandir
+            icon.removeClass('fa-plus text-primary fa-minus text-danger').addClass('fa-spinner fa-spin text-muted');
+            
+            $.get('@Url.Action("ObtenerInsumosSobrantesNP", "Liquidacion")?np=' + np, function(res) {
+                icon.removeClass('fa-spinner fa-spin text-muted').addClass('fa-minus text-danger');
+                
+                if (res.success && res.data && res.data.length > 0) {
+                    var childHtml = '<tr class="child-row"><td colspan="7" style="padding: 0; background-color: #f8f9fa;">' +
+                        '<div style="padding: 15px; border-left: 3px solid #002D72; margin: 5px 15px 15px 15px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 0 4px 4px 0;">' +
+                        '<h5 style="margin-top: 0; color: #002D72; font-size: 13px; font-weight: bold; margin-bottom: 10px;"><i class="fas fa-box-open mr-2"></i>Insumos Pendientes de Devolución</h5>' +
+                        '<table class="table table-sm table-bordered" style="margin-bottom: 0; font-size: 12px;">' +
+                        '<thead style="background-color: #e2e8f0; color: #495057;"><tr><th>Cód. Insumo</th><th>Descripción</th><th class="text-center">U.M.</th><th class="text-right">Saldo a Devolver</th></tr></thead><tbody>';
+                    
+                    $.each(res.data, function(i, d) {
+                        childHtml += '<tr>' +
+                            '<td>' + d.CodInsumo + '</td>' +
+                            '<td>' + d.Descripcion + '</td>' +
+                            '<td class="text-center">' + (d.UM || 'KG') + '</td>' +
+                            '<td class="text-right font-weight-bold text-danger">' + parseFloat(d.SaldoDevolver).toFixed(4) + '</td>' +
+                            '</tr>';
+                    });
+                    
+                    childHtml += '</tbody></table></div></td></tr>';
+                    tr.after(childHtml);
+                } else {
+                    var errorMsg = res.message || 'No hay insumos con saldo sobrante para esta NP.';
+                    var childHtml = '<tr class="child-row"><td colspan="7" style="padding: 15px; background-color: #f8f9fa; text-align: center; color: #6c757d; font-size: 13px;">' +
+                        '<i class="fas fa-info-circle mr-2"></i>' + errorMsg + '</td></tr>';
+                    tr.after(childHtml);
+                }
+            }).fail(function() {
+                icon.removeClass('fa-spinner fa-spin text-muted').addClass('fa-minus text-danger');
+                tr.after('<tr class="child-row"><td colspan="7" style="padding: 15px; background-color: #f8f9fa; text-align: center; color: #dc3545; font-size: 13px;"><i class="fas fa-exclamation-triangle mr-2"></i>Error al consultar el detalle.</td></tr>');
+            });
+        }
+    }
+
     function generarMovimientoPedidos() {
         var selectedKeys = [];
         $(".chk-np-pedido:checked").each(function() {
@@ -133,36 +252,71 @@
             return;
         }
 
-        Swal.fire({
-            title: '¿Generar Movimientos?',
-            text: "Se extraerá el detalle de fórmulas de las " + selectedKeys.length + " NPs seleccionadas y se enviarán como solicitud de movimiento.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#002D72',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, generar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Aquí en el futuro se enviará la petición AJAX al MovimientosController para grabar en LIQ_MOV_SolicitudesMovimiento.
-                // Por ahora, simulamos el éxito.
-                Swal.fire({
-                    title: 'Procesando...',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
+        window.selectedNPsForSTK = selectedKeys;
+        $("#lblCountNPs").text(selectedKeys.length);
+        $("#txtObservacionesSTK").val("");
+        
+        var today = new Date().toISOString().split('T')[0];
+        $("#txtFechaMovSTK").val(today);
+        
+        // Transición Suave (Fade)
+        $("#footer-step1").hide();
+        $("#step1-pedidos").fadeOut(200, function() {
+            $("#step2-movimiento").fadeIn(300);
+            $("#footer-step2").fadeIn(300);
+        });
+    }
 
-                setTimeout(function() {
-                    $("#modalPedidos").modal("hide");
+    function volverPaso1Pedidos() {
+        $("#footer-step2").hide();
+        $("#step2-movimiento").fadeOut(200, function() {
+            $("#step1-pedidos").fadeIn(300);
+            $("#footer-step1").fadeIn(300);
+        });
+    }
+
+    function ejecutarMovimientoSTK() {
+        var obs = $("#txtObservacionesSTK").val() || "";
+        var fecha = $("#txtFechaMovSTK").val();
+        var nps = window.selectedNPsForSTK || [];
+        
+        if (!fecha) {
+            Swal.fire('Atención', 'Ingrese una fecha de movimiento válida.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Registrando la transferencia en base de datos...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            url: '@Url.Action("GenerarMovimientoSTK", "Movimientos")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ 
+                observaciones: obs, 
+                fechaMovimiento: fecha,
+                npsSeleccionadas: nps
+            }),
+            success: function(res) {
+                if (res.success) {
                     Swal.fire({
                         title: '¡Éxito!',
-                        text: 'Las solicitudes de movimiento han sido generadas y agregadas a la bandeja.',
+                        text: 'El movimiento ha sido generado correctamente.',
                         icon: 'success',
                         confirmButtonColor: '#002D72'
                     }).then(() => {
-                        location.reload(); // Recargar la bandeja de movimientos
+                        location.reload(); 
                     });
-                }, 1500);
+                } else {
+                    Swal.fire('Error', res.message || 'Error al generar movimiento.', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Fallo de conexión.', 'error');
             }
         });
     }
