@@ -203,7 +203,8 @@
                     <thead>
                         <tr>
                             <th class="text-center">N° Requerimiento</th>
-                            <th class="text-center">OP / NP</th>
+                            <th class="text-center">NP</th>
+                            <th class="text-center">Item</th>
                             <th class="text-center">Motivo</th>
                             <th class="text-center">Estado</th>
                             <th class="text-center">Fecha Recepción</th>
@@ -214,9 +215,22 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
+                            string npVal = item.CodOrdPro;
+                            string itemVal = item.Item;
+                            if (!string.IsNullOrEmpty(npVal) && !string.IsNullOrEmpty(itemVal) && npVal.EndsWith("-" + itemVal))
+                            {
+                                npVal = npVal.Substring(0, npVal.Length - itemVal.Length - 1);
+                            }
+                            else if (string.IsNullOrEmpty(itemVal) && !string.IsNullOrEmpty(npVal) && npVal.Contains("-"))
+                            {
+                                var parts = npVal.Split('-');
+                                npVal = parts[0];
+                                itemVal = parts[1];
+                            }
                             <tr>
                                 <td class="text-center font-weight-bold text-primary">@item.NumRequerimiento</td>
-                                <td class="text-center">@item.CodOrdPro</td>
+                                <td class="text-center">@npVal</td>
+                                <td class="text-center">@itemVal</td>
                                 <td class="text-center">@item.Motivo</td>
                                 <td class="text-center"><span class="badge-estado" style="background: #d4edda; color: #155724;">@item.Estado</span></td>
                                 <td class="text-center">@item.FechaRecepcion</td>

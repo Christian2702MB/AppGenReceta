@@ -59,6 +59,7 @@ namespace AppGenReceta.BE
     {
         public int NumRequerimiento { get; set; }
         public string CodOrdPro { get; set; }
+        public string Item { get; set; }
         public string Motivo { get; set; }
         public string Estado { get; set; }
         public string FechaRecepcion { get; set; }

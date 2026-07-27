@@ -113,6 +113,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
+    DECLARE @RealNP VARCHAR(100) = @NP;
+    IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
+        SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+    
     DECLARE @StockInicial DECIMAL(18,4) = 0;
     DECLARE @StockSolicitud DECIMAL(18,4) = 0;
     
@@ -132,7 +136,7 @@ BEGIN
     SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida * 1000.00), 0)
     FROM LIQ_REQ_RecepcionesDetalle D
     INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
-    WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
+    WHERE R.CodOrdPro IN (@NP, @RealNP) AND D.CodInsumo = @CodInsumo;
 
     -- Cálculos globales para Operativo (Afectan al Stock Inicial Base)
     DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
@@ -141,13 +145,13 @@ BEGIN
     DECLARE @DevueltoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0);
 
     -- Cálculos locales para Recibido (Afectan al Stock Solicitud de ESTA NP)
-    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
-    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
 
     DECLARE @StockOperativoBase DECIMAL(18,4) = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal + @DevueltoOperativoGlobal;
 
-    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
-    DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
 
     DECLARE @StockOperativoReal DECIMAL(18,4) = @StockOperativoBase - @ConsumidoInicialNP - @AjusteInicialNP;
     DECLARE @StockSolicitudReal DECIMAL(18,4) = @StockSolicitud - @ConsumidoSolicitudNP - @AjusteSolicitudNP;
@@ -164,7 +168,7 @@ BEGIN
         FuenteConsumo,
         Cantidad
     FROM LIQ_OperacionesDetalle
-    WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo'
+    WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Consumo'
     ORDER BY FechaRegistro DESC;
 END
 GO

@@ -130,6 +130,19 @@ function abrirVistaPrevia(numReq, codOP, motivo, observaciones) {
                     $('#cboDestinoVersion').empty();
                 }
 
+                if (res.items && res.items.length > 0) {
+                    let cboItem = $('#cboDestinoItem');
+                    cboItem.empty();
+                    res.items.forEach(itm => {
+                        cboItem.append(`<option value="${itm}">${itm}</option>`);
+                    });
+                    cboItem.prop('selectedIndex', 0);
+                    $('#divSelectorItem').show();
+                } else {
+                    $('#divSelectorItem').hide();
+                    $('#cboDestinoItem').empty();
+                }
+
                 $('#modalVistaPrevia').modal('show');
             } else {
                 Swal.fire('Error', res.message || 'Ocurrió un error al cargar el detalle.', 'error');
@@ -171,13 +184,19 @@ function confirmarRecepcionFinal() {
                 finalCodOP = $('#cboDestinoVersion').val();
             }
 
+            let selectedItem = '';
+            if ($('#divSelectorItem').is(':visible')) {
+                selectedItem = $('#cboDestinoItem').val() || '';
+            }
+
             $.ajax({
                 url: '/Liquidacion/ConfirmarRecepcion',
                 type: 'POST',
                 data: {
                     numRequerimiento: numReq,
                     codOrdPro: finalCodOP,
-                    motivo: motivo
+                    motivo: motivo,
+                    item: selectedItem
                 },
                 success: function (res) {
                     if (res.success) {

@@ -17,6 +17,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    DECLARE @RealNP VARCHAR(100) = @NP;
+    IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
+        SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+
     SELECT 
         IdOperacion AS IdAjuste,
         Cantidad,
@@ -32,7 +36,7 @@ BEGIN
         LIQ_OperacionesDetalle
     WHERE 
         TipoOperacion = 'Ajuste'
-        AND NP = @NP 
+        AND NP IN (@NP, @RealNP) 
         AND CodInsumo = @CodInsumo
     ORDER BY 
         FechaRegistro DESC;

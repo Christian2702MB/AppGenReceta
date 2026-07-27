@@ -1,9 +1,12 @@
-USE [HIALPESA103]
+USE [HIALPESA]
 GO
 
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
+GO
+
+IF OBJECT_ID('dbo.LIQ_SP_GenerarSiguienteVersionNP', 'P') IS NOT NULL DROP PROCEDURE dbo.LIQ_SP_GenerarSiguienteVersionNP;
 GO
 
 -- =========================================================================================
@@ -25,7 +28,20 @@ BEGIN
     
     BEGIN TRY
         -- 1. Validar que la NP original exista y esté terminada
-        IF NOT EXISTS (SELECT 1 FROM LIQ_Formulas WHERE NP = @NPOriginal AND Estado IN ('Terminado', 'Terminada'))
+        DECLARE @IdFormulaOriginal INT;
+        DECLARE @BaseNP VARCHAR(100);
+        DECLARE @BaseItem VARCHAR(100);
+
+        SELECT TOP 1 
+            @IdFormulaOriginal = IdFormula,
+            @BaseNP = NP,
+            @BaseItem = ISNULL(Item, '')
+        FROM LIQ_Formulas 
+        WHERE (NP = @NPOriginal OR (NP + '-' + ISNULL(Item, '')) = @NPOriginal) 
+          AND Estado IN ('Terminado', 'Terminada')
+          AND ISNULL(Eliminado, 0) = 0;
+
+        IF @IdFormulaOriginal IS NULL
         BEGIN
             SET @Exito = 0;
             SET @Mensaje = 'La OP proporcionada no existe o no se encuentra en estado Terminado.';
@@ -33,29 +49,25 @@ BEGIN
         END
 
         -- 2. Determinar el nuevo sufijo de versión
-        DECLARE @BaseNP VARCHAR(100);
         DECLARE @CurrentMaxVersion INT = 1;
 
-        -- Extraer la base (ej. 'I8253' de 'I8253-V2')
-        IF CHARINDEX('-V', @NPOriginal) > 0
+        -- Extraer la base pura (ej. 'i8460' de 'i8460-V2' o de 'i8460')
+        IF CHARINDEX('-V', @BaseNP) > 0
         BEGIN
-            SET @BaseNP = SUBSTRING(@NPOriginal, 1, CHARINDEX('-V', @NPOriginal) - 1);
-        END
-        ELSE
-        BEGIN
-            SET @BaseNP = @NPOriginal;
+            SET @BaseNP = SUBSTRING(@BaseNP, 1, CHARINDEX('-V', @BaseNP) - 1);
         END
 
-        -- Buscar la versión más alta actual para esta base
+        -- Buscar la versión más alta actual para esta base e ítem
         SELECT @CurrentMaxVersion = ISNULL(MAX(
             CAST(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP)) AS INT)
         ), 1)
         FROM LIQ_Formulas
         WHERE NP LIKE @BaseNP + '-V%' 
+          AND ISNULL(Item, '') = @BaseItem
           AND ISNUMERIC(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP))) = 1;
 
         -- Si la original no tenía -V, y no encontramos derivadas, la nueva es V2
-        IF CHARINDEX('-V', @NPOriginal) = 0 AND @CurrentMaxVersion = 1
+        IF CHARINDEX('-V', @BaseNP) = 0 AND @CurrentMaxVersion = 1
         BEGIN
             SET @CurrentMaxVersion = 1; 
         END
@@ -64,7 +76,7 @@ BEGIN
         DECLARE @NuevaNP VARCHAR(100) = @BaseNP + '-V' + CAST(@NextVersion AS VARCHAR(10));
 
         -- Validar colisión (sanity check)
-        IF EXISTS (SELECT 1 FROM LIQ_Formulas WHERE NP = @NuevaNP)
+        IF EXISTS (SELECT 1 FROM LIQ_Formulas WHERE NP = @NuevaNP AND ISNULL(Item, '') = @BaseItem AND ISNULL(Eliminado, 0) = 0)
         BEGIN
             SET @Exito = 0;
             SET @Mensaje = 'Error de concurrencia: La versión ' + @NuevaNP + ' ya existe.';
@@ -86,7 +98,7 @@ BEGIN
             Ubicacion, Tecnica, OperarioUDP, FechaUDP, Prendas, Arte, 
             @Usuario, 'Activa', ISNULL(NULLIF(LTRIM(RTRIM(@Observacion)), '') + ' | ', '') + 'Versión derivada de ' + @NPOriginal + '. ' + ISNULL(Observaciones, '')
         FROM LIQ_Formulas
-        WHERE NP = @NPOriginal;
+        WHERE IdFormula = @IdFormulaOriginal;
 
         SET @NuevoIdFormula = SCOPE_IDENTITY();
 
@@ -102,7 +114,7 @@ BEGIN
         DECLARE curColores CURSOR FOR
         SELECT IdFormulaColor, NombreColor, Combo
         FROM LIQ_FormulaColores
-        WHERE IdFormula = (SELECT IdFormula FROM LIQ_Formulas WHERE NP = @NPOriginal);
+        WHERE IdFormula = @IdFormulaOriginal;
 
         OPEN curColores;
         FETCH NEXT FROM curColores INTO @OldIdColor, @NombreColor, @ComboColor;
@@ -131,7 +143,7 @@ BEGIN
         INSERT INTO LIQ_FormulaInsumosPrueba (IdFormula, NombreColor, CodigoInsumo, NombrePrueba, GramosUDP, EsPrincipal)
         SELECT @NuevoIdFormula, P.NombreColor, P.CodigoInsumo, P.NombrePrueba, P.GramosUDP, P.EsPrincipal
         FROM LIQ_FormulaInsumosPrueba P
-        WHERE P.IdFormula = (SELECT IdFormula FROM LIQ_Formulas WHERE NP = @NPOriginal);
+        WHERE P.IdFormula = @IdFormulaOriginal;
 
         -- 6. Tomar Snapshot del Stock Global Actual para la Nueva Versión
         -- Esto garantiza que la nueva versión inicie con el saldo real de la planta en gramos.

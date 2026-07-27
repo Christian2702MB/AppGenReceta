@@ -890,11 +890,13 @@ namespace AppGenReceta.Web.Controllers
             {
                 var detalles = _stockReqBl.ObtenerDetalleRequerimiento(numReq);
                 List<string> versiones = new List<string>();
+                List<string> items = new List<string>();
                 if (!string.IsNullOrEmpty(codOrdPro))
                 {
                     versiones = bl.ObtenerVersionesNP(codOrdPro);
+                    items = bl.ObtenerItemsActivosNP(codOrdPro);
                 }
-                return Json(new { success = true, data = detalles, versiones = versiones });
+                return Json(new { success = true, data = detalles, versiones = versiones, items = items });
             }
             catch (Exception ex)
             {
@@ -903,7 +905,7 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpPost]
-        public JsonResult ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo)
+        public JsonResult ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string item = null)
         {
             try
             {
@@ -911,7 +913,7 @@ namespace AppGenReceta.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
 
                 string usuario = Session["NombreUsuario"].ToString();
-                string msj = _stockReqBl.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuario);
+                string msj = _stockReqBl.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuario, item);
                 return Json(new { success = true, message = msj });
             }
             catch (Exception ex)

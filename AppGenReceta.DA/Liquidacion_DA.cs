@@ -63,6 +63,44 @@ namespace AppGenReceta.DA
             return lista;
         }
 
+        public List<string> ObtenerItemsActivosNP(string baseNP)
+        {
+            var lista = new List<string>();
+            if (string.IsNullOrEmpty(baseNP)) return lista;
+
+            using (SqlConnection cnx = new SqlConnection(ConnectionString))
+            {
+                string realBase = baseNP;
+                if (realBase.Contains("-"))
+                {
+                    realBase = realBase.Split('-')[0];
+                }
+
+                string sql = @"
+                    SELECT DISTINCT ISNULL(Item, '0000') AS Item 
+                    FROM LIQ_Formulas 
+                    WHERE (NP = @BaseNP OR NP LIKE @BaseNP + '-%' OR REPLACE(LOWER(NP), 'i', '') = REPLACE(LOWER(@BaseNP), 'i', ''))
+                      AND Estado = 'Activa'
+                      AND ISNULL(Item, '0000') <> '0000';
+                ";
+                SqlCommand cmd = new SqlCommand(sql, cnx);
+                cmd.Parameters.AddWithValue("@BaseNP", realBase);
+                cnx.Open();
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        string itm = dr["Item"].ToString();
+                        if (!string.IsNullOrEmpty(itm) && !lista.Contains(itm))
+                        {
+                            lista.Add(itm);
+                        }
+                    }
+                }
+            }
+            return lista;
+        }
+
         /// <summary>
         /// Lista fórmulas para el grid de Mantenimiento, filtradas por rango de fechas.
         /// </summary>
@@ -286,7 +324,9 @@ namespace AppGenReceta.DA
                     WHERE F.Estado <> 'Eliminada'
                       AND NOT EXISTS (
                           SELECT 1 FROM LIQ_REQ_Recepciones R 
-                          WHERE R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
+                          WHERE R.CodOrdPro = F.NP 
+                             OR R.CodOrdPro = (F.NP + '-' + ISNULL(F.Item, ''))
+                             OR (R.CodOrdPro = F.NP AND ISNULL(R.Item, '') = ISNULL(F.Item, ''))
                       )
                 ";
                 using (SqlCommand cmd = new SqlCommand(sql, cnx))
@@ -336,11 +376,12 @@ namespace AppGenReceta.DA
                     cmd.Parameters.AddWithValue("@Usuario", usuario);
 
                     cnx.Open();
+                    int numReq = 0;
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         if (dr.Read())
                         {
-                            int numReq = Convert.ToInt32(dr["NumRequerimiento"]);
+                            numReq = Convert.ToInt32(dr["NumRequerimiento"]);
                             if (numReq > 0)
                             {
                                 resultado = "OK|" + dr["Mensaje"].ToString();
@@ -350,6 +391,36 @@ namespace AppGenReceta.DA
                             {
                                 resultado = "ERROR|" + dr["Mensaje"].ToString();
                             }
+                        }
+                    }
+
+                    if (exito && numReq > 0)
+                    {
+                        string itemStr = "0000";
+                        if (np.Contains("-"))
+                        {
+                            var parts = np.Split('-');
+                            if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1])) itemStr = parts[1];
+                        }
+
+                        if (itemStr != "0000")
+                        {
+                            try
+                            {
+                                string sqlUpdateItem = @"
+                                    IF COL_LENGTH('LIQ_REQ_Recepciones', 'Item') IS NOT NULL
+                                    BEGIN
+                                        UPDATE LIQ_REQ_Recepciones SET Item = @Item WHERE NumRequerimiento = @NumReq;
+                                    END
+                                ";
+                                using (SqlCommand cmdItem = new SqlCommand(sqlUpdateItem, cnx))
+                                {
+                                    cmdItem.Parameters.AddWithValue("@Item", itemStr);
+                                    cmdItem.Parameters.AddWithValue("@NumReq", numReq);
+                                    cmdItem.ExecuteNonQuery();
+                                }
+                            }
+                            catch { }
                         }
                     }
                 }
@@ -363,32 +434,7 @@ namespace AppGenReceta.DA
                             F.NP, 
                             ISNULL(F.Item, '0000'),
                             I.CodigoInsumo,
-                            (
-                                -- 1. Tomamos el STOCK ACTUAL GLOBAL
-                                (ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0)) + 
-                                ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE D.CodInsumo = I.CodigoInsumo), 0) +
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Ingreso'), 0) -
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada')), 0) -
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste Directo' AND FuenteConsumo = 'Salida'), 0) -
-                                ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0)
-                                
-                                -- 2. MENOS (-) EL STOCK POR LIQUIDAR (Pendiente en otras NPs activas)
-                                - ISNULL((
-                                    SELECT SUM(ISNULL(Base.Recibido, 0) - ISNULL(Base.Consumido, 0) - ISNULL(Base.Ajustado, 0) - ISNULL(Base.Devuelto, 0))
-                                    FROM (
-                                        SELECT 
-                                            ISNULL((SELECT SUM(D.CantidadRecibida * 1000.0) FROM LIQ_REQ_RecepcionesDetalle D INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento WHERE R.CodOrdPro = F2.NP AND D.CodInsumo = I.CodigoInsumo), 0) AS Recibido,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Consumido,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS Ajustado,
-                                            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F2.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto
-                                        FROM LIQ_Formulas F2
-                                        INNER JOIN LIQ_FormulaColores C2 ON F2.IdFormula = C2.IdFormula
-                                        INNER JOIN LIQ_FormulaInsumos FI2 ON C2.IdFormulaColor = FI2.IdFormulaColor
-                                        WHERE F2.Estado != 'Cerrada' AND FI2.CodigoInsumo = I.CodigoInsumo
-                                    ) Base
-                                ), 0)
-                            ) AS StockOperativoInicial,
+                            ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0) AS StockOperativoInicial,
                             GETDATE()
                         FROM LIQ_Formulas F
                         INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
@@ -912,6 +958,10 @@ namespace AppGenReceta.DA
                 string sql = @"
     SET NOCOUNT ON;
     
+    DECLARE @RealNP VARCHAR(100) = @NP;
+    IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
+        SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+    
     DECLARE @StockInicial DECIMAL(18,4) = 0;
     DECLARE @StockSolicitud DECIMAL(18,4) = 0;
     
@@ -926,20 +976,20 @@ namespace AppGenReceta.DA
     SELECT @StockSolicitud = ISNULL(SUM(D.CantidadRecibida * 1000.00), 0)
     FROM LIQ_REQ_RecepcionesDetalle D
     INNER JOIN LIQ_REQ_Recepciones R ON D.NumRequerimiento = R.NumRequerimiento
-    WHERE R.CodOrdPro = @NP AND D.CodInsumo = @CodInsumo;
+    WHERE R.CodOrdPro IN (@NP, @RealNP) AND D.CodInsumo = @CodInsumo;
 
     DECLARE @ConsumidoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @AjusteOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
     DECLARE @DevueltoCentralGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Central' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Central%'))), 0);
     DECLARE @DevueltoOperativoGlobal DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = @CodInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0);
 
-    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
-    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @ConsumidoSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
+    DECLARE @AjusteSolicitudNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0);
 
     DECLARE @SnapshotStock DECIMAL(18,4) = NULL;
     SELECT TOP 1 @SnapshotStock = StockOperativoInicial 
     FROM LIQ_NP_StockSnapshot 
-    WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP AND CodInsumo = @CodInsumo 
+    WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) IN (@NP, @RealNP) AND CodInsumo = @CodInsumo 
     ORDER BY FechaCaptura DESC;
     
     DECLARE @StockOperativoBase DECIMAL(18,4);
@@ -952,8 +1002,8 @@ namespace AppGenReceta.DA
         SET @StockOperativoBase = @StockInicial - @ConsumidoOperativoGlobal - @AjusteOperativoGlobal - @DevueltoCentralGlobal + @DevueltoOperativoGlobal;
     END
 
-    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo = 'Stock Inicial'), 0);
-    DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = @NP AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @ConsumidoInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo = 'Stock Inicial'), 0);
+    DECLARE @AjusteInicialNP DECIMAL(18,4) = ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (@NP, @RealNP) AND CodInsumo = @CodInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Stock Inicial'), 0);
 
     DECLARE @StockOperativoReal DECIMAL(18,4) = @StockOperativoBase - @ConsumidoInicialNP - @AjusteInicialNP;
 
@@ -986,7 +1036,7 @@ namespace AppGenReceta.DA
       AND (
             (@IdVisita IS NOT NULL AND IdVisita = @IdVisita)
             OR 
-            (@IdVisita IS NULL AND NP = @NP)
+            (@IdVisita IS NULL AND NP IN (@NP, @RealNP))
           )
     ORDER BY FechaRegistro DESC;
                 ";
@@ -1241,6 +1291,10 @@ namespace AppGenReceta.DA
                 using (SqlConnection cnx = new SqlConnection(ConnectionString))
                 {
                     string sql = @"
+                        DECLARE @RealNP VARCHAR(100) = @NP;
+                        IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
+                            SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+
                         SELECT 
                             IdOperacion AS IdAjuste,
                             Cantidad,
@@ -1256,7 +1310,7 @@ namespace AppGenReceta.DA
                             LIQ_OperacionesDetalle
                         WHERE 
                             TipoOperacion = 'Ajuste'
-                            AND NP = @NP 
+                            AND NP IN (@NP, @RealNP) 
                             AND CodInsumo = @CodInsumo
                         ORDER BY 
                             FechaRegistro DESC;";

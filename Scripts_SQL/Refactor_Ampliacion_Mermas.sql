@@ -17,6 +17,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    DECLARE @RealNP VARCHAR(100) = @NP;
+    IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
+        SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+
     SELECT 
         IdMermaColor,
         CodigoMerma,
@@ -31,7 +35,7 @@ BEGIN
     FROM 
         LIQ_MER_MermasColor
     WHERE 
-        NP = @NP 
+        NP IN (@NP, @RealNP) 
         AND NombreColor = @NombreColor
     ORDER BY 
         FechaRegistro DESC;

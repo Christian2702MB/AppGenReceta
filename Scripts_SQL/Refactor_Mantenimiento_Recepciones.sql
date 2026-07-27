@@ -30,6 +30,7 @@ BEGIN
     SELECT 
         NumRequerimiento, 
         CodOrdPro, 
+        ISNULL(Item, '') AS Item,
         Motivo, 
         Estado, 
         FechaRecepcion, 

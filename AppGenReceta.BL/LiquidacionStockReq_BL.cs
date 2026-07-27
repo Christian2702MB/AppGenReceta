@@ -51,7 +51,7 @@ namespace AppGenReceta.BL
             return _da.ObtenerDetalleRecepcion(numReq);
         }
 
-        public string ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string usuarioRecepcion)
+        public string ConfirmarRecepcion(int numRequerimiento, string codOrdPro, string motivo, string usuarioRecepcion, string item = null)
         {
             // 1. Validar que exista la fórmula para esta NP
             if (!_da.ExisteFormulaParaNP(codOrdPro))
@@ -69,15 +69,21 @@ namespace AppGenReceta.BL
                 throw new System.Exception("No se encontró detalle para el requerimiento " + numRequerimiento);
             }
 
-            // Armar el XML para enviar al SP de ConfirmarRecepcion
+            // Armar el XML para enviar al SP de ConfirmarRecepcion (formato elementos hijos)
             string xmlDetalle = "<Detalles>";
             foreach (var det in detalles)
             {
-                xmlDetalle += $"<Detalle><CodInsumo>{det.CodItem}</CodInsumo><Descripcion>{det.Nombre}</Descripcion><Cantidad>{det.ConsumoRequerido}</Cantidad><UM>{det.Unidad}</UM><Lote>{det.Lote}</Lote></Detalle>";
+                xmlDetalle += $"<Detalle>" +
+                              $"<CodInsumo>{det.CodItem}</CodInsumo>" +
+                              $"<Descripcion>{System.Security.SecurityElement.Escape(det.Nombre ?? "")}</Descripcion>" +
+                              $"<Cantidad>{det.ConsumoRequerido.ToString(System.Globalization.CultureInfo.InvariantCulture)}</Cantidad>" +
+                              $"<UM>{det.Unidad}</UM>" +
+                              $"<Lote>{det.Lote}</Lote>" +
+                              $"</Detalle>";
             }
             xmlDetalle += "</Detalles>";
 
-            return _da.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuarioRecepcion, xmlDetalle);
+            return _da.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuarioRecepcion, xmlDetalle, item);
         }
 
         public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario)
