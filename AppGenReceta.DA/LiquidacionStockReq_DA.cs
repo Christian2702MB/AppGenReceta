@@ -445,23 +445,7 @@ namespace AppGenReceta.DA
                         finalNP = finalNP + "-" + item;
                     }
 
-                    string sqlSnapshot = @"
-                        -- Eliminar la foto anterior si existiera para tomar una nueva (se actualiza solo con nuevas recepciones)
-                        DELETE FROM LIQ_NP_StockSnapshot WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP;
-
-                        -- Tomar la foto actual del stock operativo global para todos los insumos de la fórmula de esta NP
-                        INSERT INTO LIQ_NP_StockSnapshot (NP, Item, CodInsumo, StockOperativoInicial, FechaCaptura)
-                        SELECT DISTINCT
-                            F.NP, 
-                            ISNULL(F.Item, '0000'),
-                            I.CodigoInsumo,
-                            ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0) AS StockOperativoInicial,
-                            GETDATE()
-                        FROM LIQ_Formulas F
-                        INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
-                        INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                        WHERE (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END) = @NP;
-                    ";
+                    string sqlSnapshot = "EXEC LIQ_SP_TomarSnapshotStockNP @NP;";
                     using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cn))
                     {
                         cmdSnap.CommandType = CommandType.Text;
@@ -489,7 +473,7 @@ namespace AppGenReceta.DA
             }
         }
 
-        public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario)
+        public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario, string npDirigida = null)
         {
             string mensaje = "";
             using (SqlConnection cn = new SqlConnection(ConnectionString))
@@ -502,6 +486,14 @@ namespace AppGenReceta.DA
                     cmd.Parameters.AddWithValue("@UnidadMedida", unidadMedida);
                     cmd.Parameters.AddWithValue("@PesoGramos", pesoGramos);
                     cmd.Parameters.AddWithValue("@Usuario", usuario);
+                    if (!string.IsNullOrEmpty(npDirigida))
+                    {
+                        cmd.Parameters.AddWithValue("@NPDirigida", npDirigida);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@NPDirigida", DBNull.Value);
+                    }
 
                     cn.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())

@@ -47,6 +47,15 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
+        public List<LIQ_NPSinRecepcionBE> ObtenerLiquidacionesActivasCombo()
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerLiquidacionesActivasCombo();
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
         public string CrearRecepcionBlanco(string np, string usuario)
         {
             try
@@ -105,11 +114,20 @@ namespace AppGenReceta.BL
             catch (Exception ex) { throw ex; }
         }
 
-        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado)
+        public List<LIQ_MenuNP_BE> ObtenerMenuNPs(string estado)
         {
             try
             {
-                return new Liquidacion_DA().ObtenerLiquidacionesConsolidadas(estado);
+                return new Liquidacion_DA().ObtenerMenuNPs(estado);
+            }
+            catch (Exception ex) { throw ex; }
+        }
+
+        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado, string npFiltro = null, string itemFiltro = null)
+        {
+            try
+            {
+                return new Liquidacion_DA().ObtenerLiquidacionesConsolidadas(estado, npFiltro, itemFiltro);
             }
             catch (Exception ex) { throw ex; }
         }

@@ -101,6 +101,40 @@ namespace AppGenReceta.DA
             return lista;
         }
 
+        public List<LIQ_NPSinRecepcionBE> ObtenerLiquidacionesActivasCombo()
+        {
+            List<LIQ_NPSinRecepcionBE> lista = new List<LIQ_NPSinRecepcionBE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("LIQ_SP_ObtenerLiquidacionesActivasCombo", cnx))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cnx.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                lista.Add(new LIQ_NPSinRecepcionBE
+                                {
+                                    NP = dr["NP"].ToString(),
+                                    Item = dr["Item"] != DBNull.Value ? dr["Item"].ToString() : "",
+                                    Cliente = dr["Cliente"] != DBNull.Value ? dr["Cliente"].ToString() : "",
+                                    Estilo = dr["Estilo"] != DBNull.Value ? dr["Estilo"].ToString() : ""
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return lista;
+        }
+        
         /// <summary>
         /// Lista fórmulas para el grid de Mantenimiento, filtradas por rango de fechas.
         /// </summary>
@@ -321,7 +355,7 @@ namespace AppGenReceta.DA
                     SELECT F.NP, F.Item, C.NombreColor AS Cliente, F.Estilo 
                     FROM LIQ_Formulas F 
                     LEFT JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula AND C.NombreColor <> ''
-                    WHERE F.Estado <> 'Eliminada'
+                    WHERE F.Estado <> 'Eliminada' AND ISNULL(F.Eliminado, 0) = 0
                       AND NOT EXISTS (
                           SELECT 1 FROM LIQ_REQ_Recepciones R 
                           WHERE R.CodOrdPro = F.NP 
@@ -397,11 +431,17 @@ namespace AppGenReceta.DA
                     if (exito && numReq > 0)
                     {
                         string itemStr = "0000";
-                        if (np.Contains("-"))
+                        try
                         {
-                            var parts = np.Split('-');
-                            if (parts.Length > 1 && !string.IsNullOrEmpty(parts[1])) itemStr = parts[1];
+                            string sqlGetItem = "SELECT TOP 1 ISNULL(Item, '0000') FROM LIQ_Formulas WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP AND ISNULL(Eliminado, 0) = 0 ORDER BY IdFormula DESC";
+                            using (SqlCommand cmdGetItem = new SqlCommand(sqlGetItem, cnx))
+                            {
+                                cmdGetItem.Parameters.AddWithValue("@NP", np);
+                                object itemObj = cmdGetItem.ExecuteScalar();
+                                if (itemObj != null) itemStr = itemObj.ToString();
+                            }
                         }
+                        catch { }
 
                         if (itemStr != "0000")
                         {
@@ -427,20 +467,7 @@ namespace AppGenReceta.DA
 
                 if (exito)
                 {
-                    string sqlSnapshot = @"
-                        DELETE FROM LIQ_NP_StockSnapshot WHERE (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NP;
-                        INSERT INTO LIQ_NP_StockSnapshot (NP, Item, CodInsumo, StockOperativoInicial, FechaCaptura)
-                        SELECT DISTINCT
-                            F.NP, 
-                            ISNULL(F.Item, '0000'),
-                            I.CodigoInsumo,
-                            ISNULL((SELECT TOP 1 CASE WHEN LOWER(LTRIM(RTRIM(ISNULL(UnidadMedida, 'gr')))) = 'kg' THEN ISNULL(StockActual, 0) * 1000.0 ELSE ISNULL(StockActual, 0) END FROM LIQ_STK_StockInsumos WHERE CodInsumo = I.CodigoInsumo), 0) AS StockOperativoInicial,
-                            GETDATE()
-                        FROM LIQ_Formulas F
-                        INNER JOIN LIQ_FormulaColores C ON F.IdFormula = C.IdFormula
-                        INNER JOIN LIQ_FormulaInsumos I ON C.IdFormulaColor = I.IdFormulaColor
-                        WHERE (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END) = @NP;
-                    ";
+                    string sqlSnapshot = "EXEC LIQ_SP_TomarSnapshotStockNP @NP;";
                     using (SqlCommand cmdSnap = new SqlCommand(sqlSnapshot, cnx))
                     {
                         cmdSnap.CommandType = CommandType.Text;
@@ -618,7 +645,48 @@ namespace AppGenReceta.DA
             return false;
         }
 
-        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado)
+        public List<LIQ_MenuNP_BE> ObtenerMenuNPs(string estado)
+        {
+            List<LIQ_MenuNP_BE> lista = new List<LIQ_MenuNP_BE>();
+            try
+            {
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("LIQ_SP_ObtenerMenuNPs", cnx))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@Estado", estado);
+                        
+                        cnx.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                lista.Add(new LIQ_MenuNP_BE
+                                {
+                                    NP = dr["NP"].ToString(),
+                                    Item = dr["Item"] != DBNull.Value ? dr["Item"].ToString() : "",
+                                    Cliente = dr["Cliente"].ToString(),
+                                    Estilo = dr["Estilo"].ToString(),
+                                    Temporada = dr["Temporada"].ToString(),
+                                    EstiloPropio = dr["EstiloPropio"].ToString(),
+                                    Estado = dr["Estado"].ToString(),
+                                    Creacion = dr["FechaCreacion"].ToString(),
+                                    Cierre = dr["FechaCierre"].ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return lista;
+        }
+
+        public List<LIQ_LiquidacionConsolidadaBE> ObtenerLiquidacionesConsolidadas(string estado, string npFiltro = null, string itemFiltro = null)
         {
             List<LIQ_LiquidacionConsolidadaBE> lista = new List<LIQ_LiquidacionConsolidadaBE>();
             try
@@ -640,6 +708,8 @@ namespace AppGenReceta.DA
           (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
           (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
       )
+      AND (@npFiltro IS NULL OR F.NP = @npFiltro)
+      AND (@itemFiltro IS NULL OR ISNULL(F.Item, '0000') = @itemFiltro)
       AND EXISTS (
           SELECT 1 FROM LIQ_REQ_Recepciones R 
           WHERE R.CodOrdPro = F.NP OR R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
@@ -649,7 +719,7 @@ namespace AppGenReceta.DA
     ;WITH CTE_Base AS (
         SELECT 
             F.NP,
-            F.Item,
+            ISNULL(F.Item, '0000') AS Item,
             C.NombreColor AS Pantone,
             I.CodigoInsumo,
             I.Descripcion AS NombreInsumo,
@@ -715,34 +785,34 @@ namespace AppGenReceta.DA
                 ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE CodInsumo = I.CodigoInsumo AND (TipoOperacion = 'Devolucion Operativo' OR (TipoOperacion = 'Devolucion' AND Motivo LIKE '%Operativo%'))), 0)
             ) / ISNULL(NULLIF((SELECT COUNT(*) FROM LIQ_FormulaInsumos I3 INNER JOIN LIQ_FormulaColores C3 ON I3.IdFormulaColor = C3.IdFormulaColor WHERE C3.IdFormula = F.IdFormula AND I3.CodigoInsumo = I.CodigoInsumo), 0), 1) AS StockOperativo,
 			        
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Central%'), 0) AS DevueltoCentral,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Operativo%'), 0) AS DevueltoOperativo,
-            ISNULL((SELECT SUM(Gramos) FROM LIQ_MER_MermasColor WHERE NP = F.NP AND NombreColor = C.NombreColor), 0) AS Merma,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor AND FuenteConsumo != 'Stock Merma'), 0) AS Ajuste,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND NombreColor = C.NombreColor), 0) AS Consumido,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion'), 0) AS Devuelto,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Central%'), 0) AS DevueltoCentral,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Devolucion' AND Motivo LIKE 'Almacén Operativo%'), 0) AS DevueltoOperativo,
+            ISNULL((SELECT SUM(Gramos) FROM LIQ_MER_MermasColor WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND NombreColor = C.NombreColor), 0) AS Merma,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND NombreColor = C.NombreColor AND FuenteConsumo != 'Stock Merma'), 0) AS Ajuste,
             
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial' AND NombreColor = C.NombreColor), 0) AS ConsumidoInicial,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS ConsumidoSolicitud,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS AjusteSolicitud,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Stock Inicial' AND NombreColor = C.NombreColor), 0) AS ConsumidoInicial,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS ConsumidoSolicitud,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada' AND NombreColor = C.NombreColor), 0) AS AjusteSolicitud,
             
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS ConsumidoTotalGlobal,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido') AND FuenteConsumo != 'Stock Merma'), 0) AS AjusteTotalGlobal,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitudGlobal,
-            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS AjusteSolicitudGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion IN ('Consumo', 'Consumo Desarrollo') AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido')), 0) AS ConsumidoTotalGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo IN ('Stock Inicial', 'Stock Solicitado', 'Solicitud Realizada', 'Stock Recibido') AND FuenteConsumo != 'Stock Merma'), 0) AS AjusteTotalGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Consumo' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS ConsumidoSolicitudGlobal,
+            ISNULL((SELECT SUM(Cantidad) FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND FuenteConsumo = 'Solicitud Realizada'), 0) AS AjusteSolicitudGlobal,
 
-            ISNULL((SELECT TOP 1 Motivo FROM LIQ_OperacionesDetalle WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo ORDER BY IdOperacion DESC), 'Entrega Inicial') AS Trazabilidad,
+            ISNULL((SELECT TOP 1 Motivo FROM LIQ_OperacionesDetalle WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo ORDER BY IdOperacion DESC), 'Entrega Inicial') AS Trazabilidad,
             
             -- Bandera de Bloqueo Merma
             CAST(CASE WHEN EXISTS (
                 SELECT 1 FROM LIQ_MER_MermasColor 
-                WHERE NP = F.NP AND NombreColor = C.NombreColor AND Gramos = 0 AND CodigoMerma = 'NO_MERMA'
+                WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND NombreColor = C.NombreColor AND Gramos = 0 AND CodigoMerma = 'NO_MERMA'
             ) THEN 1 ELSE 0 END AS BIT) AS BloqueoMerma,
             
             -- Bandera de Bloqueo Ajuste
             CAST(CASE WHEN EXISTS (
                 SELECT 1 FROM LIQ_OperacionesDetalle 
-                WHERE NP = F.NP AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND Cantidad = 0 AND Motivo = 'No existe ajuste'
+                WHERE NP IN (F.NP, F.NP + '-' + F.Item) AND CodInsumo = I.CodigoInsumo AND TipoOperacion = 'Ajuste' AND Cantidad = 0 AND Motivo = 'No existe ajuste'
             ) THEN 1 ELSE 0 END AS BIT) AS BloqueoAjuste
             
         FROM LIQ_Formulas F
@@ -754,6 +824,8 @@ namespace AppGenReceta.DA
               (@Estado = 'Cerrada' AND F.Estado IN ('Terminado', 'Cerrada')) OR
               (@Estado NOT IN ('Activa', 'Cerrada') AND F.Estado = @Estado)
           )
+          AND (@npFiltro IS NULL OR F.NP = @npFiltro)
+          AND (@itemFiltro IS NULL OR ISNULL(F.Item, '0000') = @itemFiltro)
           AND EXISTS (
               SELECT 1 FROM LIQ_REQ_Recepciones R 
               WHERE R.CodOrdPro = F.NP OR R.CodOrdPro = (CASE WHEN ISNULL(F.Item, '0000') = '0000' THEN F.NP ELSE F.NP + '-' + F.Item END)
@@ -793,11 +865,12 @@ namespace AppGenReceta.DA
                     SqlCommand cmd = new SqlCommand(sql, cnx);
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@Estado", estado);
+                    cmd.Parameters.AddWithValue("@npFiltro", string.IsNullOrEmpty(npFiltro) ? (object)DBNull.Value : npFiltro);
+                    cmd.Parameters.AddWithValue("@itemFiltro", string.IsNullOrEmpty(itemFiltro) ? (object)DBNull.Value : itemFiltro);
                     cnx.Open();
 
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        // 1. LEER CABECERAS
                         while (dr.Read())
                         {
                             lista.Add(new LIQ_LiquidacionConsolidadaBE
@@ -959,8 +1032,10 @@ namespace AppGenReceta.DA
     SET NOCOUNT ON;
     
     DECLARE @RealNP VARCHAR(100) = @NP;
-    IF CHARINDEX('-', @NP) > 0 AND @NP <> 'STOCK-DIR'
-        SET @RealNP = LEFT(@NP, CHARINDEX('-', @NP) - 1);
+    SELECT TOP 1 @RealNP = NP 
+    FROM LIQ_Formulas 
+    WHERE (NP + '-' + ISNULL(Item, '0000')) = @NP 
+       OR NP = @NP;
     
     DECLARE @StockInicial DECIMAL(18,4) = 0;
     DECLARE @StockSolicitud DECIMAL(18,4) = 0;
@@ -1519,32 +1594,79 @@ namespace AppGenReceta.DA
 
         public string PredecirSiguienteVersionNP(string npOriginal)
         {
-            string baseNP = npOriginal;
-            if (npOriginal.Contains("-V"))
+            string predictedDisplay = "";
+            try
             {
-                baseNP = npOriginal.Substring(0, npOriginal.IndexOf("-V"));
-            }
-
-            int currentMaxVersion = 1;
-            using (SqlConnection cnx = new SqlConnection(ConnectionString))
-            {
-                string sql = @"
-                    SELECT ISNULL(MAX(
-                        CAST(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP)) AS INT)
-                    ), 1)
-                    FROM LIQ_Formulas 
-                    WHERE NP LIKE @BaseNP + '-V%' AND CHARINDEX('-V', NP) > 0";
-                
-                SqlCommand cmd = new SqlCommand(sql, cnx);
-                cmd.Parameters.AddWithValue("@BaseNP", baseNP);
-                cnx.Open();
-                object result = cmd.ExecuteScalar();
-                if (result != null && result != DBNull.Value)
+                using (SqlConnection cnx = new SqlConnection(ConnectionString))
                 {
-                    currentMaxVersion = Convert.ToInt32(result);
+                    string sql = @"
+                        DECLARE @IdFormulaOriginal INT;
+                        DECLARE @BaseNP VARCHAR(100);
+                        DECLARE @BaseItem VARCHAR(100);
+                        DECLARE @CurrentMaxVersion INT = 1;
+
+                        SELECT TOP 1 
+                            @IdFormulaOriginal = IdFormula,
+                            @BaseNP = NP,
+                            @BaseItem = ISNULL(Item, '')
+                        FROM LIQ_Formulas 
+                        WHERE (NP = @NPOriginal OR (CASE WHEN ISNULL(Item, '0000') = '0000' THEN NP ELSE NP + '-' + Item END) = @NPOriginal) 
+                          AND ISNULL(Eliminado, 0) = 0
+                        ORDER BY IdFormula DESC;
+
+                        IF @IdFormulaOriginal IS NOT NULL
+                        BEGIN
+                            IF CHARINDEX('-V', @BaseNP) > 0
+                            BEGIN
+                                SET @BaseNP = SUBSTRING(@BaseNP, 1, CHARINDEX('-V', @BaseNP) - 1);
+                            END
+
+                            SELECT @CurrentMaxVersion = ISNULL(MAX(
+                                CAST(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP)) AS INT)
+                            ), 1)
+                            FROM LIQ_Formulas
+                            WHERE NP LIKE @BaseNP + '-V%' 
+                              AND ISNULL(Item, '') = @BaseItem
+                              AND ISNUMERIC(SUBSTRING(NP, CHARINDEX('-V', NP) + 2, LEN(NP))) = 1;
+
+                            IF CHARINDEX('-V', @BaseNP) = 0 AND @CurrentMaxVersion = 1
+                            BEGIN
+                                SET @CurrentMaxVersion = 1; 
+                            END
+
+                            DECLARE @NextVersion INT = @CurrentMaxVersion + 1;
+                            DECLARE @NuevaNP VARCHAR(100) = @BaseNP + '-V' + CAST(@NextVersion AS VARCHAR(10));
+                            
+                            IF @BaseItem = '' OR @BaseItem = '0000'
+                                SELECT @NuevaNP AS Prediction;
+                            ELSE
+                                SELECT @NuevaNP + '-' + @BaseItem AS Prediction;
+                        END
+                        ELSE
+                        BEGIN
+                            SELECT @NPOriginal + '-VX' AS Prediction;
+                        END
+                    ";
+                    
+                    SqlCommand cmd = new SqlCommand(sql, cnx);
+                    cmd.Parameters.AddWithValue("@NPOriginal", npOriginal);
+                    cnx.Open();
+                    object result = cmd.ExecuteScalar();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        predictedDisplay = result.ToString();
+                    }
+                    else
+                    {
+                        predictedDisplay = npOriginal + "-VX";
+                    }
                 }
             }
-            return baseNP + "-V" + (currentMaxVersion + 1);
+            catch
+            {
+                predictedDisplay = npOriginal + "-VX";
+            }
+            return predictedDisplay;
         }
 
         public List<LIQ_AuditoriaAnulacionBE> ListarAuditoriaAnulaciones()

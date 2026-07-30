@@ -196,7 +196,8 @@ CREATE PROCEDURE [dbo].[LIQ_STK_SP_RegistrarCargaInicial]
     @Descripcion VARCHAR(250),
     @UnidadMedida VARCHAR(20),
     @PesoGramos DECIMAL(18,4),
-    @Usuario VARCHAR(100)
+    @Usuario VARCHAR(100),
+    @NPDirigida VARCHAR(100) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -230,7 +231,42 @@ BEGIN
 
         -- Registrar en Kardex
         INSERT INTO LIQ_STK_Kardex (CodInsumo, TipoMovimiento, Concepto, Cantidad, StockResultante, ReferenciaID, Observaciones, FechaMovimiento, Usuario)
-        VALUES (@CodInsumo, 'Entrada', 'Carga Inicial', @StockIncremento, @NuevoStock, NULL, 'Carga inicial simulada', GETDATE(), @Usuario);
+        VALUES (@CodInsumo, 'Entrada', 'Carga Inicial', @StockIncremento, @NuevoStock, @NPDirigida, 'Carga inicial simulada', GETDATE(), @Usuario);
+
+        -- Lógica de Recarga Dirigida a una NP
+        -- Lógica de Recarga Dirigida a una NP
+        IF ISNULL(@NPDirigida, '') <> ''
+        BEGIN
+            DECLARE @BaseNP VARCHAR(100) = @NPDirigida;
+            DECLARE @BaseItem VARCHAR(100) = '0000';
+            
+            IF CHARINDEX('-', @NPDirigida) > 0
+            BEGIN
+                DECLARE @idx INT = CHARINDEX('-', REVERSE(@NPDirigida));
+                SET @BaseNP = SUBSTRING(@NPDirigida, 1, LEN(@NPDirigida) - @idx);
+                SET @BaseItem = SUBSTRING(@NPDirigida, LEN(@NPDirigida) - @idx + 2, LEN(@NPDirigida));
+            END
+
+            -- LIQ_NP_StockSnapshot almacena siempre en GRAMOS
+            DECLARE @IncrementoGramos DECIMAL(18,4) = @StockIncremento;
+            IF UPPER(LTRIM(RTRIM(@UnidadMedida))) = 'KG'
+            BEGIN
+                SET @IncrementoGramos = @StockIncremento * 1000.0;
+            END
+
+            IF EXISTS (SELECT 1 FROM LIQ_NP_StockSnapshot WHERE NP = @BaseNP AND CodInsumo = @CodInsumo AND Item = @BaseItem)
+            BEGIN
+                UPDATE LIQ_NP_StockSnapshot
+                SET StockOperativoInicial = StockOperativoInicial + @IncrementoGramos,
+                    FechaCaptura = GETDATE()
+                WHERE NP = @BaseNP AND CodInsumo = @CodInsumo AND Item = @BaseItem;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO LIQ_NP_StockSnapshot (NP, CodInsumo, StockOperativoInicial, FechaCaptura, Item)
+                VALUES (@BaseNP, @CodInsumo, @IncrementoGramos, GETDATE(), @BaseItem);
+            END
+        END
 
         COMMIT TRANSACTION;
         SELECT 1 AS Resultado, 'Carga inicial registrada correctamente.' AS Mensaje;

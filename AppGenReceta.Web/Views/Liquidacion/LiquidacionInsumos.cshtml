@@ -1948,13 +1948,13 @@
 
     // ── CARGA ASÍNCRONA DESDE EL BACKEND ──
     function cargarDataInicial() {
-        // 1. Cargar Activas
-        $.get('@Url.Action("ObtenerLiquidacionesConsolidadas", "Liquidacion")?estado=Activa', function(data) {
-            activeLiquidations = mapearLiquidaciones(data);
+        // 1. Cargar Cabeceras Activas
+        $.get('@Url.Action("ObtenerMenuNPs", "Liquidacion")?estado=Activa', function(data) {
+            activeLiquidations = mapearMenuLiquidaciones(data);
             
-            // 2. Cargar Terminadas
-            $.get('@Url.Action("ObtenerLiquidacionesConsolidadas", "Liquidacion")?estado=Cerrada', function(dataCerradas) {
-                finishedLiquidations = mapearLiquidaciones(dataCerradas);
+            // 2. Cargar Cabeceras Terminadas
+            $.get('@Url.Action("ObtenerMenuNPs", "Liquidacion")?estado=Cerrada', function(dataCerradas) {
+                finishedLiquidations = mapearMenuLiquidaciones(dataCerradas);
                 
                 // 3. Cargar Mermas
                 $.get('@Url.Action("ObtenerMermasStock", "Liquidacion")', function(mermasData) {
@@ -1975,50 +1975,70 @@
                         let firstKey = Object.keys(activeLiquidations)[0];
                         if(firstKey) selectNP(firstKey, 'activa', false);
                     }
+                    
+                    // Preservar el filtro de búsqueda del sidebar
+                    filtrarSidebar();
                 });
             });
         });
     }
 
-    function mapearLiquidaciones(datosBackend) {
+    function mapearMenuLiquidaciones(datosBackend) {
         var dict = {};
         if (datosBackend && datosBackend.length) {
             datosBackend.forEach(function(item) {
                 var displayNp = item.Item && item.Item !== '0000' && item.Item.length > 0 && item.NP.indexOf(item.Item) === -1 ? item.NP + '-' + item.Item : item.NP;
                 dict[displayNp] = {
-                    np: displayNp, cliente: item.Cliente, estilo: item.Estilo, temporada: item.Temporada, estiloPropio: item.EstiloPropio,
-                    estado: item.Estado, creacion: item.Creacion, cierre: item.Cierre,
-                    colores: item.Colores.map(c => ({
-                        pantone: c.Pantone,
-                        bloqueoMerma: c.BloqueoMerma,
-                        insumos: c.Insumos.map(i => ({
-                            codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
-                            requerido: i.Requerido, consumido: i.Consumido,
-                            consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud, ajusteSolicitud: i.AjusteSolicitud,
-                            devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
-                            loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
-                            stockRecibido: i.StockRecibido,
-                            stockOperativo: i.StockOperativo,
-                            stockRecibidoGlobal: i.StockRecibidoGlobal || 0,
-                            stockOperativoGlobal: i.StockOperativoGlobal || 0,
-                            consumidoSolicitudGlobal: i.ConsumidoSolicitudGlobal || 0,
-                            ajusteSolicitudGlobal: i.AjusteSolicitudGlobal || 0,
-                            devueltoCentral: i.DevueltoCentral || 0,
-                            devueltoOperativo: i.DevueltoOperativo || 0,
-                            bloqueoAjuste: i.BloqueoAjuste,
-                            stockTotal: i.StockTotal || 0,
-                            consumidoTotal: i.ConsumidoTotal || 0,
-                            ajusteInicial: i.AjusteInicial || 0,
-                            ajusteTotal: i.AjusteTotal || 0,
-                            saldoInicial: i.SaldoInicial || 0,
-                            saldoSolicitud: i.SaldoSolicitud || 0,
-                            saldoTotal: i.SaldoTotal || 0
-                        }))
-                    }))
+                    np: displayNp, 
+                    npBase: item.NP,
+                    itemBase: item.Item,
+                    cliente: item.Cliente, 
+                    estilo: item.Estilo, 
+                    temporada: item.Temporada, 
+                    estiloPropio: item.EstiloPropio,
+                    estado: item.Estado, 
+                    creacion: item.Creacion, 
+                    cierre: item.Cierre,
+                    colores: null // Se llenará por Lazy Loading
                 };
             });
         }
         return dict;
+    }
+
+    function mapearLiquidaciones(datosBackend, dictToUpdate, key) {
+        if (datosBackend && datosBackend.length) {
+            var item = datosBackend[0]; // Como filtramos por NP, solo viene 1
+            if(dictToUpdate[key]) {
+                dictToUpdate[key].colores = item.Colores.map(c => ({
+                    pantone: c.Pantone,
+                    bloqueoMerma: c.BloqueoMerma,
+                    insumos: c.Insumos.map(i => ({
+                        codigo: i.Codigo, nombre: i.Nombre, tecnica: i.Tecnica, um: i.UM,
+                        requerido: i.Requerido, consumido: i.Consumido,
+                        consumidoInicial: i.ConsumidoInicial, consumidoSolicitud: i.ConsumidoSolicitud, ajusteSolicitud: i.AjusteSolicitud,
+                        devuelto: i.Devuelto, merma: i.Merma, ajuste: i.Ajuste, saldo: i.Saldo, 
+                        loteVenc: i.LoteVenc, trazabilidad: i.Trazabilidad,
+                        stockRecibido: i.StockRecibido,
+                        stockOperativo: i.StockOperativo,
+                        stockRecibidoGlobal: i.StockRecibidoGlobal || 0,
+                        stockOperativoGlobal: i.StockOperativoGlobal || 0,
+                        consumidoSolicitudGlobal: i.ConsumidoSolicitudGlobal || 0,
+                        ajusteSolicitudGlobal: i.AjusteSolicitudGlobal || 0,
+                        devueltoCentral: i.DevueltoCentral || 0,
+                        devueltoOperativo: i.DevueltoOperativo || 0,
+                        bloqueoAjuste: i.BloqueoAjuste,
+                        stockTotal: i.StockTotal || 0,
+                        consumidoTotal: i.ConsumidoTotal || 0,
+                        ajusteInicial: i.AjusteInicial || 0,
+                        ajusteTotal: i.AjusteTotal || 0,
+                        saldoInicial: i.SaldoInicial || 0,
+                        saldoSolicitud: i.SaldoSolicitud || 0,
+                        saldoTotal: i.SaldoTotal || 0
+                    }))
+                }));
+            }
+        }
     }
 
     // ── CAMBIO DE TABS PRINCIPALES ──
@@ -2124,6 +2144,18 @@
             $("#noNpSelectedState").show();
             $("#detailNpState").hide();
             $("#globalStepperContainer").hide();
+            return;
+        }
+
+        // Lazy Loading: Si los colores son null, significa que tenemos que ir a traer su detalle a la base de datos
+        if (!item.colores) {
+            Swal.fire({ title: 'Cargando detalle...', didOpen: () => { Swal.showLoading(); } });
+            $.get('@Url.Action("ObtenerLiquidacionesConsolidadas", "Liquidacion")?estado=' + item.estado + '&npFiltro=' + item.npBase + '&itemFiltro=' + item.itemBase, function(data) {
+                var dictToUpdate = (tipo === 'activa') ? activeLiquidations : finishedLiquidations;
+                mapearLiquidaciones(data, dictToUpdate, np);
+                Swal.close();
+                selectNP(np, tipo, keepCurrentTab); // Re-ejecutar con la data ya cargada
+            });
             return;
         }
 

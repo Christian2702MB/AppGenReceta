@@ -10,7 +10,50 @@ $(document).ready(function () {
         $('#txtCantInsumo').val('');
         $('#lblEquivalencia').text('');
         selectedInsumoDescripcion = "";
+        
+        // Reset recarga dirigida
+        $('#chkRecargaDirigida').prop('checked', false);
+        $('#divRecargaDirigida').hide();
+        $('#ddlNPDirigida').empty().append('<option value="">Seleccione una NP...</option>');
     });
+
+    // Manejar el cambio del Checkbox
+    $('#chkRecargaDirigida').change(function () {
+        if ($(this).is(':checked')) {
+            $('#divRecargaDirigida').slideDown();
+            cargarNPsActivas();
+        } else {
+            $('#divRecargaDirigida').slideUp();
+        }
+    });
+
+    function cargarNPsActivas() {
+        var $ddl = $('#ddlNPDirigida');
+        $ddl.empty().append('<option value="">Cargando NPs...</option>');
+        $ddl.prop('disabled', true);
+
+        $.get('/Liquidacion/ObtenerLiquidacionesActivasCombo', function (res) {
+            $ddl.empty().append('<option value="">Seleccione una NP...</option>');
+            if (res && res.length > 0) {
+                res.forEach(function (item) {
+                    var displayNp = item.Item && item.Item !== '0000' && item.Item.length > 0 && item.NP.indexOf(item.Item) === -1 ? item.NP + '-' + item.Item : item.NP;
+                    $ddl.append('<option value="' + displayNp + '">' + displayNp + ' - ' + (item.Cliente || 'SIN CLIENTE') + ' (' + (item.Estilo || 'SIN ESTILO') + ')</option>');
+                });
+            } else {
+                $ddl.append('<option value="" disabled>No hay NPs activas en este momento</option>');
+            }
+            $ddl.prop('disabled', false);
+            $ddl.select2({
+                dropdownParent: $('#modalCargaInicial'),
+                placeholder: 'Seleccione o busque una NP',
+                allowClear: true
+            });
+        }).fail(function () {
+            $ddl.empty().append('<option value="">Error al cargar</option>');
+            $ddl.prop('disabled', false);
+            Swal.fire('Error', 'No se pudieron cargar las NPs activas.', 'error');
+        });
+    }
 
     // Inicializar Select2 en el buscador de insumos
     $('#txtDescInsumo').select2({
@@ -111,6 +154,20 @@ $(document).ready(function () {
             return;
         }
 
+        var npSeleccionada = null;
+        if ($('#chkRecargaDirigida').is(':checked')) {
+            npSeleccionada = $('#ddlNPDirigida').val();
+            if (!npSeleccionada) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: 'Debe seleccionar una NP para la recarga dirigida.',
+                    confirmButtonColor: '#002D72'
+                });
+                return;
+            }
+        }
+
         // Mostrar indicador de carga
         Swal.fire({
             title: 'Procesando...',
@@ -136,7 +193,8 @@ $(document).ready(function () {
                 codInsumo: codInsumo,
                 descripcion: selectedInsumoDescripcion,
                 unidadMedida: UM,
-                pesoGramos: pesoFinal
+                pesoGramos: pesoFinal,
+                npDirigida: npSeleccionada
             },
             success: function (response) {
                 Swal.close();

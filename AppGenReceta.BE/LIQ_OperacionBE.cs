@@ -60,6 +60,23 @@ namespace AppGenReceta.BE
     }
 
     /// <summary>
+    /// Entidad ligera para cargar el menú lateral
+    /// </summary>
+    [Serializable]
+    public class LIQ_MenuNP_BE
+    {
+        public string NP { get; set; }
+        public string Item { get; set; }
+        public string Cliente { get; set; }
+        public string Estilo { get; set; }
+        public string Temporada { get; set; }
+        public string EstiloPropio { get; set; }
+        public string Estado { get; set; }
+        public string Creacion { get; set; }
+        public string Cierre { get; set; }
+    }
+
+    /// <summary>
     /// Entidades de lectura (DTO) estructuradas para enviar JSON agrupado a la Vista
     /// </summary>
     [Serializable]

@@ -3,16 +3,15 @@ $conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 $conn.Open()
 
 $sqlContent = @"
-SELECT name 
-FROM sys.triggers
-WHERE parent_class_desc = 'OBJECT_OR_COLUMN' 
-AND parent_id IN (OBJECT_ID('LIQ_REQ_Recepciones'), OBJECT_ID('LIQ_REQ_RecepcionesDetalle'))
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'LIQ_NP_StockSnapshot';
 "@
 $cmd = $conn.CreateCommand()
 $cmd.CommandText = $sqlContent
 $reader = $cmd.ExecuteReader()
 while ($reader.Read()) {
-    Write-Host "Trigger: $($reader['name'])"
+    Write-Host "Column: $($reader['COLUMN_NAME'])"
 }
 $reader.Close()
 $conn.Close()

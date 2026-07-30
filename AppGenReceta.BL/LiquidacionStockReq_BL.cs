@@ -86,9 +86,9 @@ namespace AppGenReceta.BL
             return _da.ConfirmarRecepcion(numRequerimiento, codOrdPro, motivo, usuarioRecepcion, xmlDetalle, item);
         }
 
-        public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario)
+        public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario, string npDirigida = null)
         {
-            return _da.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario);
+            return _da.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario, npDirigida);
         }
 
         // ==========================================

@@ -494,6 +494,26 @@
                             <small id="lblEquivalencia" style="display: block; margin-top: 5px; font-weight: 600; color: #28a745 !important;"></small>
                         </div>
                     </div>
+                    <hr style="margin: 15px 0; border-top: 1px solid #e2e8f0;" />
+                    <div class="row">
+                        <div class="col-md-12 form-group" style="margin-bottom: 10px;">
+                            <div class="checkbox">
+                                <label style="font-weight: 600; color: #495057; display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="chkRecargaDirigida" style="margin-top: 0; margin-right: 8px; width: 16px; height: 16px;">
+                                    <span class="label label-info" style="font-size: 13px; padding: 4px 8px; border-radius: 4px;"><i class="fas fa-crosshairs"></i> Recarga Inicial Dirigida (a NP Activa)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="divRecargaDirigida" style="display: none;">
+                        <div class="col-md-12 form-group">
+                            <label style="font-weight: 600; color: #495057; margin-bottom: 8px;">Seleccione la NP (Fórmula) <span style="color:red">*</span></label>
+                            <select class="form-control" id="ddlNPDirigida" style="width: 100%;">
+                                <option value="">Seleccione una NP...</option>
+                            </select>
+                            <small style="color: #6c757d; display: block; margin-top: 5px;"><i class="fas fa-info-circle"></i> Al seleccionar una NP, el insumo se agregará automáticamente a su Saldo Operativo Inicial para no detener el proceso.</small>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 15px 30px; display: flex; justify-content: flex-end; gap: 10px;">

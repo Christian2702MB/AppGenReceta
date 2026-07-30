@@ -3,16 +3,13 @@ $conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 $conn.Open()
 
 $sqlContent = @"
-SELECT name 
-FROM sys.triggers
-WHERE parent_class_desc = 'OBJECT_OR_COLUMN' 
-AND parent_id IN (OBJECT_ID('LIQ_REQ_Recepciones'), OBJECT_ID('LIQ_REQ_RecepcionesDetalle'))
+SELECT TOP 5 NP, NombreColor, Gramos, FechaRegistro FROM LIQ_MER_MermasColor ORDER BY FechaRegistro DESC
 "@
 $cmd = $conn.CreateCommand()
 $cmd.CommandText = $sqlContent
 $reader = $cmd.ExecuteReader()
 while ($reader.Read()) {
-    Write-Host "Trigger: $($reader['name'])"
+    Write-Host "NP: $($reader['NP']) Color: $($reader['NombreColor']) Gramos: $($reader['Gramos'])"
 }
 $reader.Close()
 $conn.Close()

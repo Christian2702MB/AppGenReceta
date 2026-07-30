@@ -923,7 +923,7 @@ namespace AppGenReceta.Web.Controllers
         }
 
         [HttpPost]
-        public JsonResult RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos)
+        public JsonResult RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string npDirigida = null)
         {
             try
             {
@@ -931,7 +931,7 @@ namespace AppGenReceta.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
 
                 string usuario = Session["NombreUsuario"].ToString();
-                string msj = _stockReqBl.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario);
+                string msj = _stockReqBl.RegistrarCargaInicial(codInsumo, descripcion, unidadMedida, pesoGramos, usuario, npDirigida);
                 return Json(new { success = true, message = msj });
             }
             catch (Exception ex)
@@ -945,11 +945,25 @@ namespace AppGenReceta.Web.Controllers
         // =======================================================================
 
         [HttpGet]
-        public JsonResult ObtenerLiquidacionesConsolidadas(string estado)
+        public JsonResult ObtenerMenuNPs(string estado)
         {
             try
             {
-                var data = bl.ObtenerLiquidacionesConsolidadas(estado);
+                var data = bl.ObtenerMenuNPs(estado);
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerLiquidacionesConsolidadas(string estado, string npFiltro = null, string itemFiltro = null)
+        {
+            try
+            {
+                var data = bl.ObtenerLiquidacionesConsolidadas(estado, npFiltro, itemFiltro);
                 return Json(data, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -1056,6 +1070,20 @@ namespace AppGenReceta.Web.Controllers
             try
             {
                 var data = bl.ObtenerNPsSinRecepcion();
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerLiquidacionesActivasCombo()
+        {
+            try
+            {
+                var data = bl.ObtenerLiquidacionesActivasCombo();
                 return Json(data, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -1295,7 +1323,7 @@ namespace AppGenReceta.Web.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
+        
         [HttpGet]
         public JsonResult ObtenerAuditoriaDevolucionesCentral(string np)
         {

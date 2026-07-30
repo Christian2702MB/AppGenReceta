@@ -3,16 +3,13 @@ $conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 $conn.Open()
 
 $sqlContent = @"
-SELECT name 
-FROM sys.triggers
-WHERE parent_class_desc = 'OBJECT_OR_COLUMN' 
-AND parent_id IN (OBJECT_ID('LIQ_REQ_Recepciones'), OBJECT_ID('LIQ_REQ_RecepcionesDetalle'))
+EXEC sp_helptext 'LIQ_SP_CrearRecepcionBlanco'
 "@
 $cmd = $conn.CreateCommand()
 $cmd.CommandText = $sqlContent
 $reader = $cmd.ExecuteReader()
 while ($reader.Read()) {
-    Write-Host "Trigger: $($reader['name'])"
+    Write-Host "$($reader['Text'])" -NoNewline
 }
 $reader.Close()
 $conn.Close()
