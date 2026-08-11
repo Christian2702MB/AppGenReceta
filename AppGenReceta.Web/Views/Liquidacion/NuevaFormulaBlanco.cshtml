@@ -2,31 +2,81 @@
 @using AppGenReceta.BE;
 @{
     ViewBag.Title = "Nueva Fórmula en Blanco";
+
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
     :root {
         --hialpesa-blue: #002D72;
-        --hialpesa-accent: #004085; /* Azul Profundo para página hija */
+        --hialpesa-accent: #004085;
+        /* Azul Profundo para página hija */
     }
-    
-    .swal2-footer { text-align: center !important; }
-    .form-group .select2-container, .col-md-8 .select2-container, .col-md-4 .select2-container { width: 100% !important; display: block; }
-    .select2-container .select2-selection--single { height: 34px !important; padding: 3px 6px; border: 1px solid #ccc !important; border-radius: 4px; display: flex; align-items: center; }
-    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 32px !important; }
-    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 28px !important; color: #555; }
-    .select2-dropdown { border: 1px solid #aaa !important; z-index: 1051; }
+
+    .swal2-footer {
+        text-align: center !important;
+    }
+
+    .form-group .select2-container,
+    .col-md-8 .select2-container,
+    .col-md-4 .select2-container {
+        width: 100% !important;
+        display: block;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 34px !important;
+        padding: 3px 6px;
+        border: 1px solid #ccc !important;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 28px !important;
+        color: #555;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #aaa !important;
+        z-index: 1051;
+    }
 
     /* Estilos propios de liquidacion */
-    .btn-header-back { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-decoration: none; color: #495057; background-color: #f8f9fa; border: 1px solid #ced4da; transition: all 0.2s ease-in-out; }
-    .btn-header-back:hover { background-color: #e2e6ea; color: #495057; text-decoration: none; transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
+    .btn-header-back {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        color: #495057;
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-header-back:hover {
+        background-color: #e2e6ea;
+        color: #495057;
+        text-decoration: none;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    }
 </style>
 
-<div class="container-fluid py-4" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 15px;">
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div class="container-fluid py-4"
+    style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 15px;">
+    <div
+        style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div style="flex: 1 1 auto; margin-bottom: 5px;">
-            <h1 style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 26px; border-left: 6px solid var(--hialpesa-accent); padding-left: 15px;">
+            <h1
+                style="margin: 0; color: var(--hialpesa-blue); font-weight: 800; font-size: 26px; border-left: 6px solid var(--hialpesa-accent); padding-left: 15px;">
                 Fórmula en Blanco
             </h1>
             <p style="margin: 5px 0 0 20px; color: #6c757d; font-size: 14px;">
@@ -40,7 +90,7 @@
 
     <form id="formLibroVisita">
         <input type="hidden" id="hdnIdVisita" value="0" />
-        
+
         <!-- Compatibilidad JS Oculta -->
         <input type="hidden" id="dtFechaUDP" value="@DateTime.Now.ToString("dd/MM/yyyy")" />
         <input type="hidden" id="txtOperario" value="@ViewBag.Usuario" />
@@ -48,24 +98,30 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <h2 class="page-header" style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid var(--hialpesa-accent);">
-                    <span style="padding-left: 10px; border-left: 5px solid var(--hialpesa-accent); color: var(--hialpesa-accent);">Datos de la Cabecera</span>
+                <h2 class="page-header"
+                    style="margin-top: 0px; margin-bottom: 15px; border-bottom: 1px solid var(--hialpesa-accent);">
+                    <span
+                        style="padding-left: 10px; border-left: 5px solid var(--hialpesa-accent); color: var(--hialpesa-accent);">Datos
+                        de la Cabecera</span>
                 </h2>
-                
+
                 <div class="row">
                     <div class="col-xs-12 col-sm-3">
                         <div class="form-group">
                             <label for="txtNP">NP - MV</label>
                             <div class="input-group">
-                                <input type="text" name="txtNP" class="form-control" value="" id="txtNP" placeholder="Escriba la NP..." autofocus />
-                                <span class="input-group-addon" id="np-status" style="background: #eee;"><i class="fa fa-search"></i></span>
+                                <input type="text" name="txtNP" class="form-control" value="" id="txtNP"
+                                    placeholder="Escriba la NP..." autofocus />
+                                <span class="input-group-addon" id="np-status" style="background: #eee;"><i
+                                        class="fa fa-search"></i></span>
                             </div>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-3">
                         <div class="form-group">
                             <label>Prendas</label>
-                            <input type="number" name="txtPrendasReq" class="form-control" value="" id="txtPrendasReq" step="1" min="0" disabled />
+                            <input type="number" name="txtPrendasReq" class="form-control" value="" id="txtPrendasReq"
+                                step="1" min="0" disabled />
                         </div>
                     </div>
                 </div>
@@ -144,12 +200,13 @@
                     <div class="col-xs-12 col-sm-12">
                         <div class="form-group">
                             <label>Observaciones</label>
-                            <textarea name="txtObservaciones" class="form-control" id="txtObservaciones" rows="3" placeholder="Ingrese observaciones adicionales..." style="resize: vertical;"></textarea>
+                            <textarea name="txtObservaciones" class="form-control" id="txtObservaciones" rows="3"
+                                placeholder="Ingrese observaciones adicionales..." style="resize: vertical;"></textarea>
                         </div>
                     </div>
                 </div>
-                    <!-- Arte oculto para compatibilidad -->
-                    <input type="hidden" name="txtArte" id="txtArte" value="" />
+                <!-- Arte oculto para compatibilidad -->
+                <input type="hidden" name="txtArte" id="txtArte" value="" />
             </div>
         </div>
 
@@ -162,7 +219,8 @@
                     </div>
                     <div class="col-md-2">
                         <label>&nbsp;</label>
-                        <button type="button" id="btnAgregarColor" class="btn btn-primary btn-block" onclick="agregarColor()">
+                        <button type="button" id="btnAgregarColor" class="btn btn-primary btn-block"
+                            onclick="agregarColor()">
                             <i class="fa fa-plus mr-2"></i> Agregar Color
                         </button>
                     </div>
@@ -182,14 +240,19 @@
                     </tbody>
                 </table>
 
-                <div id="panelInsumos" class="panel panel-info" style="display:none; border: 2px solid var(--hialpesa-accent);">
-                    <div class="panel-heading" style="background-color: #f4f8fa; color: var(--hialpesa-accent); border-bottom: 1px solid var(--hialpesa-accent);">Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
+                <div id="panelInsumos" class="panel panel-info"
+                    style="display:none; border: 2px solid var(--hialpesa-accent);">
+                    <div class="panel-heading"
+                        style="background-color: #f4f8fa; color: var(--hialpesa-accent); border-bottom: 1px solid var(--hialpesa-accent);">
+                        Agregando Insumo para: <strong id="lblColorActivo"></strong></div>
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group">
                                     <label>Descripción Insumo:</label>
-                                    <select id="txtDescInsumo" name="txtDescInsumo" class="form-control" style="background-color: #eee;" data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
+                                    <select id="txtDescInsumo" name="txtDescInsumo" class="form-control"
+                                        style="background-color: #eee;"
+                                        data-url-busqueda="@Url.Action("BuscarInsumosSelect2", "Home")">
                                         <option value="">Seleccione o busque un insumo...</option>
                                     </select>
                                 </div>
@@ -197,16 +260,20 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Stock</label>
-                                    <input type="text" name="txtStock" class="form-control" value="" id="txtStock" readonly />
+                                    <input type="text" name="txtStock" class="form-control" value="" id="txtStock"
+                                        readonly />
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Peso (gr)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" id="txtCantInsumo" class="form-control" placeholder="0.00" min="0">
+                                        <input type="number" step="0.01" id="txtCantInsumo" class="form-control"
+                                            placeholder="0.00" min="0">
                                         <span class="input-group-btn">
-                                            <button type="button" id="btnAgregarInsumo" class="btn btn-success" onclick="agregarInsumo()" title="Agregar Insumo al Color Seleccionado" style="height: 34px;">
+                                            <button type="button" id="btnAgregarInsumo" class="btn btn-success"
+                                                onclick="agregarInsumo()" title="Agregar Insumo al Color Seleccionado"
+                                                style="height: 34px;">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </span>
@@ -226,17 +293,21 @@
                 <div class="row">
                     <div class="col-xs-12 col-sm-4" style="text-align: right">
                         <div class="form-group">
-                            <a id="btnRegistrarFormula" class="btn btn-primary px-4 shadow-sm" onclick="guardarFBlancoPersonalizado()"><i class="fa fa-check mr-2"></i> Generar Fórmula</a>
+                            <a id="btnRegistrarFormula" class="btn btn-primary px-4 shadow-sm"
+                                onclick="guardarFBlancoPersonalizado()"><i class="fa fa-check mr-2"></i> Generar
+                                Fórmula</a>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-4" style="text-align: center">
                         <div class="form-group">
-                            <a id="btnLimpiar" class="btn btn-warning px-4 shadow-sm text-white" onclick="location.reload();"><i class="fas fa-broom mr-2"></i> Limpiar</a>
+                            <a id="btnLimpiar" class="btn btn-warning px-4 shadow-sm text-white"
+                                onclick="location.reload();"><i class="fas fa-broom mr-2"></i> Limpiar</a>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-4">
                         <div class="form-group" style="text-align: left">
-                            <a href="@Url.Action("NuevaFormula", "Liquidacion")" id="btnCancelarFormulaBlanco" class="btn btn-danger px-4 shadow-sm"><i class="fa fa-times mr-2"></i> Cancelar</a>
+                            <a href="@Url.Action("NuevaFormula", "Liquidacion")" id="btnCancelarFormulaBlanco"
+                                class="btn btn-danger px-4 shadow-sm"><i class="fa fa-times mr-2"></i> Cancelar</a>
                         </div>
                     </div>
                 </div>
@@ -253,7 +324,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     @Scripts.Render("~/bundles/visita")
-    
+
     <script>
         $(document).ready(function () {
             // Select2 para detalle (Insumos) - Copiado de Visita
@@ -321,14 +392,14 @@
                 success: function (res) {
                     if (res.success && res.data) {
                         $('#np-status').html('<i class="fa fa-check text-success"></i>');
-                        
+
                         // Rellenamos los datos directos
                         llenarSelect('txtCliente', res.data.CodCliente ? res.data.CodCliente.trim() : '');
                         llenarSelect('txtTemporada', res.data.CodTemcli ? res.data.CodTemcli.trim() : '');
-                        $('#txtPrendasReq').val(res.data.CodItem ? res.data.CodItem.trim() : ''); 
+                        $('#txtPrendasReq').val(res.data.CodItem ? res.data.CodItem.trim() : '');
 
                         var estiloPropioBuscado = res.data.DescripcionTecnica ? res.data.DescripcionTecnica.trim() : '';
-                        
+
                         // Consultar Estilos para emparejar el Estilo Cliente (que a veces viene vacío en NP)
                         var tempShort = res.data.CodTemcli ? res.data.CodTemcli.substring(0, 3) : '';
                         if (res.data.CodCliente && tempShort && estiloPropioBuscado) {
@@ -346,11 +417,11 @@
                                     }
                                     llenarSelect('txtEstilo', estiloCliente);
                                     llenarSelect('txtEstiloPropio', estiloPropioBuscado);
-                                    
+
                                     desbloquearCamposCabecera();
-                                    
+
                                     // Forzar recálculo
-                                    if(typeof rellenarCombos === 'function') {
+                                    if (typeof rellenarCombos === 'function') {
                                         setTimeout(rellenarCombos, 200);
                                     }
                                 },
@@ -358,14 +429,14 @@
                                     llenarSelect('txtEstilo', res.data.CodTecnica ? res.data.CodTecnica.trim() : '');
                                     llenarSelect('txtEstiloPropio', estiloPropioBuscado);
                                     desbloquearCamposCabecera();
-                                    if(typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
+                                    if (typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
                                 }
                             });
                         } else {
                             llenarSelect('txtEstilo', res.data.CodTecnica ? res.data.CodTecnica.trim() : '');
                             llenarSelect('txtEstiloPropio', estiloPropioBuscado);
                             desbloquearCamposCabecera();
-                            if(typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
+                            if (typeof rellenarCombos === 'function') setTimeout(rellenarCombos, 200);
                         }
                     } else {
                         $('#np-status').html('<i class="fa fa-times text-danger"></i>');
@@ -417,12 +488,12 @@
         // ----------------------------------------------------
         function guardarFBlancoPersonalizado() {
             // Reutilizamos la extracción global del objeto 'recetaMaster' generada por Visita.js
-            
+
             recetaMaster.NP = $("#txtNP").val();
             // dtFechaUDP y txtOperario existen como hidden para bypass de validación JS
             recetaMaster.Operario = $("#txtOperario").val();
             var f = new Date();
-            recetaMaster.FechaUDP = f.getDate() + '/' + (f.getMonth() + 1) + '/' + f.getFullYear(); 
+            recetaMaster.FechaUDP = f.getDate() + '/' + (f.getMonth() + 1) + '/' + f.getFullYear();
 
             recetaMaster.Tecnica = $("#txtTecnica").val();
             recetaMaster.Cliente = $("#txtCliente").val();
@@ -438,12 +509,12 @@
 
             if (!recetaMaster.NP || recetaMaster.NP.length < 5) { Swal.fire("Aviso", "Busque una NP válida de 5 dígitos", "warning"); return; }
             if (recetaMaster.Colores.length === 0) { Swal.fire("Aviso", "Debe agregar al menos un color", "warning"); return; }
-            
+
             let tieneInsumos = false;
-            for(let i=0; i<recetaMaster.Colores.length; i++){
-                if(recetaMaster.Colores[i].Insumos.length > 0) { tieneInsumos = true; break; }
+            for (let i = 0; i < recetaMaster.Colores.length; i++) {
+                if (recetaMaster.Colores[i].Insumos.length > 0) { tieneInsumos = true; break; }
             }
-            if(!tieneInsumos) { Swal.fire("Aviso", "Agregue insumos al detalle", "warning"); return; }
+            if (!tieneInsumos) { Swal.fire("Aviso", "Agregue insumos al detalle", "warning"); return; }
 
             $('#btnRegistrarFormula').text('Generando...');
             $('#btnRegistrarFormula').attr('disabled', 'disabled');
