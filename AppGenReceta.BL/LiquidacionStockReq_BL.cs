@@ -103,5 +103,10 @@ namespace AppGenReceta.BL
         {
             return _da.InsertarFormulaBlanco(receta, usuario);
         }
+
+        public bool ExisteFormulaBlancoDuplicada(string np, string combo, string item)
+        {
+            return _da.ExisteFormulaBlancoDuplicada(np, combo, item);
+        }
     }
 }

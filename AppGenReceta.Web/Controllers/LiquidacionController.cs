@@ -134,6 +134,19 @@ namespace AppGenReceta.Web.Controllers
             try
             {
                 string usuario = Session["Cod_Usuario"] != null ? Session["Cod_Usuario"].ToString() : "GUEST";
+                
+                // Validar que la receta origen tenga Combo e Item
+                VisitaBL visitaBL = new VisitaBL();
+                VisitaBE recetaOrigen = visitaBL.ObtenerRecetaPorId(idReceta);
+                if (recetaOrigen == null)
+                {
+                    return Json(new { success = false, message = "No se encontró la receta origen." });
+                }
+                if (string.IsNullOrEmpty(recetaOrigen.ComboCabecera) || string.IsNullOrEmpty(recetaOrigen.Item))
+                {
+                    return Json(new { success = false, message = "La receta origen no tiene Combo o Item asignado. Por favor asigne estos datos en laboratorio antes de generar la fórmula." });
+                }
+
                 int idFormula = bl.CrearFormulaDesdeReceta(idReceta, usuario);
 
                 if (idFormula > 0)
@@ -1384,6 +1397,18 @@ namespace AppGenReceta.Web.Controllers
 
                 string usuario = Session["NombreUsuario"].ToString();
                 
+                // Validar campos obligatorios
+                if (string.IsNullOrEmpty(recetaMaster.ComboCabecera) || string.IsNullOrEmpty(recetaMaster.Item))
+                {
+                    return Json(new { success = false, result = "error", message = "El Combo y el Item son obligatorios." });
+                }
+                
+                // Validar duplicidad usando NP, Combo e Item
+                if (_stockReqBl.ExisteFormulaBlancoDuplicada(recetaMaster.NP, recetaMaster.ComboCabecera, recetaMaster.Item))
+                {
+                    return Json(new { success = false, result = "duplicate", message = "Ya existe una fórmula registrada con estos mismos datos (NP, Combo e Item)." });
+                }
+
                 bool ok = _stockReqBl.InsertarFormulaBlanco(recetaMaster, usuario);
                 if (ok)
                 {

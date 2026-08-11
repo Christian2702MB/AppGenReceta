@@ -473,6 +473,23 @@ namespace AppGenReceta.DA
             }
         }
 
+        public bool ExisteFormulaBlancoDuplicada(string np, string combo, string item)
+        {
+            using (SqlConnection cn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(1) FROM LIQ_Formulas WHERE NP = @NP AND Combo = @Combo AND Item = @Item AND Estado <> 'Eliminada'", cn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@NP", np ?? "");
+                    cmd.Parameters.AddWithValue("@Combo", combo ?? "");
+                    cmd.Parameters.AddWithValue("@Item", item ?? "");
+                    cn.Open();
+                    int count = Convert.ToInt32(cmd.ExecuteScalar());
+                    return count > 0;
+                }
+            }
+        }
+
         public string RegistrarCargaInicial(string codInsumo, string descripcion, string unidadMedida, decimal pesoGramos, string usuario, string npDirigida = null)
         {
             string mensaje = "";

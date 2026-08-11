@@ -508,6 +508,8 @@
             recetaMaster.Arte = $("#txtArte").val();
 
             if (!recetaMaster.NP || recetaMaster.NP.length < 5) { Swal.fire("Aviso", "Busque una NP válida de 5 dígitos", "warning"); return; }
+            if (!recetaMaster.ComboCabecera || recetaMaster.ComboCabecera.trim() === '') { Swal.fire("Aviso", "El Combo es obligatorio.", "warning"); return; }
+            if (!recetaMaster.Item || recetaMaster.Item.trim() === '') { Swal.fire("Aviso", "El Item es obligatorio.", "warning"); return; }
             if (recetaMaster.Colores.length === 0) { Swal.fire("Aviso", "Debe agregar al menos un color", "warning"); return; }
 
             let tieneInsumos = false;
@@ -533,6 +535,9 @@
                         }).then(() => {
                             window.location.href = '@Url.Action("MantenimientoFormulas", "Liquidacion")';
                         });
+                    } else if (res.result === 'duplicate') {
+                        Swal.fire("Aviso", res.message, "warning");
+                        $('#btnRegistrarFormula').text('Generar Fórmula').removeAttr('disabled');
                     } else {
                         Swal.fire("Error", res.message || "No se pudo guardar", "error");
                         $('#btnRegistrarFormula').text('Generar Fórmula').removeAttr('disabled');

@@ -373,6 +373,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         var idRecetaSeleccionada = 0;
+        var recetaSeleccionadaData = null;
 
         // ── Filtro instantáneo en la tabla ──
         function filtrarTabla() {
@@ -396,11 +397,13 @@
         // ── Previsualizar receta (cargar modal con detalle) ──
         function previsualizarReceta(idReceta) {
             idRecetaSeleccionada = idReceta;
+            recetaSeleccionadaData = null;
             Swal.fire({ title: 'Cargando receta...', didOpen: function () { Swal.showLoading(); } });
 
             $.get("@Url.Action("ObtenerRecetaPreview", "Liquidacion")", { id: idReceta }, function (res) {
                 Swal.close();
                 if (res.success && res.data) {
+                    recetaSeleccionadaData = res.data;
                     renderPreview(res.data);
                     $('#modalPreview').modal('show');
                 } else {
@@ -531,7 +534,18 @@
 
         // ── Confirmar y crear la fórmula ──
         $('#btnConfirmarFormula').on('click', function () {
-            if (!idRecetaSeleccionada) return;
+            if (!idRecetaSeleccionada || !recetaSeleccionadaData) return;
+
+            // Validar que la receta origen tenga Combo e Item
+            if (!recetaSeleccionadaData.ComboCabecera || recetaSeleccionadaData.ComboCabecera.trim() === '') {
+                Swal.fire("Aviso", "Esta receta no tiene Combo asignado. Por favor, asigne este dato a la receta en laboratorio antes de generar una fórmula de producción.", "warning");
+                return;
+            }
+            if (!recetaSeleccionadaData.Item || recetaSeleccionadaData.Item.trim() === '') {
+                Swal.fire("Aviso", "Esta receta no tiene Item asignado. Por favor, asigne este dato a la receta en laboratorio antes de generar una fórmula de producción.", "warning");
+                return;
+            }
+
             $('#modalPreview').modal('hide');
             $('#loadingOverlay').css('display', 'flex');
 
